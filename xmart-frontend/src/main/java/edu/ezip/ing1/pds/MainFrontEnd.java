@@ -31,7 +31,8 @@ public class MainFrontEnd {
         studentService.insertStudents();
         Students students = studentService.selectStudents();
         final AsciiTable asciiTable = new AsciiTable();
-        //check that students and getStudents are not null to avoid nullpointer exception
+
+        // added check that students and getStudents are not null to avoid nullpointer exception
 if (students != null && students.getStudents() != null) {
     for (final Student student : students.getStudents()) {
         asciiTable.addRule();

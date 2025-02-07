@@ -23,11 +23,16 @@ public class XMartCityService {
 
     private enum Queries {
         SELECT_ALL_STUDENTS("SELECT t.name, t.firstname, t.groupname FROM students t"),
-        INSERT_STUDENT("INSERT into students (name, firstname, groupname) values (?, ?, ?)");
+        INSERT_STUDENT("INSERT INTO students (name, firstname, groupname) VALUES (?, ?, ?)");
+
         private final String query;
 
         private Queries(final String query) {
             this.query = query;
+        }
+        // added method
+        public String getQuery() {
+            return query;
         }
     }
 
@@ -63,24 +68,57 @@ public class XMartCityService {
     }
 
     private Response InsertStudent(final Request request, final Connection connection) throws SQLException, IOException {
-        return null;
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Student student;
+
+        // Désérialisation du JSON en objet Student
+        try {
+            student = objectMapper.readValue(request.getRequestBody(), Student.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données de l'étudiant invalides");
+        }
+
+        // Vérification des données
+        if (student.getName() == null || student.getFirstname() == null || student.getGroup() == null) {
+            return new Response(request.getRequestId(), "Champs manquants");
+        }
+
+        // Requête SQL sécurisée avec PreparedStatement
+        try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_STUDENT.getQuery())) {
+            pstmt.setString(1, student.getName());
+            pstmt.setString(2, student.getFirstname());
+            pstmt.setString(3, student.getGroup());
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                return new Response(request.getRequestId(), "Étudiant inséré avec succès");
+            } else {
+                return new Response(request.getRequestId(), "Échec de l'insertion");
+            }
+        } catch (SQLException e) {
+            logger.error("Erreur SQL lors de l'insertion de l'étudiant", e);
+            return new Response(request.getRequestId(), "Erreur SQL");
+        }
     }
 
 
     private Response SelectAllStudents(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
-//        final ObjectMapper objectMapper = new ObjectMapper();
-//        final Statement stmt = connection.createStatement();
-//        final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_STUDENTS.query);
-//        Students students = new Students();
-//        while (res.next()) {
-//            Student student = new Student();
-//            student.setName(res.getString(1));
-//            student.setFirstname(res.getString(2));
-//            student.setGroup(res.getString(3));
-//            students.add(student);
-//        }
-//        return new Response(request.getRequestId(), objectMapper.writeValueAsString(students));
-        return null;
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_STUDENTS.query);
+
+        Students students = new Students();
+        while (res.next()) {
+            Student student = new Student();
+            student.setName(res.getString(1));
+            student.setFirstname(res.getString(2));
+            student.setGroup(res.getString(3));
+            students.add(student);
+        }
+
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(students)); // Supprimez le second return null
     }
+
 
 }
