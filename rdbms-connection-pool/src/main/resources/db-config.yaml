@@ -1,6 +1,6 @@
-databaseName: "intelijj_database"
-host: "51.75.133.46"
+databaseName: "mydatabase"
+host: "172.31.253.215"
 port: 3306
 username : "root"
-password: "meloaude"
+password: "rootpassword"
 poolSize: 1
