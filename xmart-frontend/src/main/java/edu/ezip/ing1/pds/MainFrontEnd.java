@@ -11,7 +11,7 @@ import edu.ezip.ing1.pds.client.commons.ClientRequest;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.services.*;
-import edu.ezip.ing1.pds.services.StudentService;
+//import edu.ezip.ing1.pds.services.StudentService;
 
 
 import org.slf4j.Logger;
@@ -34,17 +34,17 @@ public class MainFrontEnd {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         logger.debug("Load Network config file : {}", networkConfig.toString());
 
-        final StudentService studentService = new StudentService(networkConfig);
+        //final StudentService studentService = new StudentService(networkConfig);
         final PersonneService personneService = new PersonneService(networkConfig);
         final AbonementService abonementService = new AbonementService(networkConfig);
         final VehicleService vehicleService = new VehicleService(networkConfig);
         final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(networkConfig);
-        studentService.insertStudents();
+        //studentService.insertStudents();
         personneService.insertPersonnes();
        // abonementService.insertAbonements();
          //vehicleService.insertVehicles();
            //placeDeParkingService.insertPlaceDeParkings();
-        Students students = studentService.selectStudents();
+        // Students students = studentService.selectStudents();
         Personnes personnes = personneService.selectPersonnes();
         Abonnements abonnements = abonementService.selectAbonnements();
         Vehicles vehicles = vehicleService.selectVehicles();
@@ -52,14 +52,14 @@ public class MainFrontEnd {
         final AsciiTable asciiTable = new AsciiTable();
 
         // ajout d'une vérification que apiRequest et getStudents ne sont pas nuls pour éviter l'exception du pointeur nul
-        if (students != null && students.getStudents() != null) {
-            for (final Student student : students.getStudents()) {
+       // if (students != null && students.getStudents() != null) {
+            /*for (final Student student : students.getStudents()) {
                 asciiTable.addRule();
                 asciiTable.addRow(student.getFirstname(), student.getName(), student.getGroup());
             }
             asciiTable.addRule();
             logger.debug("\n{}\n", asciiTable.render());
-        }
+        }*/
 
         if (abonnements != null && abonnements.getAbonnements() != null) {
             for (final Abonnement student : abonnements.getAbonnements()) {
@@ -94,7 +94,7 @@ public class MainFrontEnd {
             asciiTable.addRule();
             logger.debug("\n{}\n", asciiTable.render());
         }
-        if (students != null && students.getStudents() != null) {
+        /*if (students != null && students.getStudents() != null) {
             for (final Student student : students.getStudents()) {
                 asciiTable.addRule();
                 asciiTable.addRow(student.getFirstname(), student.getName(), student.getGroup());
@@ -104,7 +104,7 @@ public class MainFrontEnd {
         }
 
         SwingUtilities.invokeLater(() -> new Principale().setVisible(true));
-
+       */
 
     }
 
