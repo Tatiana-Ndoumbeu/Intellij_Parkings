@@ -62,9 +62,9 @@ public class MainFrontEnd {
         }*/
 
         if (abonnements != null && abonnements.getAbonnements() != null) {
-            for (final Abonnement student : abonnements.getAbonnements()) {
+            for (final Abonnement abonnement : abonnements.getAbonnements()) {
                 asciiTable.addRule();
-                asciiTable.addRow(student.getIdAbonnement(), student.getTypeAbonnement(), student.getPrix());
+                asciiTable.addRow(abonnement.getIdAbonnement(), abonnement.getTypeAbonnement(), abonnement.getPrix());
             }
             asciiTable.addRule();
             logger.debug("\n{}\n", asciiTable.render());
