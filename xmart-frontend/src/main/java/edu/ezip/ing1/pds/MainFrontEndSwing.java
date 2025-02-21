@@ -191,7 +191,7 @@ public class MainFrontEndSwing extends JFrame {
         String[] columns = { "numLocal", "disponibilite"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
 
-     // Récupère et affiche les places de parking existantes depuis DB
+     // 
         try {
             localLaveries = localService.selectLocalLaveries();
             if (localLaveries != null && localLaveries.getLocalLaveries() != null) {
@@ -202,7 +202,7 @@ public class MainFrontEndSwing extends JFrame {
                 }
             }
         } catch (IOException | InterruptedException e) {
-            logger.error("Error fetching places de parking", e);
+            logger.error("Error fetching Local laverie", e);
         }
 
         return model;
