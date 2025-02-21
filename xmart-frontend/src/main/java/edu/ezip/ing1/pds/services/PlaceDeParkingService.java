@@ -88,7 +88,7 @@ public class PlaceDeParkingService {
             joinedClientRequest.join();
             logger.debug("Thread {} complete.", joinedClientRequest.getThreadName());
             PlacesDeParkings result=  (PlacesDeParkings) joinedClientRequest.getResult();
-            logger.debug("palce de parking got  {} complete.", result);
+            logger.debug("place de parking got  {} complete.", result);
             return result;
         }
         else {

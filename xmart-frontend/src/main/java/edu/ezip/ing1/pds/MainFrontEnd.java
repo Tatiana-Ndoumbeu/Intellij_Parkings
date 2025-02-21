@@ -41,9 +41,9 @@ public class MainFrontEnd {
         final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(networkConfig);
         //studentService.insertStudents();
         personneService.insertPersonnes();
-       // abonementService.insertAbonements();
+       //abonementService.insertAbonements();
          //vehicleService.insertVehicles();
-           //placeDeParkingService.insertPlaceDeParkings();
+        //placeDeParkingService.insertPlaceDeParkings();
         // Students students = studentService.selectStudents();
         Personnes personnes = personneService.selectPersonnes();
         Abonnements abonnements = abonementService.selectAbonnements();

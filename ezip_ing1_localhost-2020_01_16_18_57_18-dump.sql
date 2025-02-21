@@ -1,20 +1,3 @@
--- Table for Students
-CREATE TABLE students (
-                          id INT(20) NOT NULL AUTO_INCREMENT,
-                          name VARCHAR(64) NOT NULL,
-                          firstname VARCHAR(64) NOT NULL,
-                          groupname VARCHAR(8) NOT NULL,
-                          PRIMARY KEY (id)
-);
-
--- SQL statements for Students
--- SELECT_ALL_STUDENTS: Retrieve all apiRequest.
--- INSERT_STUDENT: Insert a new student.
--- Example:
--- SELECT t.name, t.firstname, t.groupname FROM apiRequest t;
--- INSERT INTO apiRequest (name, firstname, groupname) VALUES (?, ?, ?);
-
---------------------------------------------------------
 
 -- Table for Vehicules
 CREATE TABLE Vehicule (
@@ -77,11 +60,19 @@ CREATE TABLE Personne (
 -- Table for PlaceDeParking
 CREATE TABLE PlaceDeParking (
                                 id_place VARCHAR(36) NOT NULL,  -- e.g., UUID
+                                emplacement VARCHAR(128) NOT NULL,
                                 type_place VARCHAR(32) NOT NULL,
                                 statut_place VARCHAR(16) NOT NULL,
-                                emplacement VARCHAR(128) NOT NULL,
                                 PRIMARY KEY (id_place)
 );
+
+CREATE TABLE LocalLaverie(
+                             NumLocalL INT,
+                             disponibilite BOOLEAN,
+                             id int(20) NOT NULL AUTO_INCREMENT,
+                             PRIMARY KEY(id)
+);
+
 
 -- SQL statements for PlaceDeParking
 -- SELECT_ALL_PLACE_DE_PARKING: Retrieve all parking places.
