@@ -1,0 +1,13 @@
+abonnements:
+  - idAbonnement: "A001"
+    typeAbonnement: "Premium"
+    prix: 49
+    dateDebut: "2025-01-01T00:00:00Z"
+    dateFin: "2025-12-31T23:59:59Z"
+    statutAbonnement: "Active"
+  - idAbonnement: "A002"
+    typeAbonnement: "Basic"
+    prix: 19
+    dateDebut: "2025-06-01T00:00:00Z"
+    dateFin: "2026-05-31T23:59:59Z"
+    statutAbonnement: "Inactive"

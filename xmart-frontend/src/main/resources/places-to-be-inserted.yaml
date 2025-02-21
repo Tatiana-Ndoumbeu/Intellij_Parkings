@@ -1,0 +1,9 @@
+placeDeParkings:
+  - idPlace: "PD001"
+    typePlace: "Covered"
+    statutPlace: "Available"
+    emplacement: "Level 1, Section A"
+  - idPlace: "PD002"
+    typePlace: "Uncovered"
+    statutPlace: "Occupied"
+    emplacement: "Level 2, Section B"

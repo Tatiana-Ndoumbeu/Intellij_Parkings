@@ -1,0 +1,7 @@
+vehicules:
+  - numPlaque: "XYZ-1234"
+    type: "Sedan"
+    marque: "Toyota"
+  - numPlaque: "ABC-5678"
+    type: "SUV"
+    marque: "Ford"

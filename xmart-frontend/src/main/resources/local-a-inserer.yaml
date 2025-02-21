@@ -1,0 +1,5 @@
+localLaveries:
+  - numLocalL: 101
+    disponibilite: true
+  - numLocalL: 102
+    disponibilite: false
