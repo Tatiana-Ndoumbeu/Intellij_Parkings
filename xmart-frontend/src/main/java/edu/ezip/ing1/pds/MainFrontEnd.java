@@ -71,9 +71,9 @@ public class MainFrontEnd {
         }
 
         if (placeDeParkings != null && placeDeParkings.getPlaceDeParkings() != null) {
-            for (final PlaceDeParking student : placeDeParkings.getPlaceDeParkings()) {
+            for (final PlaceDeParking placeDeParking : placeDeParkings.getPlaceDeParkings()) {
                 asciiTable.addRule();
-                asciiTable.addRow(student.getIdPlace(), student.getEmplacement(), student.getEmplacement());
+                asciiTable.addRow(placeDeParking.getIdPlace(), placeDeParking.getEmplacement(), placeDeParking.getEmplacement());
             }
             asciiTable.addRule();
             logger.debug("\n{}\n", asciiTable.render());
@@ -87,9 +87,9 @@ public class MainFrontEnd {
             logger.debug("\n{}\n", asciiTable.render());
         }
         if (vehicles != null && vehicles.getVehicules() != null) {
-            for (final Vehicle student : vehicles.getVehicules()) {
+            for (final Vehicle vehicle : vehicles.getVehicules()) {
                 asciiTable.addRule();
-                asciiTable.addRow(student.getNumPlaque(), student.getType(), student.getMarque());
+                asciiTable.addRow(vehicle.getNumPlaque(), vehicle.getType(), vehicle.getMarque());
             }
             asciiTable.addRule();
             logger.debug("\n{}\n", asciiTable.render());
