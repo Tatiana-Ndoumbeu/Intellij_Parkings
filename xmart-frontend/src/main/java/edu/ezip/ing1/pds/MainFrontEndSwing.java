@@ -255,19 +255,19 @@ public class MainFrontEndSwing extends JFrame {
         // Collect user input for the new place de parking
         String typeAbonnement = JOptionPane.showInputDialog(this, "Enter typeAbonnement:");
         if (typeAbonnement == null || typeAbonnement.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "typeAbonnement cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "typeAbonnement doit etre non vide.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String prix = JOptionPane.showInputDialog(this, "Enter prix of Place:");
+        String prix = JOptionPane.showInputDialog(this, "Entrer prix:");
         if (prix == null || prix.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "prix cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "prix doit etre non vide", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String statutAbonnement = JOptionPane.showInputDialog(this, "Enter statutAbonnement of Place (e.g., Occupied, Free):");
+        String statutAbonnement = JOptionPane.showInputDialog(this, "Entrer statutAbonnement  (ex, actif, inactif):");
         if (statutAbonnement == null || statutAbonnement.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Status cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Statut  doit etre non vide.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -289,10 +289,10 @@ public class MainFrontEndSwing extends JFrame {
                     abonnement.getStatutAbonnement(),
                     abonnement.getDateDebut(),
                     abonnement.getDateFin()});
-            JOptionPane.showMessageDialog(this, "Place de parking inserted successfully.");
+            JOptionPane.showMessageDialog(this, "abonnement inseré avec succes.");
         } catch (IOException | InterruptedException e) {
-            logger.error("Error inserting place de parking", e);
-            JOptionPane.showMessageDialog(this, "Failed to insert place de parking.", "Error", JOptionPane.ERROR_MESSAGE);
+            logger.error("Erreur insertion abonnement", e);
+            JOptionPane.showMessageDialog(this, "Erreur insertion abonnement.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -305,13 +305,13 @@ public class MainFrontEndSwing extends JFrame {
         //
         //
         //    private Boolean disponibilite;g
-        String numLocal = JOptionPane.showInputDialog(this, "num local typeAbonnement:");
+        String numLocal = JOptionPane.showInputDialog(this, "num local :");
         if (numLocal == null || numLocal.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "num local cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String disponibilite = JOptionPane.showInputDialog(this, "Enter disponibilite of local true or false:");
+        String disponibilite = JOptionPane.showInputDialog(this, "Entrer disponibilite du local true ou false:");
         if (disponibilite == null || disponibilite.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "disponibilite cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -325,13 +325,13 @@ public class MainFrontEndSwing extends JFrame {
         try {
             localService.insertLoclaLaveries(localLaverie1);
             model.addRow(new Object[]{localLaverie1.getNumLocalL(), localLaverie1.getDisponibilite()});
-            JOptionPane.showMessageDialog(this, "Local inserted successfully.");
+            JOptionPane.showMessageDialog(this, "Local Inséré.");
             // Refresh the table after insertion
             createTablePanel("createTablePanel");
-            JOptionPane.showMessageDialog(this, "Local inserted successfully.");
+            JOptionPane.showMessageDialog(this, "Local inséré.");
         } catch (IOException | InterruptedException e) {
-            logger.error("Error inserting place de parking", e);
-            JOptionPane.showMessageDialog(this, "Failed to insert Local.", "Error", JOptionPane.ERROR_MESSAGE);
+            logger.error("Erreur insertion Local", e);
+            JOptionPane.showMessageDialog(this, "Erreur insertion Local.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
