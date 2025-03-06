@@ -49,7 +49,7 @@ public class MainFrontEnd {
         Abonnements abonnements = abonementService.selectAbonnements();
         Vehicles vehicles = vehicleService.selectVehicles();
         PlacesDeParkings placeDeParkings = placeDeParkingService.selectPlaceDeParkings();
-        final AsciiTable asciiTable = new AsciiTable();
+        //final AsciiTable asciiTable = new AsciiTable();
 
         // ajout d'une vérification que apiRequest et getStudents ne sont pas nuls pour éviter l'exception du pointeur nul
        // if (students != null && students.getStudents() != null) {
@@ -61,7 +61,7 @@ public class MainFrontEnd {
             logger.debug("\n{}\n", asciiTable.render());
         }*/
 
-        if (abonnements != null && abonnements.getAbonnements() != null) {
+       /*  if (abonnements != null && abonnements.getAbonnements() != null) {
             for (final Abonnement abonnement : abonnements.getAbonnements()) {
                 asciiTable.addRule();
                 asciiTable.addRow(abonnement.getIdAbonnement(), abonnement.getTypeAbonnement(), abonnement.getPrix());
@@ -103,8 +103,9 @@ public class MainFrontEnd {
             logger.debug("\n{}\n", asciiTable.render());
         }
 
-        SwingUtilities.invokeLater(() -> new Principale().setVisible(true));
-       */
+        */
+        SwingUtilities.invokeLater(() -> new MainFrontEndSwing().setVisible(true));
+      
 
     }
 
