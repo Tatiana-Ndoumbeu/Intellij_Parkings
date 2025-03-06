@@ -46,9 +46,71 @@ public class MainFrontEndSwing extends JFrame {
         tabbedPane.addTab(PERSONNES, createTablePanel(PERSONNES));
         tabbedPane.addTab(PLACES_DE_PARKING, createTablePanel(PLACES_DE_PARKING));
         tabbedPane.addTab(VEHICLES, createTablePanel(VEHICLES));
-        tabbedPane.addTab(LOCAL_LAVERIES, createTablePanel(LOCAL_LAVERIES));
+        tabbedPane.addTab(LOCAL_LAVERIES, createTablePanelLocaux(LOCAL_LAVERIES));
         add(tabbedPane);
     }
+
+
+
+
+
+
+    private JPanel createTablePanelLocaux(String LOCAL_LAVERIES)
+    {
+        JPanel panel = new JPanel(new BorderLayout());
+        JTable table = new JTable();
+
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
+        table.setModel(createLocalLaverieTableModel(networkConfig));
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JButton insertButton = new JButton("Ajouter un" + LOCAL_LAVERIES);
+        
+        insertButton.addActionListener(e -> {
+            logger.debug("Ajout d'un local pour {}", LOCAL_LAVERIES);
+            insertLocal((DefaultTableModel) table.getModel());});
+
+        panel.add(insertButton, BorderLayout.SOUTH);
+
+        JButton disponibutton = new JButton("modifier une disponibilité");
+   
+        disponibutton.addActionListener(e -> {
+            logger.debug("Modification de la disponibilité d'un local");
+
+
+            String numLocal = JOptionPane.showInputDialog(this, "Numéro du local à modifier :");
+            if (numLocal == null || numLocal.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
+            if (disponibilite == null || disponibilite.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+
+            
+
+        });
+        panel.add(disponibutton, BorderLayout.NORTH);
+
+        return  panel;
+
+    }
+
+
+
+
+
+
+
+
+
+
 
     private JPanel createTablePanel(String type) {
         JPanel panel = new JPanel(new BorderLayout());
@@ -75,7 +137,7 @@ public class MainFrontEndSwing extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        JButton insertButton = new JButton("Insert New " + type);
+        JButton insertButton = new JButton("Ajouter " + type);
         logger.debug("Load Network config file : {}", networkConfig.toString());
         insertButton.addActionListener(e -> {
             switch (type) {
