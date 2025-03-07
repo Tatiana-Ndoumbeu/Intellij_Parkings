@@ -26,6 +26,7 @@ public class LocalLaveriesService {
 
     final String insertRequestOrder = "INSERT_LOCAL";
     final String selectRequestOrder = "SELECT_ALL_LOCAL";
+    final String updateRequestOrder = "UPDATE_LOCAL";
 
     private final NetworkConfig networkConfig;
 
@@ -92,5 +93,37 @@ public class LocalLaveriesService {
             return null;
         }
     }
+
+    public void updateLocLaveries(LocalLaverie localLaverie) throws InterruptedException, IOException {
+
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
+        int birthdate = 0;
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final String jsonifiedLocal = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(localLaverie);
+        logger.trace("LocalLaverie en JSON : {}", jsonifiedLocal);
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(updateRequestOrder); 
+        request.setRequestContent(jsonifiedLocal);
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+
+        final InsertClientRequest clientRequest = new InsertClientRequest(
+                networkConfig,
+                birthdate++, request, localLaverie, requestBytes);
+        clientRequests.push(clientRequest);
+
+        while (!clientRequests.isEmpty()) {
+            final ClientRequest clientResponse = clientRequests.pop();
+            clientResponse.join();
+    
+            final LocalLaverie updatedLocal = (LocalLaverie) clientResponse.getInfo();
+            logger.debug("Mise à jour terminée : {} disponibilité = {}",
+                    updatedLocal.getNumLocalL(), updatedLocal.getDisponibilite());
+        }
+    }
+
+    
 
 }

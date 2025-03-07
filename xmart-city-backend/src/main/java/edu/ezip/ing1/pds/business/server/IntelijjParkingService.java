@@ -2,8 +2,7 @@ package edu.ezip.ing1.pds.business.server;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.ezip.ing1.pds.business.dto.Student;
-import edu.ezip.ing1.pds.business.dto.Students;
+
 import edu.ezip.ing1.pds.commons.Request;
 import edu.ezip.ing1.pds.commons.Response;
 import org.slf4j.Logger;
@@ -31,13 +30,14 @@ public class IntelijjParkingService {
         INSERT_VEHICULE("INSERT INTO Vehicule (num_plaque, type, marque) VALUES (?, ?, ?)"),
 
         SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin FROM Abonnement t"),
-        INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin  ) VALUES (?, ?, ?, ?, ?, ?)"),
+        INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin ) VALUES (?, ?, ?, ?, ?, ?)"),
 
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel,mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
 
         SELECT_ALL_LOCAL("SELECT l.NumLocalL, l.disponibilite FROM LocalLaverie l"),
         INSERT_LOCAL("INSERT into LocalLaverie (NumLocalL, disponibilite) VALUES (? , ?)"),
+        UPDATE_LOCAL("UPDATE LocalLaverie SET disponibilite = ? WHERE NumLocalL = ?"),
 
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
         INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)");
@@ -93,6 +93,9 @@ public class IntelijjParkingService {
             case SELECT_ALL_LOCAL:
                 response = SelectAllLocalL(request, connection);
                 break;
+            case UPDATE_LOCAL:
+                response = UpdateLocal(request, connection);
+                break;
             case INSERT_PERSONNE:
                 response = InsertPersonne(request, connection);
                 break;
@@ -135,8 +138,8 @@ public class IntelijjParkingService {
         while (res.next()) {
             Abonnement abonnement = new Abonnement();
             abonnement.setIdAbonnement(res.getString(1));
-            abonnement.setTypeAbonnement(res.getString(2));
-            abonnement.setPrix(res.getDouble(3));
+            abonnement.setPrix(res.getDouble(2));
+            abonnement.setTypeAbonnement(res.getString(3));
             abonnement.setDateDebut(res.getDate(5));
             abonnement.setDateFin(res.getDate(6));
             abonnement.setStatutAbonnement(res.getString(4));
@@ -176,10 +179,8 @@ public class IntelijjParkingService {
         while (res.next()) {
             PlaceDeParking placeDeParking = new PlaceDeParking();
             placeDeParking.setIdPlace(res.getString(1));
-            placeDeParking.setEmplacement(res.getString(2));
+            placeDeParking.setStatutPlace(res.getString(2));
             placeDeParking.setTypePlace(res.getString(3));
-            placeDeParking.setStatutPlace(res.getString(4));
-
             placesDeParkings.add(placeDeParking);
         }
 
@@ -206,8 +207,8 @@ public class IntelijjParkingService {
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_ABONNEMENT.getQuery())) {
             pstmt.setString(1, UUID.randomUUID().toString());
-            pstmt.setString(2, abonnement.getTypeAbonnement());
-            pstmt.setDouble(3, abonnement.getPrix());
+            pstmt.setDouble(2, abonnement.getPrix());
+            pstmt.setString(3, abonnement.getTypeAbonnement());
             pstmt.setString(4, abonnement.getStatutAbonnement());
             pstmt.setDate(5, abonnement.getDateDebut());
             pstmt.setDate(6, abonnement.getDateFin());
@@ -222,10 +223,9 @@ public class IntelijjParkingService {
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_PLACE_DE_PARKING.getQuery())) {
             pstmt.setString(1, UUID.randomUUID().toString());
-            pstmt.setString(2, placeDeParking.getEmplacement());
-            pstmt.setString(3, placeDeParking.getTypePlace());
-            pstmt.setString(4, placeDeParking.getStatutPlace());
-
+            pstmt.setString(2, placeDeParking.getTypePlace());
+            pstmt.setString(3, placeDeParking.getStatutPlace());
+            pstmt.setString(4, placeDeParking.getEmplacement());
             int affectedRows = pstmt.executeUpdate();
             return new Response(request.getRequestId(), affectedRows > 0 ? "place de parking inséré avec succès" : "Échec de l'insertion");
         }
@@ -302,7 +302,37 @@ public class IntelijjParkingService {
 
     }
 
+    private Response UpdateLocal(final Request request, final Connection connection) throws SQLException, IOException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
 
-    // Implement other methods for InsertVehicule, SelectAllAbonnements, InsertAbonnement, etc.
-    // Similar to how Student and Vehicule were handled
-}
+        LocalLaverie localLaverie;
+        try {
+            localLaverie = objectMapper.readValue(request.getRequestBody(), LocalLaverie.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données invalides");
+        }
+    
+
+        if (localLaverie.getNumLocalL() == 0 || localLaverie.getDisponibilite() == null) {
+            return new Response(request.getRequestId(), "Champs manquants");
+        }
+    
+
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.UPDATE_LOCAL.getQuery())) {
+            stmt.setBoolean(1, localLaverie.getDisponibilite()); 
+            stmt.setInt(2, localLaverie.getNumLocalL()); 
+            
+            int affectedRows = stmt.executeUpdate(); 
+            
+            if (affectedRows > 0) {
+                return new Response(request.getRequestId(), "Local mis à jour avec succès");
+            } else {
+                return new Response(request.getRequestId(), "Aucun local trouvé avec cet ID");
+            }
+    
+        } catch (SQLException e) {
+            logger.error("Erreur SQL lors de la mise à jour du local", e);
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+        }
+    }}
