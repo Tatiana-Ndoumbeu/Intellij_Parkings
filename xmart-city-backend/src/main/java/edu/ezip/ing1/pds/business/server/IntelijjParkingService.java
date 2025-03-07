@@ -39,8 +39,8 @@ public class IntelijjParkingService {
         SELECT_ALL_LOCAL("SELECT l.NumLocalL, l.disponibilite FROM LocalLaverie l"),
         INSERT_LOCAL("INSERT into LocalLaverie (NumLocalL, disponibilite) VALUES (? , ?)"),
 
-        SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.type_place, t.statut_place, t.emplacement FROM PlaceDeParking t"),
-        INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place,type_place, statut_place, emplacement) VALUES (?,?, ?, ?)");
+        SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
+        INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)");
 
         private final String query;
 
@@ -71,12 +71,7 @@ public class IntelijjParkingService {
 
         final Queries queryEnum = Enum.valueOf(Queries.class, request.getRequestOrder());
         switch (queryEnum) {
-            case SELECT_ALL_STUDENTS:
-                response = SelectAllStudents(request, connection);
-                break;
-            case INSERT_STUDENT:
-                response = InsertStudent(request, connection);
-                break;
+
             case SELECT_ALL_VEHICULES:
                 response = SelectAllVehicules(request, connection);
                 break;
@@ -112,40 +107,6 @@ public class IntelijjParkingService {
         }
 
         return response;
-    }
-
-    // Insert and Select methods for Student, Vehicule, Abonnement, Personne, and PlaceDeParking
-    private Response SelectAllStudents(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final Statement stmt = connection.createStatement();
-        final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_STUDENTS.getQuery());
-
-        Students students = new Students();
-        while (res.next()) {
-            Student student = new Student();
-            student.setName(res.getString(1));
-            student.setFirstname(res.getString(2));
-            student.setGroup(res.getString(3));
-            students.add(student);
-        }
-
-        return new Response(request.getRequestId(), objectMapper.writeValueAsString(students));
-    }
-
-    private Response InsertStudent(final Request request, final Connection connection) throws SQLException, IOException {
-        final ObjectMapper objectMapper = new ObjectMapper();
-        Student student = objectMapper.readValue(request.getRequestBody(), Student.class);
-
-        try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_STUDENT.getQuery())) {
-            pstmt.setString(1, student.getName());
-            pstmt.setString(2, student.getFirstname());
-            pstmt.setString(3, student.getGroup());
-            int affectedRows = pstmt.executeUpdate();
-            return new Response(request.getRequestId(), affectedRows > 0 ? "Étudiant inséré avec succès" : "Échec de l'insertion");
-        } catch (SQLException e) {
-            logger.error("Erreur SQL lors de l'insertion de l'étudiant", e);
-            return new Response(request.getRequestId(), "Erreur SQL");
-        }
     }
 
     private Response SelectAllVehicules(final Request request, final Connection connection) throws SQLException, JsonProcessingException {

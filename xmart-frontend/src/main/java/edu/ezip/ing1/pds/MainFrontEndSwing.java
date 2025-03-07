@@ -213,8 +213,18 @@ public class MainFrontEndSwing extends JFrame {
         try {
             placesDeParkings = placeDeParkingService.selectPlaceDeParkings();
             if (placesDeParkings != null && placesDeParkings.getPlaceDeParkings() != null) {
-                for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
-                    model.addRow(new Object[]{place.getIdPlace(), place.getEmplacement(), place.getStatutPlace(), place.getTypePlace()});
+
+                // Forcer le tri par emplacement ou ID
+                List<PlaceDeParking> sortedList = new ArrayList<>(placesDeParkings.getPlaceDeParkings());
+                sortedList.sort(Comparator.comparing(PlaceDeParking::getIdPlace)); // Change ici selon le critère voulu
+
+                for (PlaceDeParking place : sortedList) {
+                    model.addRow(new Object[]{
+                            place.getIdPlace(),
+                            place.getEmplacement(),
+                            place.getStatutPlace(),
+                            place.getTypePlace()
+                    });
                 }
             }
         } catch (IOException | InterruptedException e) {

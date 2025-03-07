@@ -23,6 +23,14 @@ public class PlaceDeParking {
         this.idPlace = idPlace;
     }
 
+    public String getEmplacement() {
+        return emplacement;
+    }
+
+    public void setEmplacement(String emplacement) {
+        this.emplacement = emplacement;
+    }
+
     public String getTypePlace() {
         return typePlace;
     }
@@ -37,14 +45,6 @@ public class PlaceDeParking {
 
     public void setStatutPlace(String statutPlace) {
         this.statutPlace = statutPlace;
-    }
-
-    public String getEmplacement() {
-        return emplacement;
-    }
-
-    public void setEmplacement(String emplacement) {
-        this.emplacement = emplacement;
     }
 
     @Override
