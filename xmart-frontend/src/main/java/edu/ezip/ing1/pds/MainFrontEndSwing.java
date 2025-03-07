@@ -46,9 +46,71 @@ public class MainFrontEndSwing extends JFrame {
         tabbedPane.addTab(PERSONNES, createTablePanel(PERSONNES));
         tabbedPane.addTab(PLACES_DE_PARKING, createTablePanel(PLACES_DE_PARKING));
         tabbedPane.addTab(VEHICLES, createTablePanel(VEHICLES));
-        tabbedPane.addTab(LOCAL_LAVERIES, createTablePanel(LOCAL_LAVERIES));
+        tabbedPane.addTab(LOCAL_LAVERIES, createTablePanelLocaux(LOCAL_LAVERIES));
         add(tabbedPane);
     }
+
+
+
+
+
+
+    private JPanel createTablePanelLocaux(String LOCAL_LAVERIES)
+    {
+        JPanel panel = new JPanel(new BorderLayout());
+        JTable table = new JTable();
+
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
+        table.setModel(createLocalLaverieTableModel(networkConfig));
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JButton insertButton = new JButton("Ajouter un" + LOCAL_LAVERIES);
+        
+        insertButton.addActionListener(e -> {
+            logger.debug("Ajout d'un local pour {}", LOCAL_LAVERIES);
+            insertLocal((DefaultTableModel) table.getModel());});
+
+        panel.add(insertButton, BorderLayout.SOUTH);
+
+        JButton disponibutton = new JButton("modifier une disponibilité");
+   
+        disponibutton.addActionListener(e -> {
+            logger.debug("Modification de la disponibilité d'un local");
+
+
+            String numLocal = JOptionPane.showInputDialog(this, "Numéro du local à modifier :");
+            if (numLocal == null || numLocal.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
+            if (disponibilite == null || disponibilite.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+
+            
+
+        });
+        panel.add(disponibutton, BorderLayout.NORTH);
+
+        return  panel;
+
+    }
+
+
+
+
+
+
+
+
+
+
 
     private JPanel createTablePanel(String type) {
         JPanel panel = new JPanel(new BorderLayout());
@@ -75,7 +137,7 @@ public class MainFrontEndSwing extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        JButton insertButton = new JButton("Insert New " + type);
+        JButton insertButton = new JButton("Ajouter " + type);
         logger.debug("Load Network config file : {}", networkConfig.toString());
         insertButton.addActionListener(e -> {
             switch (type) {
@@ -145,7 +207,7 @@ public class MainFrontEndSwing extends JFrame {
 
     private DefaultTableModel createPlaceDeParkingTableModel(NetworkConfig networkConfig) {
         final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(networkConfig);
-        String[] columns = {"ID", "Emplacement", "statutPlace", "typePlace"};
+        String[] columns = {"ID", "Emplacement", "typePlace", "statutPlace"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
 
         try {
@@ -211,21 +273,21 @@ public class MainFrontEndSwing extends JFrame {
     private void insertPlaceDeParking(DefaultTableModel model) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(networkConfig);
-        String emplacement = JOptionPane.showInputDialog(this, "Enter Emplacement:");
+        String emplacement = JOptionPane.showInputDialog(this, "Entrer Emplacement:");
         if (emplacement == null || emplacement.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Emplacement cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String typePlace = JOptionPane.showInputDialog(this, "Enter Type of Place:");
+        String typePlace = JOptionPane.showInputDialog(this, "Entrer Type de Place:");
         if (typePlace == null || typePlace.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Type cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String statutPlace = JOptionPane.showInputDialog(this, "Enter Status of Place (e.g., Occupied, Free):");
+        String statutPlace = JOptionPane.showInputDialog(this, "Entrer Statut de Place (Occupée, Libre):");
         if (statutPlace == null || statutPlace.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Status cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "statut ne peut etre vide.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -236,10 +298,11 @@ public class MainFrontEndSwing extends JFrame {
             placeDeParkingService.insertPlaceDeParkings(newPlace);
 
             model.addRow(new Object[]{newPlace.getIdPlace(), newPlace.getEmplacement(), newPlace.getTypePlace(), newPlace.getStatutPlace()});
-            JOptionPane.showMessageDialog(this, "Place de parking inserted successfully.");
+            //model.addRow(new Object[]{newPlace.getIdPlace(), newPlace.getEmplacement(), newPlace.getStatutPlace(), newPlace.getTypePlace()});
+            JOptionPane.showMessageDialog(this, "Place de parking inseré !.");
         } catch (IOException | InterruptedException e) {
-            logger.error("Error inserting place de parking", e);
-            JOptionPane.showMessageDialog(this, "Failed to insert place de parking.", "Error", JOptionPane.ERROR_MESSAGE);
+            logger.error("echec insertion place de parking", e);
+            JOptionPane.showMessageDialog(this, "echec insertion place de parking.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -252,7 +315,7 @@ public class MainFrontEndSwing extends JFrame {
         //private Date dateDebut;
         //private Date dateFin;
         //private String statutAbonnement;
-        // Collect user input for the new place de parking
+        // Collecter la saisie pour nouvel abonnement
         String typeAbonnement = JOptionPane.showInputDialog(this, "Enter typeAbonnement:");
         if (typeAbonnement == null || typeAbonnement.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "typeAbonnement doit etre non vide.", "Error", JOptionPane.ERROR_MESSAGE);
