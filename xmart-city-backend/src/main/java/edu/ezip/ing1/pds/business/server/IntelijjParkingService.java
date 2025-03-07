@@ -215,8 +215,10 @@ public class IntelijjParkingService {
         while (res.next()) {
             PlaceDeParking placeDeParking = new PlaceDeParking();
             placeDeParking.setIdPlace(res.getString(1));
-            placeDeParking.setStatutPlace(res.getString(2));
+            placeDeParking.setEmplacement(res.getString(2));
             placeDeParking.setTypePlace(res.getString(3));
+            placeDeParking.setStatutPlace(res.getString(4));
+
             placesDeParkings.add(placeDeParking);
         }
 
@@ -259,9 +261,10 @@ public class IntelijjParkingService {
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_PLACE_DE_PARKING.getQuery())) {
             pstmt.setString(1, UUID.randomUUID().toString());
-            pstmt.setString(2, placeDeParking.getTypePlace());
-            pstmt.setString(3, placeDeParking.getStatutPlace());
-            pstmt.setString(4, placeDeParking.getEmplacement());
+            pstmt.setString(2, placeDeParking.getEmplacement());
+            pstmt.setString(3, placeDeParking.getTypePlace());
+            pstmt.setString(4, placeDeParking.getStatutPlace());
+
             int affectedRows = pstmt.executeUpdate();
             return new Response(request.getRequestId(), affectedRows > 0 ? "place de parking inséré avec succès" : "Échec de l'insertion");
         }

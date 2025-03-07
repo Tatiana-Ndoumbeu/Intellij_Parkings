@@ -229,7 +229,7 @@ public class MainFrontEndSwing extends JFrame {
         String[] columns = { "idAbonnement", "typeAbonnement", "prix", "statutAbonnement", "dateDebut", "dateFin"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
 
-        // Récupère et affiche les places de parking existantes depuis BD
+
         try {
             abonnements = abonementService.selectAbonnements();
             if (abonnements != null && abonnements.getAbonnements() != null) {
