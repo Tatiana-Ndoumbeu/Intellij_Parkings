@@ -76,29 +76,13 @@ public class MainFrontEndSwing extends JFrame {
 
         JButton disponibutton = new JButton("modifier une disponibilité");
    
-        disponibutton.addActionListener(e -> {
+         disponibutton.addActionListener(e -> {
             logger.debug("Modification de la disponibilité d'un local");
+            updateLocal((DefaultTableModel) table.getModel());});
 
-
-            String numLocal = JOptionPane.showInputDialog(this, "Numéro du local à modifier :");
-            if (numLocal == null || numLocal.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
-            if (disponibilite == null || disponibilite.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-
-            
-
-        });
         panel.add(disponibutton, BorderLayout.NORTH);
-
-        return  panel;
+ 
+        return panel;
 
     }
 
@@ -229,7 +213,7 @@ public class MainFrontEndSwing extends JFrame {
         String[] columns = { "idAbonnement", "typeAbonnement", "prix", "statutAbonnement", "dateDebut", "dateFin"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
 
-
+        // Récupère et affiche les places de parking existantes depuis BD
         try {
             abonnements = abonementService.selectAbonnements();
             if (abonnements != null && abonnements.getAbonnements() != null) {
@@ -359,6 +343,57 @@ public class MainFrontEndSwing extends JFrame {
         }
     }
 
+    private void updateLocal(DefaultTableModel model) {
+        
+
+        String numLocal = JOptionPane.showInputDialog(this, "Numéro du local à modifier :");
+        if (numLocal == null || numLocal.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
+        if (disponibilite == null || disponibilite.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        boolean newDisponibilite = Boolean.parseBoolean(disponibilite);
+
+        boolean localTrouvé = false;
+        for (LocalLaverie local : localLaveries.getLocalLaveries()) {
+            if (String.valueOf(local.getNumLocalL()).equals(numLocal)) {
+                local.setDisponibilite(newDisponibilite);
+                localTrouvé = true;
+                break;
+            }
+        }
+    
+        if (!localTrouvé) {
+            JOptionPane.showMessageDialog(this, "Local non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+        LocalLaverie localLaveriemodif = new LocalLaverie();
+        localLaveriemodif.setNumLocalL(Integer.parseInt(numLocal));
+        localLaveriemodif.setDisponibilite(newDisponibilite);
+
+            final LocalLaveriesService localService = new LocalLaveriesService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+            localService.updateLocLaveries(localLaveriemodif);
+    
+            model.setRowCount(0);// on supprime dabord les anciennes lignes dans le tableau
+            for (LocalLaverie place : localLaveries.getLocalLaveries()) {
+                model.addRow(new Object[]{place.getNumLocalL(), place.getDisponibilite()});
+            }
+    
+            JOptionPane.showMessageDialog(this, "Disponibilité du local mise à jour.");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur lors de la mise à jour du local", e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour du local.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    
+
+    }
+
     private void insertLocal(DefaultTableModel model) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         final LocalLaveriesService localService = new LocalLaveriesService(networkConfig);
@@ -396,7 +431,10 @@ public class MainFrontEndSwing extends JFrame {
             logger.error("Erreur insertion Local", e);
             JOptionPane.showMessageDialog(this, "Erreur insertion Local.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+
     }
+    
+    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
