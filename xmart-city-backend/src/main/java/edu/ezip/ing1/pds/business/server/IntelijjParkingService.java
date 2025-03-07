@@ -31,7 +31,7 @@ public class IntelijjParkingService {
         INSERT_VEHICULE("INSERT INTO Vehicule (num_plaque, type, marque) VALUES (?, ?, ?)"),
 
         SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin FROM Abonnement t"),
-        INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin ) VALUES (?, ?, ?, ?, ?, ?)"),
+        INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin  ) VALUES (?, ?, ?, ?, ?, ?)"),
 
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel,mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
@@ -174,8 +174,8 @@ public class IntelijjParkingService {
         while (res.next()) {
             Abonnement abonnement = new Abonnement();
             abonnement.setIdAbonnement(res.getString(1));
-            abonnement.setPrix(res.getDouble(2));
-            abonnement.setTypeAbonnement(res.getString(3));
+            abonnement.setTypeAbonnement(res.getString(2));
+            abonnement.setPrix(res.getDouble(3));
             abonnement.setDateDebut(res.getDate(5));
             abonnement.setDateFin(res.getDate(6));
             abonnement.setStatutAbonnement(res.getString(4));
@@ -245,8 +245,8 @@ public class IntelijjParkingService {
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_ABONNEMENT.getQuery())) {
             pstmt.setString(1, UUID.randomUUID().toString());
-            pstmt.setDouble(2, abonnement.getPrix());
-            pstmt.setString(3, abonnement.getTypeAbonnement());
+            pstmt.setString(2, abonnement.getTypeAbonnement());
+            pstmt.setDouble(3, abonnement.getPrix());
             pstmt.setString(4, abonnement.getStatutAbonnement());
             pstmt.setDate(5, abonnement.getDateDebut());
             pstmt.setDate(6, abonnement.getDateFin());
