@@ -16,6 +16,10 @@ import java.io.IOException;
 import java.sql.Date;
 import java.util.UUID;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Comparator;
+
 public class MainFrontEndSwing extends JFrame {
 
     public static final String VEHICLES = "Vehicles";
