@@ -31,6 +31,7 @@ public class IntelijjParkingService {
 
         SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin FROM Abonnement t"),
         INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin ) VALUES (?, ?, ?, ?, ?, ?)"),
+        DELETE_ABONNEMENT("DELETE FROM Abonnement WHERE id_abonnement = ?"),
 
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel,mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
@@ -216,6 +217,26 @@ public class IntelijjParkingService {
             return new Response(request.getRequestId(), affectedRows > 0 ? "abonnements inséré avec succès" : "Échec de l'insertion");
         }
     }
+
+    private Response SupprimerAbonnement(final Request request, final Connection connection) throws SQLException {
+        String id_abonnement = request.getRequestBody();
+    
+        try (PreparedStatement pstmt = connection.prepareStatement(Queries.DELETE_ABONNEMENT.getQuery())) {
+            pstmt.setString(1, id_abonnement);
+            int affectedRows = pstmt.executeUpdate();
+    
+            if (affectedRows > 0) {
+                return new Response(request.getRequestId(), "Abonnement supprimé avec succès");
+            } else {
+                return new Response(request.getRequestId(), "Aucun abonnement trouvé avec cet identifiant");
+            }
+        } catch (SQLException e) {
+            logger.error("Erreur SQL lors de la suppression de l'abonnement", e);
+            return new Response(request.getRequestId(), "Erreur SQL");
+        }
+    }
+
+    
 
     private Response InsertPlaceDeParking(final Request request, final Connection connection) throws SQLException, IOException {
         final ObjectMapper objectMapper = new ObjectMapper();
