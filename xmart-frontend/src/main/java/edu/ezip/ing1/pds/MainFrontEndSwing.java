@@ -148,6 +148,20 @@ public class MainFrontEndSwing extends JFrame {
         });
         panel.add(insertButton, BorderLayout.SOUTH);
 
+        JButton deleteButton = new JButton("Supprimer "+type);
+        deleteButton.addActionListener(e -> {
+            switch (type) {
+                case ABONNEMENTS:
+                    supprimerAbonnement((DefaultTableModel) table.getModel(), table);
+                    break;
+            
+                default:
+                    break;
+            }
+        });
+        panel.add(deleteButton, BorderLayout.NORTH);
+
+
         return panel;
     }
 
@@ -354,6 +368,34 @@ public class MainFrontEndSwing extends JFrame {
         } catch (IOException | InterruptedException e) {
             logger.error("Erreur insertion abonnement", e);
             JOptionPane.showMessageDialog(this, "Erreur insertion abonnement.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void supprimerAbonnement(DefaultTableModel model, JTable table){
+        String idAbonnement = JOptionPane.showInputDialog(this, "Entrez l'identifiant de l'abonnement à supprimer :",
+                "Suppression d'un abonnement", JOptionPane.QUESTION_MESSAGE);
+
+        if (idAbonnement == null || idAbonnement.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "L'identifiant est invalide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Voulez-vous vraiment supprimer cet abonnement ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+        try {
+            AbonementService abonementService = new AbonementService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+            abonementService.supprimerAbonnement(idAbonnement);
+            for (int i = 0; i < model.getRowCount(); i++) {
+                if (model.getValueAt(i, 0).equals(idAbonnement)) {
+                    model.removeRow(i);
+                    break;
+                }
+            }
+            JOptionPane.showMessageDialog(this, "Abonnement supprimé avec succès !");
+        } catch (Exception e) {
+            logger.error("Erreur lors de la suppression de l'abonnement", e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la suppression de l'abonnement.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
         }
     }
 
