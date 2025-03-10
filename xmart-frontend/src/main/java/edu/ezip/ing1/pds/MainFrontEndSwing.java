@@ -160,7 +160,7 @@ public class MainFrontEndSwing extends JFrame {
             }
         });
         panelsud.add(insertButton);
-        //panel.add(insertButton, BorderLayout.SOUTH);
+
 
         JButton deleteButton = new JButton("Supprimer "+type);
         deleteButton.addActionListener(e -> {
@@ -175,7 +175,7 @@ public class MainFrontEndSwing extends JFrame {
         });
         panelsud.add(deleteButton);
         panel.add(panelsud, BorderLayout.SOUTH);
-        //panel.add(deleteButton, BorderLayout.NORTH);
+
 
 
         return panel;
