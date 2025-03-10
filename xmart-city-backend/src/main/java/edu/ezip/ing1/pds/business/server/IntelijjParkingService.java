@@ -139,8 +139,8 @@ public class IntelijjParkingService {
         while (res.next()) {
             Abonnement abonnement = new Abonnement();
             abonnement.setIdAbonnement(res.getString(1));
-            abonnement.setPrix(res.getDouble(2));
-            abonnement.setTypeAbonnement(res.getString(3));
+            abonnement.setPrix(res.getDouble(3));
+            abonnement.setTypeAbonnement(res.getString(2));
             abonnement.setDateDebut(res.getDate(5));
             abonnement.setDateFin(res.getDate(6));
             abonnement.setStatutAbonnement(res.getString(4));
@@ -207,9 +207,9 @@ public class IntelijjParkingService {
         Abonnement abonnement = objectMapper.readValue(request.getRequestBody(), Abonnement.class);
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_ABONNEMENT.getQuery())) {
-            pstmt.setString(1, UUID.randomUUID().toString());
-            pstmt.setDouble(2, abonnement.getPrix());
-            pstmt.setString(3, abonnement.getTypeAbonnement());
+            pstmt.setString(1, UUID.randomUUID().toString().substring(0, 8)); //Prend les 8 premiers caractères Sde l'UUID
+            pstmt.setDouble(3, abonnement.getPrix());
+            pstmt.setString(2, abonnement.getTypeAbonnement());
             pstmt.setString(4, abonnement.getStatutAbonnement());
             pstmt.setDate(5, abonnement.getDateDebut());
             pstmt.setDate(6, abonnement.getDateFin());
