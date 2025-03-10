@@ -26,16 +26,21 @@ public class MainFrontEndSwing extends JFrame {
     public static final String ABONNEMENTS = "Abonnements";
     public static final String PERSONNES = "Personnes";
     public static final String PLACES_DE_PARKING = "Places de Parking";
-    public static final String LOCAL_LAVERIES = "Local Laveries";
+    public static final String LOCAL_LAVERIES = "Local Laverie";
+    public static final String LOCAL_TECHNIQUE = "Local Technique";
+    public static final String TECHNICIENS = "Techniciens";
+
 
     private Abonnements abonnements = new Abonnements();
     private Personnes personnes = new Personnes();
     private Vehicles vehicles = new Vehicles();
+    //private Technicien technicien = new Technicien(); à continuer
     private final static String LoggingLabel = "FrontEnd";
     private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
     private final static String networkConfigFile = "network.yaml";
     private PlacesDeParkings placesDeParkings = new PlacesDeParkings();
     private LocalLaveries localLaveries = new LocalLaveries();
+    //private LocalTechnique LocalTechnique = new LocalTechnique(); à continuer
 
 
     public MainFrontEndSwing() {
@@ -51,6 +56,8 @@ public class MainFrontEndSwing extends JFrame {
         tabbedPane.addTab(PLACES_DE_PARKING, createTablePanel(PLACES_DE_PARKING));
         tabbedPane.addTab(VEHICLES, createTablePanel(VEHICLES));
         tabbedPane.addTab(LOCAL_LAVERIES, createTablePanelLocaux(LOCAL_LAVERIES));
+        tabbedPane.addTab(LOCAL_TECHNIQUE, createTablePanelLocaux(LOCAL_TECHNIQUE));
+        tabbedPane.addTab(TECHNICIENS, createTablePanel(TECHNICIENS));
         add(tabbedPane);
     }
 
@@ -61,6 +68,7 @@ public class MainFrontEndSwing extends JFrame {
 
     private JPanel createTablePanelLocaux(String LOCAL_LAVERIES)
     {
+        JPanel panelsud = new JPanel(new FlowLayout());
         JPanel panel = new JPanel(new BorderLayout());
         JTable table = new JTable();
 
@@ -70,13 +78,14 @@ public class MainFrontEndSwing extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        JButton insertButton = new JButton("Ajouter un" + LOCAL_LAVERIES);
+        JButton insertButton = new JButton("Ajouter un " + LOCAL_LAVERIES);
         
         insertButton.addActionListener(e -> {
             logger.debug("Ajout d'un local pour {}", LOCAL_LAVERIES);
             insertLocal((DefaultTableModel) table.getModel());});
 
-        panel.add(insertButton, BorderLayout.SOUTH);
+        panelsud.add(insertButton);
+
 
         JButton disponibutton = new JButton("modifier une disponibilité");
    
@@ -84,7 +93,8 @@ public class MainFrontEndSwing extends JFrame {
             logger.debug("Modification de la disponibilité d'un local");
             updateLocal((DefaultTableModel) table.getModel());});
 
-        panel.add(disponibutton, BorderLayout.NORTH);
+        panelsud.add(disponibutton);
+        panel.add(panelsud, BorderLayout.SOUTH);
  
         return panel;
 
@@ -101,6 +111,7 @@ public class MainFrontEndSwing extends JFrame {
 
 
     private JPanel createTablePanel(String type) {
+        JPanel panelsud = new JPanel(new FlowLayout());
         JPanel panel = new JPanel(new BorderLayout());
         JTable table = new JTable();
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
@@ -117,13 +128,14 @@ public class MainFrontEndSwing extends JFrame {
             case VEHICLES:
                 table.setModel(createVehicleTableModel());
                 break;
-            case LOCAL_LAVERIES:
-                table.setModel(createLocalLaverieTableModel(networkConfig));
+            case TECHNICIENS:
+                table.setModel(createTechnicienTableModel());
                 break;
         }
 
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
+
 
         JButton insertButton = new JButton("Ajouter " + type);
         logger.debug("Load Network config file : {}", networkConfig.toString());
@@ -141,12 +153,14 @@ public class MainFrontEndSwing extends JFrame {
                 case VEHICLES:
                     insertVehicle((DefaultTableModel) table.getModel());
                     break;
-                case LOCAL_LAVERIES:
-                    insertLocal((DefaultTableModel) table.getModel());
-                    break;
+                //case TECHNICIENS:
+                 //   insertLocal((DefaultTableModel) table.getModel());
+                 //   break;
+
             }
         });
-        panel.add(insertButton, BorderLayout.SOUTH);
+        panelsud.add(insertButton);
+        //panel.add(insertButton, BorderLayout.SOUTH);
 
         JButton deleteButton = new JButton("Supprimer "+type);
         deleteButton.addActionListener(e -> {
@@ -159,7 +173,9 @@ public class MainFrontEndSwing extends JFrame {
                     break;
             }
         });
-        panel.add(deleteButton, BorderLayout.NORTH);
+        panelsud.add(deleteButton);
+        panel.add(panelsud, BorderLayout.SOUTH);
+        //panel.add(deleteButton, BorderLayout.NORTH);
 
 
         return panel;
@@ -183,6 +199,17 @@ public class MainFrontEndSwing extends JFrame {
             for (Vehicle vehicle : vehicles.getVehicules()) {
                 model.addRow(new Object[]{vehicle.getNumPlaque(), vehicle.getType(), vehicle.getMarque()});
             }
+        }
+        return model;
+    }
+
+    private DefaultTableModel createTechnicienTableModel() {
+        String[] columns = {"Nom", "Prenom", "Spécialité"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        if (personnes.getPersonnes() != null) {
+            for (Personne personne : personnes.getPersonnes()) {
+                model.addRow(new Object[]{personne.getIdPersonne(), personne.getNom(), personne.getPrenom()});
+            } //à modifier aussi
         }
         return model;
     }
@@ -414,16 +441,16 @@ public class MainFrontEndSwing extends JFrame {
         }
         boolean newDisponibilite = Boolean.parseBoolean(disponibilite);
 
-        boolean localTrouvé = false;
+        boolean localTrouve = false;
         for (LocalLaverie local : localLaveries.getLocalLaveries()) {
             if (String.valueOf(local.getNumLocalL()).equals(numLocal)) {
                 local.setDisponibilite(newDisponibilite);
-                localTrouvé = true;
+                localTrouve = true;
                 break;
             }
         }
     
-        if (!localTrouvé) {
+        if (!localTrouve) {
             JOptionPane.showMessageDialog(this, "Local non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
