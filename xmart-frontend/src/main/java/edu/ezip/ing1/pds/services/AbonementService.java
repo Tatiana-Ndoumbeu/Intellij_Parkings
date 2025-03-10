@@ -10,6 +10,7 @@ import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.commons.Request;
 import edu.ezip.ing1.pds.requests.apiRequest.InsertClientRequest;
 import edu.ezip.ing1.pds.requests.apiRequest.SelectAllClientRequest;
+import edu.ezip.ing1.pds.requests.apiRequest.DeleteClientRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -25,6 +26,7 @@ public class AbonementService {
 
     final String insertRequestOrder = "INSERT_ABONNEMENT";
     final String selectRequestOrder = "SELECT_ALL_ABONNEMENTS";
+    final String suppRequestOrder = "DELETE_ABONNEMENT";
 
     private final NetworkConfig networkConfig;
 
@@ -93,4 +95,34 @@ public class AbonementService {
         }
     }
 
+    public void supprimerAbonnement(String id_Abonnement) throws InterruptedException, IOException {
+        int birthdate = 0;
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(suppRequestOrder);
+        request.setRequestContent(id_Abonnement);  
+    
+        final byte[] requestBytes = objectMapper.writeValueAsBytes(request);
+    
+        
+        final DeleteClientRequest<String> deleteRequest = new DeleteClientRequest<>(
+            networkConfig, birthdate++, request, id_Abonnement, requestBytes );
+    
+        clientRequests.push(deleteRequest);
+    
+        if (!clientRequests.isEmpty()) {
+            final ClientRequest clientResponse = clientRequests.pop();
+            clientResponse.join(); 
+    
+             
+            if (clientResponse.getResult() != null && clientResponse.getResult().toString().contains("success")) {
+                logger.debug("Abonnement supprimé avec succès.");
+            } else {
+                logger.error("Échec de la suppression de l'abonnement.");
+            }
+        }
+    }
 }
