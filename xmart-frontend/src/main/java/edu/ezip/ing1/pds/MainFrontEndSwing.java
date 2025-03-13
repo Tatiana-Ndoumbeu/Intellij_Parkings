@@ -44,7 +44,7 @@ public class MainFrontEndSwing extends JFrame {
 
 
     public MainFrontEndSwing() {
-        setTitle("Main Front End - Parking System");
+        setTitle("DASHBOARD ET SERVICES");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);

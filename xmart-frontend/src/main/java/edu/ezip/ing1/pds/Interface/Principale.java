@@ -26,7 +26,7 @@ public class Principale extends JFrame {
     private JPanel panneauDroite;
 
     public Principale() {
-        super("Principale");
+        super("IntelliJ Parking System");
         setSize(900, 600);
         setLocationRelativeTo(null);
        // setLayout(new BorderLayout());
@@ -48,26 +48,18 @@ public class Principale extends JFrame {
 
     private JPanel accueuil() {
 
+
         JPanel pannelAccueuil = new JPanel(new BorderLayout());
-/*
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-
-                ImageIcon backgroundIcon = new ImageIcon(getClass().getResource("backgroundImage.png"));
-                Image backgroundImage = backgroundIcon.getImage();
-                Image resizedImage = backgroundImage.getScaledInstance(150, 100, Image.SCALE_SMOOTH);
-
-                g.drawImage(backgroundImage, 0, 0, this);
-            }
-        };
-
-        pannelAccueuil.setLayout(new BorderLayout());*/
         pannelAccueuil.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
 
         JLabel titre = new JLabel("BONJOUR ET BIENVENUE DANS INTELLIJ PARKING", JLabel.CENTER);
         titre.setFont(new Font("Arial", Font.BOLD, 20));
+        titre.setForeground(Color.BLUE);
         pannelAccueuil.add(titre, BorderLayout.CENTER);
+
+       // JLabel iconLabel = new JLabel(chargerIcone( "Imagefond2.png", 100, 100));
+       // pannelAccueuil.add(iconLabel, BorderLayout.NORTH);
 
 
 
@@ -101,9 +93,7 @@ public class Principale extends JFrame {
         Bouton4.setPreferredSize(new Dimension(250, 50));
         pannel.add(Bouton4);
 
-       // pannelAccueuil.repaint();
         pannelAccueuil.add(pannel, BorderLayout.SOUTH);
-
         return pannelAccueuil;
 
     }
@@ -153,25 +143,25 @@ public class Principale extends JFrame {
 
        JButton Bouton1 = new JButton("Attribution sans identification");
         Bouton1.setFont(boutonFont);
-        Bouton1.setBackground(new Color(128, 0, 32));
+        Bouton1.setBackground(new Color(105, 0, 31));
         Bouton1.addActionListener(this::clicrapide);
       panneauGauche.add(Bouton1);
 
        JButton Bouton2 = new JButton("Attribution avec identification");
         Bouton2.setFont(boutonFont);
         Bouton2.addActionListener(this::clicrapide);
-        Bouton2.setBackground(new Color(128, 0, 32));
+        Bouton2.setBackground(new Color(105, 0, 31));
         panneauGauche.add(Bouton2);
 
        JButton Bouton3 = new JButton("Attribution zones spéciales");
         Bouton3.setFont(boutonFont);
         Bouton3.addActionListener(this::clicrapide);
-        Bouton3.setBackground(new Color(128, 0, 32));
+        Bouton3.setBackground(new Color(105, 0, 31));
         panneauGauche.add(Bouton3);
 
         JButton Bouton4 = new JButton("Retour");
         Bouton4.setFont(boutonFont);
-        Bouton4.setBackground(new Color(128, 0, 32));
+        Bouton4.setBackground(new Color(105, 0, 31));
         Bouton4.addActionListener(e->{cardLayout.show(mainPannel, "accueuil");});
         panneauGauche.add(Bouton4);
 
@@ -196,10 +186,6 @@ public class Principale extends JFrame {
 
     }
 
-
-
-
-    //La listenner qui va verifier mes locaux laverie quand j'appui sur le bouton
     private void clicrapide(ActionEvent e){
 
 

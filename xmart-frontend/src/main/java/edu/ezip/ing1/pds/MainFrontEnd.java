@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 public class MainFrontEnd {
 
@@ -104,7 +104,13 @@ public class MainFrontEnd {
         }
 
         */
-        SwingUtilities.invokeLater(() -> new MainFrontEndSwing().setVisible(true));
+
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } // pour faire plus beau
+        SwingUtilities.invokeLater(() -> new Principale().setVisible(true));
       
 
     }
