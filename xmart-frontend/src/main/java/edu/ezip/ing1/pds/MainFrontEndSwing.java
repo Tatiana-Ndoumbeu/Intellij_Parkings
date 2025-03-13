@@ -46,7 +46,7 @@ public class MainFrontEndSwing extends JFrame {
     public MainFrontEndSwing() {
         setTitle("Main Front End - Parking System");
         setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -520,6 +520,11 @@ public class MainFrontEndSwing extends JFrame {
     
 
     public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         SwingUtilities.invokeLater(() -> {
             MainFrontEndSwing frame = new MainFrontEndSwing();
             frame.setVisible(true);
