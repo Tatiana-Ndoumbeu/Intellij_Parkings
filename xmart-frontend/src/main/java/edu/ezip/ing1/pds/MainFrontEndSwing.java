@@ -174,6 +174,13 @@ public class MainFrontEndSwing extends JFrame {
             }
         });
         panelsud.add(deleteButton);
+
+        JButton updateAbobutton = new JButton("modifier un abonnement");
+        updateAbobutton.addActionListener(e ->{
+            logger.debug("Modification de l'abonnement");
+            updateAbonnement((DefaultTableModel) table.getModel());
+        });
+        panelsud.add(updateAbobutton);
         panel.add(panelsud, BorderLayout.SOUTH);
 
 
@@ -423,6 +430,32 @@ public class MainFrontEndSwing extends JFrame {
             logger.error("Erreur lors de la suppression de l'abonnement", e);
             JOptionPane.showMessageDialog(this, "Erreur lors de la suppression de l'abonnement.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
+        }
+    }
+
+    private void updateAbonnement(DefaultTableModel model) {
+        String idAbo = JOptionPane.showInputDialog(this, "Identifiant de l'abonnement à modifier :");
+        if (idAbo == null || idAbo.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "L'identifiant ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String typeAbo = JOptionPane.showInputDialog(this, "Nouveau type de l'abonnement :");
+        if (typeAbo == null || typeAbo.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le type de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String prix = JOptionPane.showInputDialog(this, "Nouveau prix de l'abonnement :");
+        if (prix == null || prix.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le prix de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String statut = JOptionPane.showInputDialog(this, "Nouveau statut de l'abonnement :");
+        if (statut == null || statut.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le statut de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
         }
     }
 
