@@ -27,6 +27,7 @@ public class AbonementService {
     final String insertRequestOrder = "INSERT_ABONNEMENT";
     final String selectRequestOrder = "SELECT_ALL_ABONNEMENTS";
     final String suppRequestOrder = "DELETE_ABONNEMENT";
+    final String updateRequestOrder = "UPDATE_ABONNEMENT";
 
     private final NetworkConfig networkConfig;
 
@@ -123,6 +124,35 @@ public class AbonementService {
             } else {
                 logger.error("Échec de la suppression de l'abonnement.");
             }
+        }
+    }
+
+    public void updateAbonnement(Abonnement abonnement) throws InterruptedException, IOException {
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
+        int birthdate = 0;
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final String jsonifiedAbonnement = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(abonnement);
+        logger.trace("Abonnement en JSON : {}", jsonifiedAbonnement);
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(updateRequestOrder);
+        request.setRequestContent(jsonifiedAbonnement);
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+
+        final InsertClientRequest clientRequest = new InsertClientRequest(
+                networkConfig,
+                birthdate++, request, abonnement, requestBytes);
+        clientRequests.push(clientRequest);
+
+        while (!clientRequests.isEmpty()) {
+            final ClientRequest clientResponse = clientRequests.pop();
+            clientResponse.join();
+
+            final Abonnement updatedAbonnement = (Abonnement) clientResponse.getInfo();
+            logger.debug("Mise à jour terminée : {} id_Abonnement= {}",
+                    updatedAbonnement.getIdAbonnement(), updatedAbonnement.getTypeAbonnement());;
         }
     }
 }
