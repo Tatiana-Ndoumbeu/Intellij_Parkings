@@ -1,5 +1,11 @@
-databaseName: "mydatabase"
-host: "172.31.253.215"
+#databaseName: "mydatabase"
+#host: "172.31.253.215"
+#port: 3306
+#username : "root"
+#password: "rootpassword"
+#poolSize: 1
+databaseName: "IntellijPDB"
+host: "172.31.253.186"
 port: 3306
 username : "root"
 password: "rootpassword"
