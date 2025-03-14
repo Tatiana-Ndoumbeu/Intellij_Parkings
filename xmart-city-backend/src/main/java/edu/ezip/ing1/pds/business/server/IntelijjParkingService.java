@@ -39,6 +39,12 @@ public class IntelijjParkingService {
         SELECT_ALL_LOCAL("SELECT l.NumLocalL, l.disponibilite FROM LocalLaverie l"),
         INSERT_LOCAL("INSERT into LocalLaverie (NumLocalL, disponibilite) VALUES (? , ?)"),
         UPDATE_LOCAL("UPDATE LocalLaverie SET disponibilite = ? WHERE NumLocalL = ?"),
+        DELETE_LOCAL("DELETE FROM LocalLaverie WHERE NumLocalL = ?"),
+
+        SELECT_ALL_LOCAL_T("SELECT l.numLocalT, l.disponibilite FROM LocalTechnique l"),
+        INSERT_LOCAL_T("INSERT into LocalTechnique (numLocalT, disponibilite) VALUES (? , ?)"),
+        UPDATE_LOCAL_T("UPDATE LocalTechnique SET disponibilite = ? WHERE numLocalT = ?"),
+        DELETE_LOCAL_T("DELETE FROM LocalTechnique WHERE numLocalT = ?"),
 
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
         INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)");
@@ -91,11 +97,26 @@ public class IntelijjParkingService {
             case INSERT_LOCAL:
                 response = InsertLocalL(request, connection);
                 break;
+            case INSERT_LOCAL_T:
+                response = InsertLocalT(request, connection);
+                break;
             case SELECT_ALL_LOCAL:
                 response = SelectAllLocalL(request, connection);
                 break;
+            case SELECT_ALL_LOCAL_T:
+                response = SelectAllLocalT(request, connection);
+                break;
             case UPDATE_LOCAL:
                 response = UpdateLocal(request, connection);
+                break;
+            case UPDATE_LOCAL_T:
+                response = UpdateLocalT(request, connection);
+                break;
+            case DELETE_LOCAL:
+                response = supprimerLocal(request, connection);
+                break;
+            case DELETE_LOCAL_T:
+                response = supprimerLocalT(request, connection);
                 break;
             case INSERT_PERSONNE:
                 response = InsertPersonne(request, connection);
@@ -281,7 +302,7 @@ public class IntelijjParkingService {
             localLaverie = objectMapper.readValue(request.getRequestBody(), LocalLaverie.class);
         } catch (JsonProcessingException e) {
             logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
-            return new Response(request.getRequestId(), "Données de l'étudiant invalides");
+            return new Response(request.getRequestId(), "Données du local invalides");
         }
 
         if (localLaverie.getNumLocalL() == 0 || localLaverie.getDisponibilite() == null) {
@@ -354,6 +375,153 @@ public class IntelijjParkingService {
     
         } catch (SQLException e) {
             logger.error("Erreur SQL lors de la mise à jour du local", e);
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+        }
+    }
+    private Response supprimerLocal(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            String requestBody = request.getRequestBody();
+            LocalLaverie localLaverie = objectMapper.readValue(requestBody, LocalLaverie.class);
+
+            if (localLaverie.getNumLocalL() == 0) {
+                return new Response(request.getRequestId(), "Numéro de local invalide");
+            }
+
+            try (PreparedStatement stmt = connection.prepareStatement(Queries.DELETE_LOCAL.getQuery())) {
+                stmt.setInt(1, localLaverie.getNumLocalL());
+                int affectedRows = stmt.executeUpdate();
+
+                if (affectedRows > 0) {
+                    return new Response(request.getRequestId(), "Local supprimé avec succès");
+                } else {
+                    return new Response(request.getRequestId(), "Aucun local trouvé avec cet ID");
+                }
+            }
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données invalides");
+        } catch (SQLException e) {
+            logger.error("Erreur SQL lors de la suppression du local", e);
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+        }
+    }
+
+private Response InsertLocalT(final Request request, final Connection connection) throws SQLException, IOException {
+
+    final ObjectMapper objectMapper = new ObjectMapper();
+
+
+    LocalTechnique localTechnique;
+
+
+    try {
+        localTechnique = objectMapper.readValue(request.getRequestBody(), LocalTechnique.class);
+    } catch (JsonProcessingException e) {
+        logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+        return new Response(request.getRequestId(), "Données du local invalides");
+    }
+
+    if (localTechnique.getNumLocalT() == 0 || localTechnique.getDisponibilite() == null) {
+        return new Response(request.getRequestId(), "Champs manquants");
+    }
+
+
+    try (PreparedStatement stmt = connection.prepareStatement(Queries.INSERT_LOCAL_T.query)) {
+        stmt.setInt(1, localTechnique.getNumLocalT());
+        stmt.setBoolean(2, localTechnique.getDisponibilite());
+        stmt.executeUpdate();
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(localTechnique));
+
+
+    } catch (SQLException e) {
+        return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+    } catch (IOException e) {
+        return new Response(request.getRequestId(), "Erreur de traitement de la requête.");
+    }
+
+
+}
+
+
+private Response SelectAllLocalT(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final Statement stmt = connection.createStatement();
+    final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_LOCAL_T.query);
+    LocalTechniques localTechniques = new LocalTechniques();
+    while (res.next()) {
+
+        LocalTechnique localTechnique = new LocalTechnique();
+        localTechnique.setNumLocalT(res.getInt(1));
+        localTechnique.setDisponibilite(res.getBoolean(2));
+
+        localTechniques.add(localTechnique);
+    }
+    return new Response(request.getRequestId(), objectMapper.writeValueAsString(localTechniques));
+
+}
+
+private Response UpdateLocalT(final Request request, final Connection connection) throws SQLException, IOException, JsonProcessingException {
+    final ObjectMapper objectMapper = new ObjectMapper();
+
+    LocalTechnique localTechnique;
+    try {
+        localTechnique = objectMapper.readValue(request.getRequestBody(), LocalTechnique.class);
+    } catch (JsonProcessingException e) {
+        logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+        return new Response(request.getRequestId(), "Données invalides");
+    }
+
+
+    if (localTechnique.getNumLocalT() == 0 || localTechnique.getDisponibilite() == null) {
+        return new Response(request.getRequestId(), "Champs manquants");
+    }
+
+
+    try (PreparedStatement stmt = connection.prepareStatement(Queries.UPDATE_LOCAL_T.getQuery())) {
+        stmt.setBoolean(1, localTechnique.getDisponibilite());
+        stmt.setInt(2, localTechnique.getNumLocalT());
+
+        int affectedRows = stmt.executeUpdate();
+
+        if (affectedRows > 0) {
+            return new Response(request.getRequestId(), "Local mis à jour avec succès");
+        } else {
+            return new Response(request.getRequestId(), "Aucun local trouvé avec cet ID");
+        }
+
+    } catch (SQLException e) {
+        logger.error("Erreur SQL lors de la mise à jour du local", e);
+        return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+    }
+}
+    private Response supprimerLocalT(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            String requestBody = request.getRequestBody();
+            LocalTechnique localTechnique = objectMapper.readValue(requestBody, LocalTechnique.class);
+
+            if (localTechnique.getNumLocalT() == 0) {
+                return new Response(request.getRequestId(), "Numéro de local invalide");
+            }
+
+            try (PreparedStatement stmt = connection.prepareStatement(Queries.DELETE_LOCAL_T.getQuery())) {
+                stmt.setInt(1, localTechnique.getNumLocalT());
+                int affectedRows = stmt.executeUpdate();
+
+                if (affectedRows > 0) {
+                    return new Response(request.getRequestId(), "Local supprimé avec succès");
+                } else {
+                    return new Response(request.getRequestId(), "Aucun local trouvé avec ce numero");
+                }
+            }
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données invalides");
+        } catch (SQLException e) {
+            logger.error("Erreur SQL lors de la suppression du local", e);
             return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
         }
     }}

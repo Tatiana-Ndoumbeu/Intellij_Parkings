@@ -5,6 +5,7 @@ import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.services.AbonementService;
 import edu.ezip.ing1.pds.services.LocalLaveriesService;
+import edu.ezip.ing1.pds.services.LocalTechniqueService;
 import edu.ezip.ing1.pds.services.PlaceDeParkingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class MainFrontEndSwing extends JFrame {
     private final static String networkConfigFile = "network.yaml";
     private PlacesDeParkings placesDeParkings = new PlacesDeParkings();
     private LocalLaveries localLaveries = new LocalLaveries();
-    //private LocalTechnique LocalTechnique = new LocalTechnique(); à continuer
+    private LocalTechniques localTechniques = new LocalTechniques();
 
 
     public MainFrontEndSwing() {
@@ -66,37 +67,70 @@ public class MainFrontEndSwing extends JFrame {
 
 
 
-    private JPanel createTablePanelLocaux(String LOCAL_LAVERIES)
+    private JPanel createTablePanelLocaux(String LOCAL)
     {
         JPanel panelsud = new JPanel(new FlowLayout());
         JPanel panel = new JPanel(new BorderLayout());
         JTable table = new JTable();
 
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
-        table.setModel(createLocalLaverieTableModel(networkConfig));
-
+        switch (LOCAL) {
+            case LOCAL_LAVERIES:
+                table.setModel(createLocalLaverieTableModel(networkConfig));
+                break;
+            case LOCAL_TECHNIQUE:
+                table.setModel(createLocalTechniqueTableModel(networkConfig));
+                break;
+        }
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        JButton insertButton = new JButton("Ajouter un " + LOCAL_LAVERIES);
-        
+        JButton insertButton = new JButton("Ajouter un " + LOCAL);
         insertButton.addActionListener(e -> {
-            logger.debug("Ajout d'un local pour {}", LOCAL_LAVERIES);
-            insertLocal((DefaultTableModel) table.getModel());});
-
+            logger.debug("Ajout d'un local pour {}", LOCAL);
+            switch (LOCAL) {
+                case LOCAL_LAVERIES:
+                    insertLocal((DefaultTableModel) table.getModel());
+                    break;
+                case LOCAL_TECHNIQUE:
+                    insertLocalT((DefaultTableModel) table.getModel());
+                    break;
+                          }
+        });
         panelsud.add(insertButton);
-
 
         JButton disponibutton = new JButton("modifier une disponibilité");
    
          disponibutton.addActionListener(e -> {
-            logger.debug("Modification de la disponibilité d'un local");
-            updateLocal((DefaultTableModel) table.getModel());});
-
+            logger.debug("Modification de la disponibilité pour {}", LOCAL);
+             switch (LOCAL) {
+                 case LOCAL_LAVERIES:
+                     updateLocal((DefaultTableModel) table.getModel());
+                     break;
+                 case LOCAL_TECHNIQUE:
+                     updateLocalT((DefaultTableModel) table.getModel());
+                     break;
+    }
+         });
         panelsud.add(disponibutton);
+        JButton supprimebouton = new JButton("supprimer un Local");
+
+        supprimebouton.addActionListener(e -> {
+            logger.debug("Suppression  {}", LOCAL);
+            switch (LOCAL) {
+                case LOCAL_LAVERIES:
+                   deleteLocal((DefaultTableModel) table.getModel());
+                    break;
+                case LOCAL_TECHNIQUE:
+                    deleteLocalT((DefaultTableModel) table.getModel());
+                    break;
+            }
+        });
+        panelsud.add(supprimebouton);
         panel.add(panelsud, BorderLayout.SOUTH);
  
         return panel;
+
 
     }
 
@@ -175,10 +209,19 @@ public class MainFrontEndSwing extends JFrame {
         });
         panelsud.add(deleteButton);
 
-        JButton updateAbobutton = new JButton("modifier un abonnement");
+        JButton updateAbobutton = new JButton("modification " +type);
         updateAbobutton.addActionListener(e ->{
-            logger.debug("Modification de l'abonnement");
-            updateAbonnement((DefaultTableModel) table.getModel());
+            switch (type) {
+                case ABONNEMENTS:
+                    logger.debug("Modification pour {}", type);
+                    updateAbonnement((DefaultTableModel) table.getModel());
+                    break;
+
+                default:
+                    break;
+            }
+
+
         });
         panelsud.add(updateAbobutton);
         panel.add(panelsud, BorderLayout.SOUTH);
@@ -311,6 +354,28 @@ public class MainFrontEndSwing extends JFrame {
             }
         } catch (IOException | InterruptedException e) {
             logger.error("Error fetching Local laverie", e);
+        }
+
+        return model;
+    }
+
+    private DefaultTableModel createLocalTechniqueTableModel(NetworkConfig networkConfig) {
+        final LocalTechniqueService localService = new LocalTechniqueService(networkConfig);
+        String[] columns = { "numLocal", "disponibilite"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+
+        //
+        try {
+            localTechniques = localService.selectLocalTechnique();
+            if (localTechniques != null && localTechniques.getLocalTechniques() != null) {
+                for (LocalTechnique place : localTechniques.getLocalTechniques()) {
+                    model.addRow(new Object[]{place.getNumLocalT(),
+                            place.getDisponibilite(),
+                    });
+                }
+            }
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur recuperation Local Technique", e);
         }
 
         return model;
@@ -514,23 +579,16 @@ public class MainFrontEndSwing extends JFrame {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         final LocalLaveriesService localService = new LocalLaveriesService(networkConfig);
 
-
-        //  private int numLocalL;
-        //
-        //
-        //    private Boolean disponibilite;g
         String numLocal = JOptionPane.showInputDialog(this, "num local :");
         if (numLocal == null || numLocal.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "num local cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         String disponibilite = JOptionPane.showInputDialog(this, "Entrer disponibilite du local true ou false:");
         if (disponibilite == null || disponibilite.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "disponibilite cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
 
         LocalLaverie localLaverie1 = new LocalLaverie();
         localLaverie1.setNumLocalL(Integer.parseInt(numLocal));
@@ -547,10 +605,187 @@ public class MainFrontEndSwing extends JFrame {
             logger.error("Erreur insertion Local", e);
             JOptionPane.showMessageDialog(this, "Erreur insertion Local.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+    private void deleteLocal(DefaultTableModel model) {
+        String numLocalL = JOptionPane.showInputDialog(this, "Numéro du local à supprimer :");
+        if (numLocalL == null || numLocalL.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        boolean localTrouve = false;
+        LocalLaverie localASupprimer = null;
+        for (LocalLaverie local : localLaveries.getLocalLaveries()) {
+            if (String.valueOf(local.getNumLocalL()).equals(numLocalL)) {
+                localASupprimer = local;
+                localTrouve = true;
+                break;
+            }
+        }
+
+        if (!localTrouve) {
+            JOptionPane.showMessageDialog(this, "Local non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int confirmation = JOptionPane.showConfirmDialog(this,
+                "Êtes-vous sûr de vouloir supprimer ce local ?",
+                "Confirmation", JOptionPane.YES_NO_OPTION);
+        if (confirmation != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+                final LocalLaveriesService localService = new LocalLaveriesService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+            localService.deleteLocalLaverie(localASupprimer);
+
+            localLaveries.getLocalLaveries().remove(localASupprimer);
+
+            model.setRowCount(0);
+            for (LocalLaverie place : localLaveries.getLocalLaveries()) {
+                model.addRow(new Object[]{place.getNumLocalL(), place.getDisponibilite()});
+            }
+
+            JOptionPane.showMessageDialog(this, "Local supprimé avec succès.");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur lors de la suppression du local", e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la suppression du local.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateLocalT(DefaultTableModel model) {
+
+        String numLocalT = JOptionPane.showInputDialog(this, "Numéro du local à modifier :");
+        if (numLocalT == null || numLocalT.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
+        if (disponibilite == null || disponibilite.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        boolean newDisponibilite = Boolean.parseBoolean(disponibilite);
+
+        boolean localTrouve = false;
+        for (LocalTechnique local : localTechniques.getLocalTechniques()) {
+            if (String.valueOf(local.getNumLocalT()).equals(numLocalT)) {
+                local.setDisponibilite(newDisponibilite);
+                localTrouve = true;
+                break;
+            }
+        }
+
+        if (!localTrouve) {
+            JOptionPane.showMessageDialog(this, "Local non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            LocalTechnique localTechniquemodif = new LocalTechnique();
+            localTechniquemodif.setNumLocalT(Integer.parseInt(numLocalT));
+            localTechniquemodif.setDisponibilite(newDisponibilite);
+
+            final LocalTechniqueService localService = new LocalTechniqueService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+            localService.updateLocTechnique(localTechniquemodif);
+
+            model.setRowCount(0);// on supprime dabord les anciennes lignes dans le tableau
+            for (LocalTechnique place : localTechniques.getLocalTechniques()) {
+                model.addRow(new Object[]{place.getNumLocalT(), place.getDisponibilite()});
+            }
+
+            JOptionPane.showMessageDialog(this, "Disponibilité du local mise à jour.");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur lors de la mise à jour du local", e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour du local.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+
 
     }
-    
-    
+
+    private void insertLocalT(DefaultTableModel model) {
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
+        final LocalTechniqueService localService = new LocalTechniqueService(networkConfig);
+
+        String numLocalT = JOptionPane.showInputDialog(this, "numero local :");
+        if (numLocalT == null || numLocalT.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "num local cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String disponibilite = JOptionPane.showInputDialog(this, "Entrer disponibilite du local true ou false:");
+        if (disponibilite == null || disponibilite.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "disponibilite cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+
+        LocalTechnique localTechnique1 = new LocalTechnique();
+        localTechnique1.setNumLocalT(Integer.parseInt(numLocalT));
+        localTechnique1.setDisponibilite(Boolean.parseBoolean(disponibilite));
+
+        try {
+            localService.insertLocTechnique(localTechnique1);
+            model.addRow(new Object[]{localTechnique1.getNumLocalT(), localTechnique1.getDisponibilite()});
+            //JOptionPane.showMessageDialog(this, "Local Inséré.");
+            // Refresh  after insertion
+            createTablePanel("createTablePanel");
+            JOptionPane.showMessageDialog(this, "Local inséré.");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur insertion Local", e);
+            JOptionPane.showMessageDialog(this, "Erreur insertion Local.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+    }
+    private void deleteLocalT(DefaultTableModel model) {
+        String numLocalT = JOptionPane.showInputDialog(this, "Numéro du local à supprimer :");
+        if (numLocalT == null || numLocalT.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        boolean localTrouve = false;
+        LocalTechnique localASupprimer = null;
+        for (LocalTechnique local : localTechniques.getLocalTechniques()) {
+            if (String.valueOf(local.getNumLocalT()).equals(numLocalT)) {
+                localASupprimer = local;
+                localTrouve = true;
+                break;
+            }
+        }
+
+        if (!localTrouve) {
+            JOptionPane.showMessageDialog(this, "Local non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int confirmation = JOptionPane.showConfirmDialog(this,
+                "Êtes-vous sûr de vouloir supprimer ce local ?",
+                "Confirmation", JOptionPane.YES_NO_OPTION);
+        if (confirmation != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+            final LocalTechniqueService localService = new LocalTechniqueService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+            localService.deleteLocalTechnique(localASupprimer);
+
+            localTechniques.getLocalTechniques().remove(localASupprimer);
+
+            model.setRowCount(0);
+            for (LocalTechnique place : localTechniques.getLocalTechniques()) {
+                model.addRow(new Object[]{place.getNumLocalT(), place.getDisponibilite()});
+            }
+
+            JOptionPane.showMessageDialog(this, "Local supprimé avec succès.");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur lors de la suppression du local", e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la suppression du local.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+
 
     public static void main(String[] args) {
         try {
