@@ -48,7 +48,9 @@ public class IntelijjParkingService {
         DELETE_LOCAL_T("DELETE FROM LocalTechnique WHERE numLocalT = ?"),
 
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
-        INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)");
+        INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)"),
+        UPDATE_PLACE_DE_PARKING("UPDATE PlaceDeParking t SET t.emplacement = ?, t.type_place = ?, t.statut_place = ? WHERE t.id_place = ?"),
+        DELETE_PLACE_DE_PARKING("DELETE FROM PlaceDeParking t WHERE t.id_place = ?");
 
         private final String query;
 
@@ -134,6 +136,12 @@ public class IntelijjParkingService {
             case INSERT_PLACE_DE_PARKING:
                 response = InsertPlaceDeParking(request, connection);
                 break;
+                case UPDATE_PLACE_DE_PARKING:
+                    response = UpdatePlaceDeParking(request, connection);
+                    break;
+            case DELETE_PLACE_DE_PARKING:
+                    response = DeletePlaceDeParking(request, connection);
+                    break;
             default:
                 break;
         }
@@ -208,8 +216,9 @@ public class IntelijjParkingService {
         while (res.next()) {
             PlaceDeParking placeDeParking = new PlaceDeParking();
             placeDeParking.setIdPlace(res.getString(1));
-            placeDeParking.setStatutPlace(res.getString(2));
-            placeDeParking.setTypePlace(res.getString(3));
+            placeDeParking.setEmplacement(res.getString(2));
+            placeDeParking.setStatutPlace(res.getString(3));
+            placeDeParking.setTypePlace(res.getString(4));
             placesDeParkings.add(placeDeParking);
         }
 
@@ -316,6 +325,36 @@ public class IntelijjParkingService {
             return new Response(request.getRequestId(), affectedRows > 0 ? "place de parking inséré avec succès" : "Échec de l'insertion");
         }
     }
+
+    private Response DeletePlaceDeParking(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        PlaceDeParking placeDeParking = objectMapper.readValue(request.getRequestBody(), PlaceDeParking.class);
+
+        try (PreparedStatement pstmt = connection.prepareStatement(Queries.DELETE_PLACE_DE_PARKING.getQuery())) {
+            pstmt.setString(1, placeDeParking.getIdPlace()); // Use the ID to delete
+
+            int affectedRows = pstmt.executeUpdate();
+            return new Response(request.getRequestId(), affectedRows > 0 ? "Place de parking supprimée avec succès" : "Échec de la suppression");
+        }
+    }
+
+
+
+    private Response UpdatePlaceDeParking(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        PlaceDeParking placeDeParking = objectMapper.readValue(request.getRequestBody(), PlaceDeParking.class);
+
+        try (PreparedStatement pstmt = connection.prepareStatement(Queries.UPDATE_PLACE_DE_PARKING.getQuery())) {
+            pstmt.setString(1, placeDeParking.getEmplacement());
+            pstmt.setString(2, placeDeParking.getTypePlace());
+            pstmt.setString(3, placeDeParking.getStatutPlace());
+            pstmt.setString(4, placeDeParking.getIdPlace()); // Use the existing ID for WHERE condition
+
+            int affectedRows = pstmt.executeUpdate();
+            return new Response(request.getRequestId(), affectedRows > 0 ? "Place de parking mise à jour avec succès" : "Échec de la mise à jour");
+        }
+    }
+
 
     private Response InsertPersonne(final Request request, final Connection connection) throws SQLException, IOException {
         final ObjectMapper objectMapper = new ObjectMapper();

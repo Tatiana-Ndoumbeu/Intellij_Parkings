@@ -9,6 +9,7 @@ import edu.ezip.ing1.pds.client.commons.ClientRequest;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.commons.Request;
+import edu.ezip.ing1.pds.requests.apiRequest.DeleteClientRequest;
 import edu.ezip.ing1.pds.requests.apiRequest.InsertClientRequest;
 import edu.ezip.ing1.pds.requests.apiRequest.SelectAllClientRequest;
 import org.slf4j.Logger;
@@ -27,6 +28,8 @@ public class PlaceDeParkingService {
 
     final String insertRequestOrder = "INSERT_PLACE_DE_PARKING";
     final String selectRequestOrder = "SELECT_ALL_PLACE_DE_PARKING";
+    final String updatePlaceDeParkingOrder = "UPDATE_PLACE_DE_PARKING";
+    final String deleplaceDeParkingOrder = "DELETE_PLACE_DE_PARKING";
 
 
     private final NetworkConfig networkConfig;
@@ -96,5 +99,65 @@ public class PlaceDeParkingService {
             return null;
         }
     }
+
+
+    public void deletePlaceDeParking(String idPlace) throws InterruptedException, IOException {
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(deleplaceDeParkingOrder);
+        request.setRequestContent(idPlace);
+
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+
+        final DeleteClientRequest clientRequest = new DeleteClientRequest(
+                networkConfig,
+                requestId.hashCode(), request, null, requestBytes);
+        clientRequests.push(clientRequest);
+
+        while (!clientRequests.isEmpty()) {
+            final ClientRequest clientResponse = clientRequests.pop();
+            clientResponse.join();
+            logger.debug("Thread {} complete. Deleted PlaceDeParking with ID: {} --> {}",
+                    clientResponse.getThreadName(), idPlace, clientResponse.getResult());
+        }
+    }
+
+    public void updatePlaceDeParking(PlaceDeParking placeDeParking) throws InterruptedException, IOException {
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final String jsonifiedPlace = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(placeDeParking);
+        logger.trace("Updating PlaceDeParking with JSON: {}", jsonifiedPlace);
+
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(updatePlaceDeParkingOrder);
+        request.setRequestContent(jsonifiedPlace);
+
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+
+        final InsertClientRequest clientRequest = new InsertClientRequest(
+                networkConfig,
+                requestId.hashCode(), request, placeDeParking, requestBytes);
+        clientRequests.push(clientRequest);
+
+        while (!clientRequests.isEmpty()) {
+            final ClientRequest clientResponse = clientRequests.pop();
+            clientResponse.join();
+            final PlaceDeParking updatedPlace = (PlaceDeParking) clientRequest.getInfo();
+            logger.debug("Thread {} complete: {} {} {} {} --> {}",
+                    clientResponse.getThreadName(),
+                    updatedPlace.getIdPlace(), updatedPlace.getEmplacement(), updatedPlace.getTypePlace(), updatedPlace.getStatutPlace(),
+                    clientResponse.getResult());
+        }
+    }
+
+
 
 }

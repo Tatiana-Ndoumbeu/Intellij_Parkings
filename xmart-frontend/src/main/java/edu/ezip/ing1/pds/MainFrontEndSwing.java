@@ -111,6 +111,9 @@ public class MainFrontEndSwing extends JFrame {
                  case LOCAL_TECHNIQUE:
                      updateLocalT((DefaultTableModel) table.getModel());
                      break;
+                 case PLACES_DE_PARKING:
+                     updatePlaceDeParking((DefaultTableModel) table.getModel());
+                     break;
     }
          });
         panelsud.add(disponibutton);
@@ -134,17 +137,6 @@ public class MainFrontEndSwing extends JFrame {
 
 
     }
-
-
-
-
-
-
-
-
-
-
-
     private JPanel createTablePanel(String type) {
         JPanel panelsud = new JPanel(new FlowLayout());
         JPanel panel = new JPanel(new BorderLayout());
@@ -203,6 +195,9 @@ public class MainFrontEndSwing extends JFrame {
                 case ABONNEMENTS:
                     supprimerAbonnement((DefaultTableModel) table.getModel(), table);
                     break;
+                case PLACES_DE_PARKING:
+                    supprimerPlaceDeParking((DefaultTableModel) table.getModel(), table);
+                    break;
             
                 default:
                     break;
@@ -216,6 +211,10 @@ public class MainFrontEndSwing extends JFrame {
                 case ABONNEMENTS:
                     logger.debug("Modification pour {}", type);
                     updateAbonnement((DefaultTableModel) table.getModel());
+                    break;
+                case PLACES_DE_PARKING:
+                    logger.debug("Modification pour {}", type);
+                    updatePlaceDeParking((DefaultTableModel) table.getModel());
                     break;
 
                 default:
@@ -297,6 +296,7 @@ public class MainFrontEndSwing extends JFrame {
                 // Forcer le tri par emplacement ou ID
                 List<PlaceDeParking> sortedList = new ArrayList<>(placesDeParkings.getPlaceDeParkings());
                 sortedList.sort(Comparator.comparing(PlaceDeParking::getIdPlace)); // Change ici selon le critère voulu
+                logger.debug("PlaceDeParkings sorted list {}", sortedList);
 
                 for (PlaceDeParking place : sortedList) {
                     model.addRow(new Object[]{
@@ -499,6 +499,37 @@ public class MainFrontEndSwing extends JFrame {
         }
     }
 
+    private void supprimerPlaceDeParking(DefaultTableModel model, JTable table) {
+        String idPlace = JOptionPane.showInputDialog(this, "Entrez l'identifiant de la place de parking à supprimer :",
+                "Suppression d'une place de parking", JOptionPane.QUESTION_MESSAGE);
+
+        if (idPlace == null || idPlace.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "L'identifiant est invalide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Voulez-vous vraiment supprimer cette place de parking ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+                placeDeParkingService.deletePlaceDeParking(idPlace);
+
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    if (model.getValueAt(i, 0).equals(idPlace)) {
+                        model.removeRow(i);
+                        break;
+                    }
+                }
+
+                JOptionPane.showMessageDialog(this, "Place de parking supprimée avec succès !");
+            } catch (Exception e) {
+                logger.error("Erreur lors de la suppression de la place de parking", e);
+                JOptionPane.showMessageDialog(this, "Erreur lors de la suppression de la place de parking.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+
     private void updateAbonnement(DefaultTableModel model) {
 
         String idAbo = JOptionPane.showInputDialog(this, "Identifiant de l'abonnement à modifier :");
@@ -577,6 +608,66 @@ public class MainFrontEndSwing extends JFrame {
     
 
     }
+
+
+    private void updatePlaceDeParking(DefaultTableModel model) {
+        String idPlace = JOptionPane.showInputDialog(this, "ID de la place à modifier :");
+        if (idPlace == null || idPlace.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "L'ID de la place ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String newEmplacement = JOptionPane.showInputDialog(this, "Nouvel emplacement :");
+        if (newEmplacement == null || newEmplacement.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "L'emplacement ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String newType = JOptionPane.showInputDialog(this, "Nouveau type de place :");
+        if (newType == null || newType.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le type de place ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String newStatut = JOptionPane.showInputDialog(this, "Nouveau statut de place (Occupée, Libre) :");
+        if (newStatut == null || newStatut.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le statut de la place ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        boolean placeTrouvee = false;
+        for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
+            if (place.getIdPlace().equals(idPlace)) {
+                place.setEmplacement(newEmplacement);
+                place.setTypePlace(newType);
+                place.setStatutPlace(newStatut);
+                placeTrouvee = true;
+                break;
+            }
+        }
+
+        if (!placeTrouvee) {
+            JOptionPane.showMessageDialog(this, "Place de parking non trouvée.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            PlaceDeParking updatedPlace = new PlaceDeParking(idPlace, newEmplacement, newType, newStatut);
+            final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+            placeDeParkingService.updatePlaceDeParking(updatedPlace);
+
+            model.setRowCount(0); // Réinitialiser les lignes de la table
+            for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
+                model.addRow(new Object[]{place.getIdPlace(), place.getEmplacement(), place.getTypePlace(), place.getStatutPlace()});
+            }
+
+            JOptionPane.showMessageDialog(this, "Place de parking mise à jour avec succès.");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur lors de la mise à jour de la place de parking", e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour de la place de parking.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
 
     private void insertLocal(DefaultTableModel model) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
