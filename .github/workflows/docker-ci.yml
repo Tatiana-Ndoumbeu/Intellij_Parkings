@@ -46,9 +46,3 @@ jobs:
           IMAGE_NAME=ghcr.io/tatiana-ndoumbeu/xmart-backend
           docker build -t $IMAGE_NAME:latest -f xmart-city-backend/Dockerfile xmart-city-backend/
           docker push $IMAGE_NAME:latest
-
-      - name: Build and Push Frontend Image
-        run: |
-          IMAGE_NAME=ghcr.io/tatiana-ndoumbeu/xmart-frontend
-          docker build -t $IMAGE_NAME:latest -f xmart-frontend/Dockerfile xmart-frontend/
-          docker push $IMAGE_NAME:latest
