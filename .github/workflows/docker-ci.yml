@@ -27,9 +27,8 @@ jobs:
           restore-keys: |
             maven-${{ runner.os }}-
 
-      - name: Build Backend JAR file
+      - name: Build and Install All Modules
         run: |
-          cd xmart-city-backend
           mvn clean install -DskipTests
 
       - name: Set up Docker Buildx
@@ -45,7 +44,7 @@ jobs:
       - name: Build and Push Backend Image
         run: |
           IMAGE_NAME=ghcr.io/tatiana-ndoumbeu/xmart-backend
-          docker build -t $IMAGE_NAME:latest -f xmart-city-backend/Dockerfile xmart-city-backend/
+          docker build -t $IMAGE_NAME:latest -f xmart-zity-backend/Dockerfile xmart-zity-backend/
           docker push $IMAGE_NAME:latest
 
       - name: Build and Push Frontend Image

@@ -5,7 +5,11 @@ CREATE TABLE Vehicule (
                           num_plaque VARCHAR(32) NOT NULL,
                           type VARCHAR(32) NOT NULL,
                           marque VARCHAR(64) NOT NULL,
-                          PRIMARY KEY (id)
+                          id_place VARCHAR(50) NOT NULL,
+                          PRIMARY KEY (id),
+                          UNIQUE(id_place),
+                          FOREIGN KEY(id_place) REFERENCES PlaceDeParking(id_place)
+
 );
 
 -- SQL statements for Vehicules
@@ -15,7 +19,7 @@ CREATE TABLE Vehicule (
 -- SELECT t.num_plaque, t.type, t.marque FROM Vehicule t;
 -- INSERT INTO Vehicule (num_plaque, type, marque) VALUES (?, ?, ?);
 
---------------------------------------------------------
+
 
 -- Table for Abonnements
 CREATE TABLE Abonnement (
@@ -35,7 +39,7 @@ CREATE TABLE Abonnement (
 -- SELECT t.id_abonnement, t.typeAbonnement, t.prix FROM Abonnement t;
 -- INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix, dateDebut, dateFin, statutAbonnement) VALUES (?, ?, ?, ?, ?, ?);
 
---------------------------------------------------------
+
 
 -- Table for Personnes
 CREATE TABLE Personne (
@@ -55,7 +59,7 @@ CREATE TABLE Personne (
 -- SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t;
 -- INSERT INTO Personne (mail, nom, prenom, tel, code_postal) VALUES (?, ?, ?, ?, ?);
 
---------------------------------------------------------
+
 
 -- Table for PlaceDeParking
 CREATE TABLE PlaceDeParking (
