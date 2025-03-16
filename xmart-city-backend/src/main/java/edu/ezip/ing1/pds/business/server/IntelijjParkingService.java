@@ -318,9 +318,9 @@ public class IntelijjParkingService {
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_PLACE_DE_PARKING.getQuery())) {
             pstmt.setString(1, UUID.randomUUID().toString());
-            pstmt.setString(2, placeDeParking.getTypePlace());
-            pstmt.setString(3, placeDeParking.getStatutPlace());
-            pstmt.setString(4, placeDeParking.getEmplacement());
+            pstmt.setString(2, placeDeParking.getEmplacement());
+            pstmt.setString(3, placeDeParking.getTypePlace());
+            pstmt.setString(4, placeDeParking.getStatutPlace());
             int affectedRows = pstmt.executeUpdate();
             return new Response(request.getRequestId(), affectedRows > 0 ? "place de parking inséré avec succès" : "Échec de l'insertion");
         }
@@ -345,10 +345,10 @@ public class IntelijjParkingService {
         PlaceDeParking placeDeParking = objectMapper.readValue(request.getRequestBody(), PlaceDeParking.class);
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.UPDATE_PLACE_DE_PARKING.getQuery())) {
-            pstmt.setString(1, placeDeParking.getEmplacement());
-            pstmt.setString(2, placeDeParking.getTypePlace());
-            pstmt.setString(3, placeDeParking.getStatutPlace());
-            pstmt.setString(4, placeDeParking.getIdPlace()); // Use the existing ID for WHERE condition
+            pstmt.setString(1, placeDeParking.getIdPlace());
+            pstmt.setString(2, placeDeParking.getEmplacement());
+            pstmt.setString(3, placeDeParking.getTypePlace());
+            pstmt.setString(4, placeDeParking.getStatutPlace()); // Use the existing ID for WHERE condition
 
             int affectedRows = pstmt.executeUpdate();
             return new Response(request.getRequestId(), affectedRows > 0 ? "Place de parking mise à jour avec succès" : "Échec de la mise à jour");
