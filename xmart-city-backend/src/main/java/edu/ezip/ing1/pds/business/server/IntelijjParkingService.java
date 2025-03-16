@@ -32,6 +32,7 @@ public class IntelijjParkingService {
         SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin FROM Abonnement t"),
         INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin ) VALUES (?, ?, ?, ?, ?, ?)"),
         DELETE_ABONNEMENT("DELETE FROM Abonnement WHERE id_abonnement = ?"),
+        UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=?, WHERE id_abonnement=?"),
 
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel,mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
@@ -90,6 +91,12 @@ public class IntelijjParkingService {
                 break;
             case INSERT_ABONNEMENT:
                 response = InsertAbonnement(request, connection);
+                break;
+            case DELETE_ABONNEMENT:
+                response = SupprimerAbonnement(request, connection);
+                break;
+            case UPDATE_ABONNEMENT:
+                response = UpdateAbonnement(request, connection);
                 break;
             case SELECT_ALL_PERSONNES:
                 response = SelectAllPersonnes(request, connection);
@@ -162,8 +169,8 @@ public class IntelijjParkingService {
             abonnement.setIdAbonnement(res.getString(1));
             abonnement.setPrix(res.getDouble(3));
             abonnement.setTypeAbonnement(res.getString(2));
-            abonnement.setDateDebut(res.getDate(5));
-            abonnement.setDateFin(res.getDate(6));
+            abonnement.setDateDebut(res.getDate(5).toLocalDate());
+            abonnement.setDateFin(res.getDate(6).toLocalDate());
             abonnement.setStatutAbonnement(res.getString(4));
             abonnements.add(abonnement);
         }
@@ -232,10 +239,10 @@ public class IntelijjParkingService {
             pstmt.setDouble(3, abonnement.getPrix());
             pstmt.setString(2, abonnement.getTypeAbonnement());
             pstmt.setString(4, abonnement.getStatutAbonnement());
-            pstmt.setDate(5, abonnement.getDateDebut());
-            pstmt.setDate(6, abonnement.getDateFin());
+            pstmt.setDate(5, java.sql.Date.valueOf(abonnement.getDateDebut()));
+            pstmt.setDate(6, java.sql.Date.valueOf(abonnement.getDateFin()));
             int affectedRows = pstmt.executeUpdate();
-            return new Response(request.getRequestId(), affectedRows > 0 ? "abonnements inséré avec succès" : "Échec de l'insertion");
+            return new Response(request.getRequestId(), affectedRows > 0 ? "abonnement inséré avec succès" : "Échec de l'insertion");
         }
     }
 
@@ -254,6 +261,43 @@ public class IntelijjParkingService {
         } catch (SQLException e) {
             logger.error("Erreur SQL lors de la suppression de l'abonnement", e);
             return new Response(request.getRequestId(), "Erreur SQL");
+        }
+    }
+    private Response UpdateAbonnement(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Abonnement abonnement;
+        try {
+            abonnement= objectMapper.readValue(request.getRequestBody(), Abonnement.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données invalides");
+        }
+
+
+        if (abonnement.getTypeAbonnement() == null || abonnement.getPrix() == 0 || abonnement.getStatutAbonnement() == null) {
+            return new Response(request.getRequestId(), "Champs manquants");
+        }
+
+
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.UPDATE_ABONNEMENT.getQuery())) {
+            stmt.setString(1, abonnement.getTypeAbonnement());
+            stmt.setDouble(2, abonnement.getPrix());
+            stmt.setString(3, abonnement.getStatutAbonnement());
+            stmt.setDate(4, abonnement.getDateDebut() != null ? Date.valueOf(abonnement.getDateDebut()) : null);
+            stmt.setDate(5, abonnement.getDateFin() != null ? Date.valueOf(abonnement.getDateFin()) : null);
+            stmt.setString(6, abonnement.getIdAbonnement());
+
+            int affectedRows = stmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                return new Response(request.getRequestId(), "Abonnement mis à jour avec succès");
+            } else {
+                return new Response(request.getRequestId(), "Aucun abonnement trouvé avec cet ID");
+            }
+
+        } catch (SQLException e) {
+            logger.error("Erreur SQL lors de la mise à jour de l'abonnement", e);
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
         }
     }
 

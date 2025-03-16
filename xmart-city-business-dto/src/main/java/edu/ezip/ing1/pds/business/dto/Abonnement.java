@@ -1,17 +1,19 @@
 package edu.ezip.ing1.pds.business.dto;
 
 
-import java.sql.Date;
+
+import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class Abonnement {
     private String idAbonnement;
     private String typeAbonnement;
     private double prix;
-    private Date dateDebut;
-    private Date dateFin;
+    private LocalDate dateDebut;
+    private LocalDate dateFin;
     private String statutAbonnement;
 
-    public Abonnement(String idAbonnement, String typeAbonnement, double prix, Date dateDebut, Date dateFin, String statutAbonnement) {
+    public Abonnement(String idAbonnement, String typeAbonnement, double prix, LocalDate dateDebut, LocalDate dateFin, String statutAbonnement) {
         this.idAbonnement = idAbonnement;
         this.typeAbonnement = typeAbonnement;
         this.prix = prix;
@@ -46,19 +48,19 @@ public class Abonnement {
         this.prix = prix;
     }
 
-    public Date getDateDebut() {
+    public LocalDate getDateDebut() {
         return dateDebut;
     }
 
-    public void setDateDebut(Date dateDebut) {
+    public void setDateDebut(LocalDate dateDebut) {
         this.dateDebut = dateDebut;
     }
 
-    public java.sql.Date getDateFin() {
+    public LocalDate getDateFin() {
         return dateFin;
     }
 
-    public void setDateFin(Date dateFin) {
+    public void setDateFin(LocalDate dateFin) {
         this.dateFin = dateFin;
     }
 

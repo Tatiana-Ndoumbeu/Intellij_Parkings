@@ -14,7 +14,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.IOException;
-import java.sql.Date;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import java.util.List;
@@ -445,13 +446,13 @@ public class MainFrontEndSwing extends JFrame {
             return;
         }
 
-        // nouvelle abonnement
+        // nouvel abonnement
         Abonnement abonnement = new Abonnement();
         abonnement.setStatutAbonnement(statutAbonnement);
         abonnement.setTypeAbonnement(typeAbonnement);
         abonnement.setPrix(Double.parseDouble(prix));
-        abonnement.setDateDebut( new Date(2025,12,12));
-        abonnement.setDateFin( new Date(2025,12,23));
+        abonnement.setDateDebut( LocalDate.now());
+        abonnement.setDateFin( LocalDate.now().plusYears(1));
 
         try {
             abonementService.insertAbonements(abonnement);
@@ -499,6 +500,7 @@ public class MainFrontEndSwing extends JFrame {
     }
 
     private void updateAbonnement(DefaultTableModel model) {
+
         String idAbo = JOptionPane.showInputDialog(this, "Identifiant de l'abonnement à modifier :");
         if (idAbo == null || idAbo.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "L'identifiant ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
@@ -522,6 +524,7 @@ public class MainFrontEndSwing extends JFrame {
             JOptionPane.showMessageDialog(this, "Le statut de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
     }
 
     private void updateLocal(DefaultTableModel model) {
