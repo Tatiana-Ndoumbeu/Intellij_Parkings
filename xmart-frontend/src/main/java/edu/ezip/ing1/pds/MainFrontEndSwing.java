@@ -558,56 +558,7 @@ public class MainFrontEndSwing extends JFrame {
 
     }
 
-    private void updateLocal(DefaultTableModel model) {
-        
 
-        String numLocal = JOptionPane.showInputDialog(this, "Numéro du local à modifier :");
-        if (numLocal == null || numLocal.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
-        if (disponibilite == null || disponibilite.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        boolean newDisponibilite = Boolean.parseBoolean(disponibilite);
-
-        boolean localTrouve = false;
-        for (LocalLaverie local : localLaveries.getLocalLaveries()) {
-            if (String.valueOf(local.getNumLocalL()).equals(numLocal)) {
-                local.setDisponibilite(newDisponibilite);
-                localTrouve = true;
-                break;
-            }
-        }
-    
-        if (!localTrouve) {
-            JOptionPane.showMessageDialog(this, "Local non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        try {
-        LocalLaverie localLaveriemodif = new LocalLaverie();
-        localLaveriemodif.setNumLocalL(Integer.parseInt(numLocal));
-        localLaveriemodif.setDisponibilite(newDisponibilite);
-
-            final LocalLaveriesService localService = new LocalLaveriesService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
-            localService.updateLocLaveries(localLaveriemodif);
-    
-            model.setRowCount(0);// on supprime dabord les anciennes lignes dans le tableau
-            for (LocalLaverie place : localLaveries.getLocalLaveries()) {
-                model.addRow(new Object[]{place.getNumLocalL(), place.getDisponibilite()});
-            }
-    
-            JOptionPane.showMessageDialog(this, "Disponibilité du local mise à jour.");
-        } catch (IOException | InterruptedException e) {
-            logger.error("Erreur lors de la mise à jour du local", e);
-            JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour du local.", "Erreur", JOptionPane.ERROR_MESSAGE);
-        }
-    
-
-    }
 
 
     private void updatePlaceDeParking(DefaultTableModel model) {
@@ -678,9 +629,19 @@ public class MainFrontEndSwing extends JFrame {
             JOptionPane.showMessageDialog(this, "num local cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        try {
+            Integer.parseInt(numLocal);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         String disponibilite = JOptionPane.showInputDialog(this, "Entrer disponibilite du local true ou false:");
         if (disponibilite == null || disponibilite.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "disponibilite cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "disponibilite ne peut pas être vide.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!disponibilite.equalsIgnoreCase("true") && !disponibilite.equalsIgnoreCase("false")){
+            JOptionPane.showMessageDialog(this, "La disponibilité est soit 'true' soit 'false'' ", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -700,12 +661,80 @@ public class MainFrontEndSwing extends JFrame {
             JOptionPane.showMessageDialog(this, "Erreur insertion Local.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    private void updateLocal(DefaultTableModel model) {
+
+
+        String numLocal = JOptionPane.showInputDialog(this, "Numéro du local à modifier :");
+        if (numLocal == null || numLocal.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            Integer.parseInt(numLocal);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
+        if (disponibilite == null || disponibilite.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!disponibilite.equalsIgnoreCase("true") && !disponibilite.equalsIgnoreCase("false")){
+            JOptionPane.showMessageDialog(this, "La disponibilité est soit 'true' soit 'false'' ", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        boolean newDisponibilite = Boolean.parseBoolean(disponibilite);
+
+        boolean localTrouve = false;
+        for (LocalLaverie local : localLaveries.getLocalLaveries()) {
+            if (String.valueOf(local.getNumLocalL()).equals(numLocal)) {
+                local.setDisponibilite(newDisponibilite);
+                localTrouve = true;
+                break;
+            }
+        }
+
+        if (!localTrouve) {
+            JOptionPane.showMessageDialog(this, "Local non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            LocalLaverie localLaveriemodif = new LocalLaverie();
+            localLaveriemodif.setNumLocalL(Integer.parseInt(numLocal));
+            localLaveriemodif.setDisponibilite(newDisponibilite);
+
+            final LocalLaveriesService localService = new LocalLaveriesService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+            localService.updateLocLaveries(localLaveriemodif);
+
+            model.setRowCount(0);// on supprime dabord les anciennes lignes dans le tableau
+            for (LocalLaverie place : localLaveries.getLocalLaveries()) {
+                model.addRow(new Object[]{place.getNumLocalL(), place.getDisponibilite()});
+            }
+
+            JOptionPane.showMessageDialog(this, "Disponibilité du local mise à jour.");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur lors de la mise à jour du local", e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour du local.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+
+
+    }
     private void deleteLocal(DefaultTableModel model) {
         String numLocalL = JOptionPane.showInputDialog(this, "Numéro du local à supprimer :");
         if (numLocalL == null || numLocalL.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        try {
+            Integer.parseInt(numLocalL);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+
 
         boolean localTrouve = false;
         LocalLaverie localASupprimer = null;
@@ -754,9 +783,19 @@ public class MainFrontEndSwing extends JFrame {
             JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        try {
+            Integer.parseInt(numLocalT);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
         if (disponibilite == null || disponibilite.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!disponibilite.equalsIgnoreCase("true") && !disponibilite.equalsIgnoreCase("false")){
+            JOptionPane.showMessageDialog(this, "La disponibilité est soit 'true' soit 'false'' ", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
         boolean newDisponibilite = Boolean.parseBoolean(disponibilite);
@@ -803,13 +842,23 @@ public class MainFrontEndSwing extends JFrame {
 
         String numLocalT = JOptionPane.showInputDialog(this, "numero local :");
         if (numLocalT == null || numLocalT.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "num local cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "num local ne peut pas être vide.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            Integer.parseInt(numLocalT);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         String disponibilite = JOptionPane.showInputDialog(this, "Entrer disponibilite du local true ou false:");
         if (disponibilite == null || disponibilite.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "disponibilite cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!disponibilite.equalsIgnoreCase("true") && !disponibilite.equalsIgnoreCase("false")){
+            JOptionPane.showMessageDialog(this, "La disponibilité est soit 'true' soit 'false'' ", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -835,6 +884,12 @@ public class MainFrontEndSwing extends JFrame {
         String numLocalT = JOptionPane.showInputDialog(this, "Numéro du local à supprimer :");
         if (numLocalT == null || numLocalT.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            Integer.parseInt(numLocalT);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
