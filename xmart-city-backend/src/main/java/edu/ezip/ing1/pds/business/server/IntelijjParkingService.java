@@ -37,6 +37,9 @@ public class IntelijjParkingService {
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel,mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
 
+        SELECT_ALL_MECANICIEN("SELECT m.nom, m.prenom, m.telephone, m.disponibilite, m.specialite,m.mail FROM Mecanicien m"),
+        INSERT_MECANICIEN("INSERT INTO Mecanicien (nom, prenom, telephone, disponibilite, specialite, mail) VALUES (?, ?, ?,?, ?, ?)"),
+
         SELECT_ALL_LOCAL("SELECT l.NumLocalL, l.disponibilite FROM LocalLaverie l"),
         INSERT_LOCAL("INSERT into LocalLaverie (NumLocalL, disponibilite) VALUES (? , ?)"),
         UPDATE_LOCAL("UPDATE LocalLaverie SET disponibilite = ? WHERE NumLocalL = ?"),
@@ -142,6 +145,12 @@ public class IntelijjParkingService {
             case DELETE_PLACE_DE_PARKING:
                     response = DeletePlaceDeParking(request, connection);
                     break;
+            case SELECT_ALL_MECANICIEN:
+                response = SelectAllMecaniciens(request, connection);
+                break;
+            case INSERT_MECANICIEN:
+                response = InsertMecanicien(request, connection);
+                break;
             default:
                 break;
         }
@@ -607,4 +616,58 @@ private Response UpdateLocalT(final Request request, final Connection connection
             logger.error("Erreur SQL lors de la suppression du local", e);
             return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
         }
-    }}
+    }
+    private Response SelectAllMecaniciens(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_MECANICIEN.query);
+        Mecaniciens mecaniciens = new Mecaniciens();
+
+        while (res.next()) {
+            Mecanicien mecanicien = new Mecanicien();
+            mecanicien.setNom(res.getString(1));
+            mecanicien.setPrenom(res.getString(2));
+            mecanicien.setTelephone(res.getString(3));
+            mecanicien.setDisponibilite(res.getBoolean(4));
+            mecanicien.setSpecialite(res.getString(5));
+            mecanicien.setMail(res.getString(6));
+            mecaniciens.add(mecanicien);
+        }
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(mecaniciens));
+
+    }
+    private Response InsertMecanicien(final Request request, final Connection connection) throws SQLException, IOException {
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Mecanicien mecanicien;
+        try {
+            mecanicien = objectMapper.readValue(request.getRequestBody(), Mecanicien.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données du mecanicien invalides");
+        }
+
+        if (mecanicien.getNom() == null || mecanicien.getTelephone() == null) {
+            return new Response(request.getRequestId(), "Champs nom ou/et telephone manquants");
+        }
+
+
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.INSERT_MECANICIEN.query)) {
+            stmt.setString(1, mecanicien.getNom());
+            stmt.setString(2, mecanicien.getPrenom());
+            stmt.setString(3, mecanicien.getTelephone());
+            stmt.setBoolean(4, mecanicien.getDisponibilite());
+            stmt.setString(5, mecanicien.getSpecialite());
+            stmt.setString(6, mecanicien.getMail());
+            stmt.executeUpdate();
+            return new Response(request.getRequestId(), objectMapper.writeValueAsString(mecanicien));
+
+        } catch (SQLException e) {
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+        } catch (IOException e) {
+            return new Response(request.getRequestId(), "Erreur de traitement de la requête.");
+        }
+
+
+    }
+}

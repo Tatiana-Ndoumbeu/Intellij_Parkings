@@ -7,6 +7,7 @@ import edu.ezip.ing1.pds.services.AbonementService;
 import edu.ezip.ing1.pds.services.LocalLaveriesService;
 import edu.ezip.ing1.pds.services.LocalTechniqueService;
 import edu.ezip.ing1.pds.services.PlaceDeParkingService;
+import edu.ezip.ing1.pds.services.MecanicienService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,13 +31,13 @@ public class MainFrontEndSwing extends JFrame {
     public static final String PLACES_DE_PARKING = "Places de Parking";
     public static final String LOCAL_LAVERIES = "Local Laverie";
     public static final String LOCAL_TECHNIQUE = "Local Technique";
-    public static final String TECHNICIENS = "Techniciens";
+    public static final String MECANICIEN = "Mecanicien";
 
 
     private Abonnements abonnements = new Abonnements();
     private Personnes personnes = new Personnes();
     private Vehicles vehicles = new Vehicles();
-    //private Technicien technicien = new Technicien(); à continuer
+    private Mecaniciens mecaniciens = new Mecaniciens();
     private final static String LoggingLabel = "FrontEnd";
     private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
     private final static String networkConfigFile = "network.yaml";
@@ -57,9 +58,10 @@ public class MainFrontEndSwing extends JFrame {
         tabbedPane.addTab(PERSONNES, createTablePanel(PERSONNES));
         tabbedPane.addTab(PLACES_DE_PARKING, createTablePanel(PLACES_DE_PARKING));
         tabbedPane.addTab(VEHICLES, createTablePanel(VEHICLES));
+        tabbedPane.addTab(MECANICIEN, createTablePanel(MECANICIEN));
         tabbedPane.addTab(LOCAL_LAVERIES, createTablePanelLocaux(LOCAL_LAVERIES));
         tabbedPane.addTab(LOCAL_TECHNIQUE, createTablePanelLocaux(LOCAL_TECHNIQUE));
-        tabbedPane.addTab(TECHNICIENS, createTablePanel(TECHNICIENS));
+
         add(tabbedPane);
     }
 
@@ -155,8 +157,8 @@ public class MainFrontEndSwing extends JFrame {
             case VEHICLES:
                 table.setModel(createVehicleTableModel());
                 break;
-            case TECHNICIENS:
-                table.setModel(createTechnicienTableModel());
+            case MECANICIEN:
+                table.setModel(createMecanicienTableModel());
                 break;
         }
 
@@ -180,9 +182,9 @@ public class MainFrontEndSwing extends JFrame {
                 case VEHICLES:
                     insertVehicle((DefaultTableModel) table.getModel());
                     break;
-                //case TECHNICIENS:
-                 //   insertLocal((DefaultTableModel) table.getModel());
-                 //   break;
+                case MECANICIEN:
+                    insertMecanicien((DefaultTableModel) table.getModel());
+                    break;
 
             }
         });
@@ -220,14 +222,9 @@ public class MainFrontEndSwing extends JFrame {
                 default:
                     break;
             }
-
-
         });
         panelsud.add(updateAbobutton);
         panel.add(panelsud, BorderLayout.SOUTH);
-
-
-
         return panel;
     }
 
@@ -253,13 +250,13 @@ public class MainFrontEndSwing extends JFrame {
         return model;
     }
 
-    private DefaultTableModel createTechnicienTableModel() {
+    private DefaultTableModel createMecanicienTableModel() {
         String[] columns = {"Nom", "Prenom", "Spécialité"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
-        if (personnes.getPersonnes() != null) {
-            for (Personne personne : personnes.getPersonnes()) {
-                model.addRow(new Object[]{personne.getIdPersonne(), personne.getNom(), personne.getPrenom()});
-            } //à modifier aussi
+        if (mecaniciens.getMecaniciens() != null) {
+            for (Mecanicien mecanicien : mecaniciens.getMecaniciens()) {
+                model.addRow(new Object[]{mecanicien.getNom(), mecanicien.getPrenom(), mecanicien.getSpecialite()});
+            }
         }
         return model;
     }
@@ -653,7 +650,7 @@ public class MainFrontEndSwing extends JFrame {
             localService.insertLoclaLaveries(localLaverie1);
             model.addRow(new Object[]{localLaverie1.getNumLocalL(), localLaverie1.getDisponibilite()});
             JOptionPane.showMessageDialog(this, "Local Inséré.");
-            // Refresh the table after insertion
+
             createTablePanel("createTablePanel");
             JOptionPane.showMessageDialog(this, "Local inséré.");
         } catch (IOException | InterruptedException e) {
@@ -930,6 +927,44 @@ public class MainFrontEndSwing extends JFrame {
         } catch (IOException | InterruptedException e) {
             logger.error("Erreur lors de la suppression du local", e);
             JOptionPane.showMessageDialog(this, "Erreur lors de la suppression du local.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    private void insertMecanicien(DefaultTableModel model) {
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
+        final MecanicienService mecanicienService = new MecanicienService(networkConfig);
+
+        String nom = JOptionPane.showInputDialog(this, "nom du mecano :");
+        if (nom == null || nom.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "nom du mecanicien ne peut etre vide", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String prenom = JOptionPane.showInputDialog(this, "Entrer son prénom :");
+        String telephone = JOptionPane.showInputDialog(this, "Entrer son numero de telephone(ex:0743434343) :");
+        String disponibilite= JOptionPane.showInputDialog(this, "Entrer sa disponibilité pour ce mois :");
+        String specialite = JOptionPane.showInputDialog(this, "Entrer sa spécialité :");
+        if(specialite == null || specialite.trim().isEmpty()) {
+            do { specialite = JOptionPane.showInputDialog(this, "Entrer sa spécialité :");}
+            while (specialite == null || specialite.trim().isEmpty());
+        }
+        String mail = JOptionPane.showInputDialog(this, "Entrer son mail :");
+
+
+        Mecanicien mecanicien1 = new Mecanicien();
+        mecanicien1.setNom(nom);
+        mecanicien1.setPrenom(prenom);
+        mecanicien1.setTelephone(telephone);
+        mecanicien1.setDisponibilite(Boolean.parseBoolean(disponibilite));
+        mecanicien1.setSpecialite(specialite);
+        mecanicien1.setMail(mail);
+        try {
+            mecanicienService.insertMecanicien(mecanicien1);
+            model.addRow(new Object[]{mecanicien1.getNom(), mecanicien1.getPrenom(), mecanicien1.getSpecialite()});
+            JOptionPane.showMessageDialog(this, "Mecanicien Inséré.");
+            createTablePanel("createTablePanel");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur insertion Mecanicien", e);
+            JOptionPane.showMessageDialog(this, "Erreur insertion Mecanicien.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

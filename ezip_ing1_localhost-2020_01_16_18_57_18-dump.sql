@@ -77,6 +77,23 @@ CREATE TABLE LocalLaverie(
                              PRIMARY KEY(id)
 );
 
+CREATE TABLE LocalTechnique(
+                             numLocalT INT,
+                             disponibilite BOOLEAN,
+                             id_LT int(20) NOT NULL AUTO_INCREMENT,
+                             PRIMARY KEY(id_LT)
+);
+CREATE TABLE Mecanicien (
+                            id_mecanicien INT NOT NULL AUTO_INCREMENT,
+                            nom VARCHAR(50) NOT NULL,
+                            prenom VARCHAR(50),
+                            telephone VARCHAR(20) NOT NULL,
+                            disponibilite BOOLEAN,
+                            specialite VARCHAR(50),
+                            mail VARCHAR(50),
+                            PRIMARY KEY (id_mecanicien)
+);
+
 
 -- SQL statements for PlaceDeParking
 -- SELECT_ALL_PLACE_DE_PARKING: Retrieve all parking places.
