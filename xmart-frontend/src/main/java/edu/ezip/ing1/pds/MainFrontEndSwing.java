@@ -32,6 +32,7 @@ public class MainFrontEndSwing extends JFrame {
     public static final String LOCAL_LAVERIES = "Local Laverie";
     public static final String LOCAL_TECHNIQUE = "Local Technique";
     public static final String MECANICIEN = "Mecanicien";
+    public static final String RESERVATION = "Reservation";
 
 
     private Abonnements abonnements = new Abonnements();
@@ -61,6 +62,8 @@ public class MainFrontEndSwing extends JFrame {
         tabbedPane.addTab(MECANICIEN, createTablePanel(MECANICIEN));
         tabbedPane.addTab(LOCAL_LAVERIES, createTablePanelLocaux(LOCAL_LAVERIES));
         tabbedPane.addTab(LOCAL_TECHNIQUE, createTablePanelLocaux(LOCAL_TECHNIQUE));
+        tabbedPane.addTab(RESERVATION, createTablePanelresa());
+
 
         add(tabbedPane);
     }
@@ -158,7 +161,7 @@ public class MainFrontEndSwing extends JFrame {
                 table.setModel(createVehicleTableModel());
                 break;
             case MECANICIEN:
-                table.setModel(createMecanicienTableModel());
+                table.setModel(createMecanicienTableModel(networkConfig));
                 break;
         }
 
@@ -228,6 +231,24 @@ public class MainFrontEndSwing extends JFrame {
         return panel;
     }
 
+    private JPanel createTablePanelresa()
+    {
+        JPanel panelsud = new JPanel(new FlowLayout());
+        JPanel panel = new JPanel(new BorderLayout());
+        JTable table = new JTable();
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
+        table.setModel(createReservationTableModel(networkConfig));
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JButton reserverButton = new JButton("reserver une zone spéciale");
+        panelsud.add(reserverButton);
+        panel.add(panelsud, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
     private DefaultTableModel createPersonneTableModel() {
         String[] columns = {"ID", "Nom", "Prenom"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
@@ -250,14 +271,26 @@ public class MainFrontEndSwing extends JFrame {
         return model;
     }
 
-    private DefaultTableModel createMecanicienTableModel() {
+    private DefaultTableModel createMecanicienTableModel(NetworkConfig networkConfig) {
+        final MecanicienService mecanicienService = new MecanicienService(networkConfig);
         String[] columns = {"Nom", "Prenom", "Spécialité"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
-        if (mecaniciens.getMecaniciens() != null) {
-            for (Mecanicien mecanicien : mecaniciens.getMecaniciens()) {
-                model.addRow(new Object[]{mecanicien.getNom(), mecanicien.getPrenom(), mecanicien.getSpecialite()});
-            }
+        try {
+            mecaniciens = mecanicienService.selectMecanicien();
+            if (mecaniciens != null && mecaniciens.getMecaniciens() != null) {
+                    for (Mecanicien mecanicien : mecaniciens.getMecaniciens()) {
+                        model.addRow(new Object[]{mecanicien.getNom(), mecanicien.getPrenom(), mecanicien.getSpecialite()});
+
+            }}
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur recuperation mecanicien", e);
         }
+        return model;
+    }
+    private DefaultTableModel createReservationTableModel(NetworkConfig networkConfig) {
+        String[] columns = {"Jour debut", "Type de place", "du", "jusqu'au" , "place"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+
         return model;
     }
 
