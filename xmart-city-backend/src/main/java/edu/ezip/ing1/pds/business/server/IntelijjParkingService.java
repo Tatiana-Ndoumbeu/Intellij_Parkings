@@ -37,6 +37,9 @@ public class IntelijjParkingService {
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel,mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
 
+        SELECT_ALL_MECANICIEN("SELECT m.nom, m.prenom, m.telephone, m.disponibilite, m.specialite,m.mail FROM Mecanicien m"),
+        INSERT_MECANICIEN("INSERT INTO Mecanicien (nom, prenom, telephone, disponibilite, specialite, mail) VALUES (?, ?, ?,?, ?, ?)"),
+
         SELECT_ALL_LOCAL("SELECT l.NumLocalL, l.disponibilite FROM LocalLaverie l"),
         INSERT_LOCAL("INSERT into LocalLaverie (NumLocalL, disponibilite) VALUES (? , ?)"),
         UPDATE_LOCAL("UPDATE LocalLaverie SET disponibilite = ? WHERE NumLocalL = ?"),
@@ -48,7 +51,9 @@ public class IntelijjParkingService {
         DELETE_LOCAL_T("DELETE FROM LocalTechnique WHERE numLocalT = ?"),
 
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
-        INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)");
+        INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)"),
+        UPDATE_PLACE_DE_PARKING("UPDATE PlaceDeParking t SET t.emplacement = ?, t.type_place = ?, t.statut_place = ? WHERE t.id_place = ?"),
+        DELETE_PLACE_DE_PARKING("DELETE FROM PlaceDeParking t WHERE t.id_place = ?");
 
         private final String query;
 
@@ -134,6 +139,18 @@ public class IntelijjParkingService {
             case INSERT_PLACE_DE_PARKING:
                 response = InsertPlaceDeParking(request, connection);
                 break;
+                case UPDATE_PLACE_DE_PARKING:
+                    response = UpdatePlaceDeParking(request, connection);
+                    break;
+            case DELETE_PLACE_DE_PARKING:
+                    response = DeletePlaceDeParking(request, connection);
+                    break;
+            case SELECT_ALL_MECANICIEN:
+                response = SelectAllMecaniciens(request, connection);
+                break;
+            case INSERT_MECANICIEN:
+                response = InsertMecanicien(request, connection);
+                break;
             default:
                 break;
         }
@@ -208,8 +225,9 @@ public class IntelijjParkingService {
         while (res.next()) {
             PlaceDeParking placeDeParking = new PlaceDeParking();
             placeDeParking.setIdPlace(res.getString(1));
-            placeDeParking.setStatutPlace(res.getString(2));
-            placeDeParking.setTypePlace(res.getString(3));
+            placeDeParking.setEmplacement(res.getString(2));
+            placeDeParking.setStatutPlace(res.getString(3));
+            placeDeParking.setTypePlace(res.getString(4));
             placesDeParkings.add(placeDeParking);
         }
 
@@ -310,13 +328,43 @@ public class IntelijjParkingService {
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_PLACE_DE_PARKING.getQuery())) {
             pstmt.setString(1, UUID.randomUUID().toString());
-            pstmt.setString(2, placeDeParking.getTypePlace());
-            pstmt.setString(3, placeDeParking.getStatutPlace());
-            pstmt.setString(4, placeDeParking.getEmplacement());
+            pstmt.setString(2, placeDeParking.getEmplacement());
+            pstmt.setString(3, placeDeParking.getTypePlace());
+            pstmt.setString(4, placeDeParking.getStatutPlace());
             int affectedRows = pstmt.executeUpdate();
             return new Response(request.getRequestId(), affectedRows > 0 ? "place de parking inséré avec succès" : "Échec de l'insertion");
         }
     }
+
+    private Response DeletePlaceDeParking(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        PlaceDeParking placeDeParking = objectMapper.readValue(request.getRequestBody(), PlaceDeParking.class);
+
+        try (PreparedStatement pstmt = connection.prepareStatement(Queries.DELETE_PLACE_DE_PARKING.getQuery())) {
+            pstmt.setString(1, placeDeParking.getIdPlace()); // Use the ID to delete
+
+            int affectedRows = pstmt.executeUpdate();
+            return new Response(request.getRequestId(), affectedRows > 0 ? "Place de parking supprimée avec succès" : "Échec de la suppression");
+        }
+    }
+
+
+
+    private Response UpdatePlaceDeParking(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        PlaceDeParking placeDeParking = objectMapper.readValue(request.getRequestBody(), PlaceDeParking.class);
+
+        try (PreparedStatement pstmt = connection.prepareStatement(Queries.UPDATE_PLACE_DE_PARKING.getQuery())) {
+            pstmt.setString(1, placeDeParking.getIdPlace());
+            pstmt.setString(2, placeDeParking.getEmplacement());
+            pstmt.setString(3, placeDeParking.getTypePlace());
+            pstmt.setString(4, placeDeParking.getStatutPlace()); // Use the existing ID for WHERE condition
+
+            int affectedRows = pstmt.executeUpdate();
+            return new Response(request.getRequestId(), affectedRows > 0 ? "Place de parking mise à jour avec succès" : "Échec de la mise à jour");
+        }
+    }
+
 
     private Response InsertPersonne(final Request request, final Connection connection) throws SQLException, IOException {
         final ObjectMapper objectMapper = new ObjectMapper();
@@ -569,4 +617,58 @@ private Response UpdateLocalT(final Request request, final Connection connection
             logger.error("Erreur SQL lors de la suppression du local", e);
             return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
         }
-    }}
+    }
+    private Response SelectAllMecaniciens(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_MECANICIEN.query);
+        Mecaniciens mecaniciens = new Mecaniciens();
+
+        while (res.next()) {
+            Mecanicien mecanicien = new Mecanicien();
+            mecanicien.setNom(res.getString(1));
+            mecanicien.setPrenom(res.getString(2));
+            mecanicien.setTelephone(res.getString(3));
+            mecanicien.setDisponibilite(res.getBoolean(4));
+            mecanicien.setSpecialite(res.getString(5));
+            mecanicien.setMail(res.getString(6));
+            mecaniciens.add(mecanicien);
+        }
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(mecaniciens));
+
+    }
+    private Response InsertMecanicien(final Request request, final Connection connection) throws SQLException, IOException {
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Mecanicien mecanicien;
+        try {
+            mecanicien = objectMapper.readValue(request.getRequestBody(), Mecanicien.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données du mecanicien invalides");
+        }
+
+        if (mecanicien.getNom() == null || mecanicien.getTelephone() == null) {
+            return new Response(request.getRequestId(), "Champs nom ou/et telephone manquants");
+        }
+
+
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.INSERT_MECANICIEN.query)) {
+            stmt.setString(1, mecanicien.getNom());
+            stmt.setString(2, mecanicien.getPrenom());
+            stmt.setString(3, mecanicien.getTelephone());
+            stmt.setBoolean(4, mecanicien.getDisponibilite());
+            stmt.setString(5, mecanicien.getSpecialite());
+            stmt.setString(6, mecanicien.getMail());
+            stmt.executeUpdate();
+            return new Response(request.getRequestId(), objectMapper.writeValueAsString(mecanicien));
+
+        } catch (SQLException e) {
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+        } catch (IOException e) {
+            return new Response(request.getRequestId(), "Erreur de traitement de la requête.");
+        }
+
+
+    }
+}

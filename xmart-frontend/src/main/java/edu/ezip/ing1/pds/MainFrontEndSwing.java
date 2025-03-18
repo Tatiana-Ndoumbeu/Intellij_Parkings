@@ -7,6 +7,7 @@ import edu.ezip.ing1.pds.services.AbonementService;
 import edu.ezip.ing1.pds.services.LocalLaveriesService;
 import edu.ezip.ing1.pds.services.LocalTechniqueService;
 import edu.ezip.ing1.pds.services.PlaceDeParkingService;
+import edu.ezip.ing1.pds.services.MecanicienService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,13 +31,14 @@ public class MainFrontEndSwing extends JFrame {
     public static final String PLACES_DE_PARKING = "Places de Parking";
     public static final String LOCAL_LAVERIES = "Local Laverie";
     public static final String LOCAL_TECHNIQUE = "Local Technique";
-    public static final String TECHNICIENS = "Techniciens";
+    public static final String MECANICIEN = "Mecanicien";
+    public static final String RESERVATION = "Reservation";
 
 
     private Abonnements abonnements = new Abonnements();
     private Personnes personnes = new Personnes();
     private Vehicles vehicles = new Vehicles();
-    //private Technicien technicien = new Technicien(); à continuer
+    private Mecaniciens mecaniciens = new Mecaniciens();
     private final static String LoggingLabel = "FrontEnd";
     private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
     private final static String networkConfigFile = "network.yaml";
@@ -57,9 +59,12 @@ public class MainFrontEndSwing extends JFrame {
         tabbedPane.addTab(PERSONNES, createTablePanel(PERSONNES));
         tabbedPane.addTab(PLACES_DE_PARKING, createTablePanel(PLACES_DE_PARKING));
         tabbedPane.addTab(VEHICLES, createTablePanel(VEHICLES));
+        tabbedPane.addTab(MECANICIEN, createTablePanel(MECANICIEN));
         tabbedPane.addTab(LOCAL_LAVERIES, createTablePanelLocaux(LOCAL_LAVERIES));
         tabbedPane.addTab(LOCAL_TECHNIQUE, createTablePanelLocaux(LOCAL_TECHNIQUE));
-        tabbedPane.addTab(TECHNICIENS, createTablePanel(TECHNICIENS));
+        tabbedPane.addTab(RESERVATION, createTablePanelresa());
+
+
         add(tabbedPane);
     }
 
@@ -111,6 +116,9 @@ public class MainFrontEndSwing extends JFrame {
                  case LOCAL_TECHNIQUE:
                      updateLocalT((DefaultTableModel) table.getModel());
                      break;
+                 case PLACES_DE_PARKING:
+                     updatePlaceDeParking((DefaultTableModel) table.getModel());
+                     break;
     }
          });
         panelsud.add(disponibutton);
@@ -134,17 +142,6 @@ public class MainFrontEndSwing extends JFrame {
 
 
     }
-
-
-
-
-
-
-
-
-
-
-
     private JPanel createTablePanel(String type) {
         JPanel panelsud = new JPanel(new FlowLayout());
         JPanel panel = new JPanel(new BorderLayout());
@@ -163,8 +160,8 @@ public class MainFrontEndSwing extends JFrame {
             case VEHICLES:
                 table.setModel(createVehicleTableModel());
                 break;
-            case TECHNICIENS:
-                table.setModel(createTechnicienTableModel());
+            case MECANICIEN:
+                table.setModel(createMecanicienTableModel(networkConfig));
                 break;
         }
 
@@ -188,9 +185,9 @@ public class MainFrontEndSwing extends JFrame {
                 case VEHICLES:
                     insertVehicle((DefaultTableModel) table.getModel());
                     break;
-                //case TECHNICIENS:
-                 //   insertLocal((DefaultTableModel) table.getModel());
-                 //   break;
+                case MECANICIEN:
+                    insertMecanicien((DefaultTableModel) table.getModel());
+                    break;
 
             }
         });
@@ -202,6 +199,9 @@ public class MainFrontEndSwing extends JFrame {
             switch (type) {
                 case ABONNEMENTS:
                     supprimerAbonnement((DefaultTableModel) table.getModel(), table);
+                    break;
+                case PLACES_DE_PARKING:
+                    supprimerPlaceDeParking((DefaultTableModel) table.getModel(), table);
                     break;
             
                 default:
@@ -217,17 +217,34 @@ public class MainFrontEndSwing extends JFrame {
                     logger.debug("Modification pour {}", type);
                     updateAbonnement((DefaultTableModel) table.getModel());
                     break;
+                case PLACES_DE_PARKING:
+                    logger.debug("Modification pour {}", type);
+                    updatePlaceDeParking((DefaultTableModel) table.getModel());
+                    break;
 
                 default:
                     break;
             }
-
-
         });
         panelsud.add(updateAbobutton);
         panel.add(panelsud, BorderLayout.SOUTH);
+        return panel;
+    }
 
+    private JPanel createTablePanelresa()
+    {
+        JPanel panelsud = new JPanel(new FlowLayout());
+        JPanel panel = new JPanel(new BorderLayout());
+        JTable table = new JTable();
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
+        table.setModel(createReservationTableModel(networkConfig));
 
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JButton reserverButton = new JButton("reserver une zone spéciale");
+        panelsud.add(reserverButton);
+        panel.add(panelsud, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -254,14 +271,26 @@ public class MainFrontEndSwing extends JFrame {
         return model;
     }
 
-    private DefaultTableModel createTechnicienTableModel() {
+    private DefaultTableModel createMecanicienTableModel(NetworkConfig networkConfig) {
+        final MecanicienService mecanicienService = new MecanicienService(networkConfig);
         String[] columns = {"Nom", "Prenom", "Spécialité"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
-        if (personnes.getPersonnes() != null) {
-            for (Personne personne : personnes.getPersonnes()) {
-                model.addRow(new Object[]{personne.getIdPersonne(), personne.getNom(), personne.getPrenom()});
-            } //à modifier aussi
+        try {
+            mecaniciens = mecanicienService.selectMecanicien();
+            if (mecaniciens != null && mecaniciens.getMecaniciens() != null) {
+                    for (Mecanicien mecanicien : mecaniciens.getMecaniciens()) {
+                        model.addRow(new Object[]{mecanicien.getNom(), mecanicien.getPrenom(), mecanicien.getSpecialite()});
+
+            }}
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur recuperation mecanicien", e);
         }
+        return model;
+    }
+    private DefaultTableModel createReservationTableModel(NetworkConfig networkConfig) {
+        String[] columns = {"Jour debut", "Type de place", "du", "jusqu'au" , "place"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+
         return model;
     }
 
@@ -297,6 +326,7 @@ public class MainFrontEndSwing extends JFrame {
                 // Forcer le tri par emplacement ou ID
                 List<PlaceDeParking> sortedList = new ArrayList<>(placesDeParkings.getPlaceDeParkings());
                 sortedList.sort(Comparator.comparing(PlaceDeParking::getIdPlace)); // Change ici selon le critère voulu
+                logger.debug("PlaceDeParkings sorted list {}", sortedList);
 
                 for (PlaceDeParking place : sortedList) {
                     model.addRow(new Object[]{
@@ -500,6 +530,37 @@ public class MainFrontEndSwing extends JFrame {
         }
     }
 
+    private void supprimerPlaceDeParking(DefaultTableModel model, JTable table) {
+        String idPlace = JOptionPane.showInputDialog(this, "Entrez l'identifiant de la place de parking à supprimer :",
+                "Suppression d'une place de parking", JOptionPane.QUESTION_MESSAGE);
+
+        if (idPlace == null || idPlace.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "L'identifiant est invalide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Voulez-vous vraiment supprimer cette place de parking ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+                placeDeParkingService.deletePlaceDeParking(idPlace);
+
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    if (model.getValueAt(i, 0).equals(idPlace)) {
+                        model.removeRow(i);
+                        break;
+                    }
+                }
+
+                JOptionPane.showMessageDialog(this, "Place de parking supprimée avec succès !");
+            } catch (Exception e) {
+                logger.error("Erreur lors de la suppression de la place de parking", e);
+                JOptionPane.showMessageDialog(this, "Erreur lors de la suppression de la place de parking.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+
     private void updateAbonnement(DefaultTableModel model) {
 
         String idAbo = JOptionPane.showInputDialog(this, "Identifiant de l'abonnement à modifier :");
@@ -528,17 +589,130 @@ public class MainFrontEndSwing extends JFrame {
 
     }
 
+
+
+
+    private void updatePlaceDeParking(DefaultTableModel model) {
+        String idPlace = JOptionPane.showInputDialog(this, "ID de la place à modifier :");
+        if (idPlace == null || idPlace.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "L'ID de la place ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String newEmplacement = JOptionPane.showInputDialog(this, "Nouvel emplacement :");
+        if (newEmplacement == null || newEmplacement.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "L'emplacement ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String newType = JOptionPane.showInputDialog(this, "Nouveau type de place :");
+        if (newType == null || newType.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le type de place ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String newStatut = JOptionPane.showInputDialog(this, "Nouveau statut de place (Occupée, Libre) :");
+        if (newStatut == null || newStatut.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Le statut de la place ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        boolean placeTrouvee = false;
+        for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
+            if (place.getIdPlace().equals(idPlace)) {
+                place.setEmplacement(newEmplacement);
+                place.setTypePlace(newType);
+                place.setStatutPlace(newStatut);
+                placeTrouvee = true;
+                break;
+            }
+        }
+
+        if (!placeTrouvee) {
+            JOptionPane.showMessageDialog(this, "Place de parking non trouvée.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            PlaceDeParking updatedPlace = new PlaceDeParking(idPlace, newEmplacement, newType, newStatut);
+            final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+            placeDeParkingService.updatePlaceDeParking(updatedPlace);
+
+            model.setRowCount(0); // Réinitialiser les lignes de la table
+            for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
+                model.addRow(new Object[]{place.getIdPlace(), place.getEmplacement(), place.getTypePlace(), place.getStatutPlace()});
+            }
+
+            JOptionPane.showMessageDialog(this, "Place de parking mise à jour avec succès.");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur lors de la mise à jour de la place de parking", e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour de la place de parking.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+    private void insertLocal(DefaultTableModel model) {
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
+        final LocalLaveriesService localService = new LocalLaveriesService(networkConfig);
+
+        String numLocal = JOptionPane.showInputDialog(this, "num local :");
+        if (numLocal == null || numLocal.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "num local cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            Integer.parseInt(numLocal);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String disponibilite = JOptionPane.showInputDialog(this, "Entrer disponibilite du local true ou false:");
+        if (disponibilite == null || disponibilite.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "disponibilite ne peut pas être vide.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!disponibilite.equalsIgnoreCase("true") && !disponibilite.equalsIgnoreCase("false")){
+            JOptionPane.showMessageDialog(this, "La disponibilité est soit 'true' soit 'false'' ", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        LocalLaverie localLaverie1 = new LocalLaverie();
+        localLaverie1.setNumLocalL(Integer.parseInt(numLocal));
+        localLaverie1.setDisponibilite(Boolean.parseBoolean(disponibilite));
+
+        try {
+            localService.insertLoclaLaveries(localLaverie1);
+            model.addRow(new Object[]{localLaverie1.getNumLocalL(), localLaverie1.getDisponibilite()});
+            JOptionPane.showMessageDialog(this, "Local Inséré.");
+
+            createTablePanel("createTablePanel");
+            JOptionPane.showMessageDialog(this, "Local inséré.");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur insertion Local", e);
+            JOptionPane.showMessageDialog(this, "Erreur insertion Local.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
     private void updateLocal(DefaultTableModel model) {
-        
+
 
         String numLocal = JOptionPane.showInputDialog(this, "Numéro du local à modifier :");
         if (numLocal == null || numLocal.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        try {
+            Integer.parseInt(numLocal);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
         if (disponibilite == null || disponibilite.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!disponibilite.equalsIgnoreCase("true") && !disponibilite.equalsIgnoreCase("false")){
+            JOptionPane.showMessageDialog(this, "La disponibilité est soit 'true' soit 'false'' ", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
         boolean newDisponibilite = Boolean.parseBoolean(disponibilite);
@@ -551,64 +725,32 @@ public class MainFrontEndSwing extends JFrame {
                 break;
             }
         }
-    
+
         if (!localTrouve) {
             JOptionPane.showMessageDialog(this, "Local non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         try {
-        LocalLaverie localLaveriemodif = new LocalLaverie();
-        localLaveriemodif.setNumLocalL(Integer.parseInt(numLocal));
-        localLaveriemodif.setDisponibilite(newDisponibilite);
+            LocalLaverie localLaveriemodif = new LocalLaverie();
+            localLaveriemodif.setNumLocalL(Integer.parseInt(numLocal));
+            localLaveriemodif.setDisponibilite(newDisponibilite);
 
             final LocalLaveriesService localService = new LocalLaveriesService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
             localService.updateLocLaveries(localLaveriemodif);
-    
+
             model.setRowCount(0);// on supprime dabord les anciennes lignes dans le tableau
             for (LocalLaverie place : localLaveries.getLocalLaveries()) {
                 model.addRow(new Object[]{place.getNumLocalL(), place.getDisponibilite()});
             }
-    
+
             JOptionPane.showMessageDialog(this, "Disponibilité du local mise à jour.");
         } catch (IOException | InterruptedException e) {
             logger.error("Erreur lors de la mise à jour du local", e);
             JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour du local.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
-    
 
-    }
 
-    private void insertLocal(DefaultTableModel model) {
-        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
-        final LocalLaveriesService localService = new LocalLaveriesService(networkConfig);
-
-        String numLocal = JOptionPane.showInputDialog(this, "num local :");
-        if (numLocal == null || numLocal.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "num local cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        String disponibilite = JOptionPane.showInputDialog(this, "Entrer disponibilite du local true ou false:");
-        if (disponibilite == null || disponibilite.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "disponibilite cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        LocalLaverie localLaverie1 = new LocalLaverie();
-        localLaverie1.setNumLocalL(Integer.parseInt(numLocal));
-        localLaverie1.setDisponibilite(Boolean.parseBoolean(disponibilite));
-
-        try {
-            localService.insertLoclaLaveries(localLaverie1);
-            model.addRow(new Object[]{localLaverie1.getNumLocalL(), localLaverie1.getDisponibilite()});
-            JOptionPane.showMessageDialog(this, "Local Inséré.");
-            // Refresh the table after insertion
-            createTablePanel("createTablePanel");
-            JOptionPane.showMessageDialog(this, "Local inséré.");
-        } catch (IOException | InterruptedException e) {
-            logger.error("Erreur insertion Local", e);
-            JOptionPane.showMessageDialog(this, "Erreur insertion Local.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
     }
     private void deleteLocal(DefaultTableModel model) {
         String numLocalL = JOptionPane.showInputDialog(this, "Numéro du local à supprimer :");
@@ -616,6 +758,14 @@ public class MainFrontEndSwing extends JFrame {
             JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        try {
+            Integer.parseInt(numLocalL);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+
 
         boolean localTrouve = false;
         LocalLaverie localASupprimer = null;
@@ -664,9 +814,19 @@ public class MainFrontEndSwing extends JFrame {
             JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        try {
+            Integer.parseInt(numLocalT);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         String disponibilite = JOptionPane.showInputDialog(this, "Nouvelle disponibilité (true ou false) :");
         if (disponibilite == null || disponibilite.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "La disponibilité ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!disponibilite.equalsIgnoreCase("true") && !disponibilite.equalsIgnoreCase("false")){
+            JOptionPane.showMessageDialog(this, "La disponibilité est soit 'true' soit 'false'' ", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
         boolean newDisponibilite = Boolean.parseBoolean(disponibilite);
@@ -713,13 +873,23 @@ public class MainFrontEndSwing extends JFrame {
 
         String numLocalT = JOptionPane.showInputDialog(this, "numero local :");
         if (numLocalT == null || numLocalT.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "num local cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "num local ne peut pas être vide.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            Integer.parseInt(numLocalT);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         String disponibilite = JOptionPane.showInputDialog(this, "Entrer disponibilite du local true ou false:");
         if (disponibilite == null || disponibilite.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "disponibilite cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!disponibilite.equalsIgnoreCase("true") && !disponibilite.equalsIgnoreCase("false")){
+            JOptionPane.showMessageDialog(this, "La disponibilité est soit 'true' soit 'false'' ", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -745,6 +915,12 @@ public class MainFrontEndSwing extends JFrame {
         String numLocalT = JOptionPane.showInputDialog(this, "Numéro du local à supprimer :");
         if (numLocalT == null || numLocalT.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Le numéro du local ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            Integer.parseInt(numLocalT);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Num local doit être un entier.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -785,6 +961,44 @@ public class MainFrontEndSwing extends JFrame {
         } catch (IOException | InterruptedException e) {
             logger.error("Erreur lors de la suppression du local", e);
             JOptionPane.showMessageDialog(this, "Erreur lors de la suppression du local.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    private void insertMecanicien(DefaultTableModel model) {
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
+        final MecanicienService mecanicienService = new MecanicienService(networkConfig);
+
+        String nom = JOptionPane.showInputDialog(this, "nom du mecano :");
+        if (nom == null || nom.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "nom du mecanicien ne peut etre vide", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String prenom = JOptionPane.showInputDialog(this, "Entrer son prénom :");
+        String telephone = JOptionPane.showInputDialog(this, "Entrer son numero de telephone(ex:0743434343) :");
+        String disponibilite= JOptionPane.showInputDialog(this, "Entrer sa disponibilité pour ce mois :");
+        String specialite = JOptionPane.showInputDialog(this, "Entrer sa spécialité :");
+        if(specialite == null || specialite.trim().isEmpty()) {
+            do { specialite = JOptionPane.showInputDialog(this, "Entrer sa spécialité :");}
+            while (specialite == null || specialite.trim().isEmpty());
+        }
+        String mail = JOptionPane.showInputDialog(this, "Entrer son mail :");
+
+
+        Mecanicien mecanicien1 = new Mecanicien();
+        mecanicien1.setNom(nom);
+        mecanicien1.setPrenom(prenom);
+        mecanicien1.setTelephone(telephone);
+        mecanicien1.setDisponibilite(Boolean.parseBoolean(disponibilite));
+        mecanicien1.setSpecialite(specialite);
+        mecanicien1.setMail(mail);
+        try {
+            mecanicienService.insertMecanicien(mecanicien1);
+            model.addRow(new Object[]{mecanicien1.getNom(), mecanicien1.getPrenom(), mecanicien1.getSpecialite()});
+            JOptionPane.showMessageDialog(this, "Mecanicien Inséré.");
+            createTablePanel("createTablePanel");
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur insertion Mecanicien", e);
+            JOptionPane.showMessageDialog(this, "Erreur insertion Mecanicien.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
