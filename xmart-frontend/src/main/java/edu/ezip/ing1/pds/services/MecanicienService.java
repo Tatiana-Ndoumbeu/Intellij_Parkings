@@ -27,7 +27,7 @@ public class MecanicienService {
     private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
 
     final String insertRequestOrder = "INSERT_MECANICIEN";
-    final String selectRequestOrder = "SELECT_ALL_ABONNEMENTS";
+    final String selectRequestOrder = "SELECT_ALL_MECANICIEN";
     //final String suppRequestOrder = "DELETE_MECANICIEN";
     //final String updateRequestOrder = "UPDATE_MECANICIEN";
 
