@@ -169,8 +169,8 @@ public class IntelijjParkingService {
             abonnement.setIdAbonnement(res.getString(1));
             abonnement.setPrix(res.getDouble(3));
             abonnement.setTypeAbonnement(res.getString(2));
-            abonnement.setDateDebut(res.getDate(5).toLocalDate());
-            abonnement.setDateFin(res.getDate(6).toLocalDate());
+            abonnement.setDateDebut(res.getDate(5));
+            abonnement.setDateFin(res.getDate(6));
             abonnement.setStatutAbonnement(res.getString(4));
             abonnements.add(abonnement);
         }
@@ -239,8 +239,9 @@ public class IntelijjParkingService {
             pstmt.setDouble(3, abonnement.getPrix());
             pstmt.setString(2, abonnement.getTypeAbonnement());
             pstmt.setString(4, abonnement.getStatutAbonnement());
-            pstmt.setDate(5, java.sql.Date.valueOf(abonnement.getDateDebut()));
-            pstmt.setDate(6, java.sql.Date.valueOf(abonnement.getDateFin()));
+            pstmt.setDate(5, abonnement.getDateDebut());
+            pstmt.setDate(6, abonnement.getDateFin());
+
             int affectedRows = pstmt.executeUpdate();
             return new Response(request.getRequestId(), affectedRows > 0 ? "abonnement inséré avec succès" : "Échec de l'insertion");
         }
@@ -283,8 +284,8 @@ public class IntelijjParkingService {
             stmt.setString(1, abonnement.getTypeAbonnement());
             stmt.setDouble(2, abonnement.getPrix());
             stmt.setString(3, abonnement.getStatutAbonnement());
-            stmt.setDate(4, abonnement.getDateDebut() != null ? Date.valueOf(abonnement.getDateDebut()) : null);
-            stmt.setDate(5, abonnement.getDateFin() != null ? Date.valueOf(abonnement.getDateFin()) : null);
+            stmt.setDate(4, abonnement.getDateDebut() );
+            stmt.setDate(5, abonnement.getDateFin() );
             stmt.setString(6, abonnement.getIdAbonnement());
 
             int affectedRows = stmt.executeUpdate();
