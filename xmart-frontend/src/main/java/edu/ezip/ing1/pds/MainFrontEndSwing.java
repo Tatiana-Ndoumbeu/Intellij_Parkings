@@ -8,6 +8,7 @@ import edu.ezip.ing1.pds.services.LocalLaveriesService;
 import edu.ezip.ing1.pds.services.LocalTechniqueService;
 import edu.ezip.ing1.pds.services.PlaceDeParkingService;
 import edu.ezip.ing1.pds.services.MecanicienService;
+import edu.ezip.ing1.pds.uiUtils.PlaceDeParkingViewModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,12 +17,13 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.IOException;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.util.UUID;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
+
+import static edu.ezip.ing1.pds.uiUtils.PlaceDeParkingViewModel.*;
 
 public class MainFrontEndSwing extends JFrame {
 
@@ -117,7 +119,7 @@ public class MainFrontEndSwing extends JFrame {
                      updateLocalT((DefaultTableModel) table.getModel());
                      break;
                  case PLACES_DE_PARKING:
-                     updatePlaceDeParking((DefaultTableModel) table.getModel());
+                     updatePlaceDeParking(networkConfig,(DefaultTableModel) table.getModel(),this,networkConfigFile,logger);
                      break;
     }
          });
@@ -155,7 +157,7 @@ public class MainFrontEndSwing extends JFrame {
                 table.setModel(createPersonneTableModel());
                 break;
             case PLACES_DE_PARKING:
-                table.setModel(createPlaceDeParkingTableModel(networkConfig));
+                table.setModel(createPlaceDeParkingTableModel(networkConfig,placesDeParkings,logger));
                 break;
             case VEHICLES:
                 table.setModel(createVehicleTableModel());
@@ -180,7 +182,7 @@ public class MainFrontEndSwing extends JFrame {
                     insertPersonne((DefaultTableModel) table.getModel());
                     break;
                 case PLACES_DE_PARKING:
-                    insertPlaceDeParking((DefaultTableModel) table.getModel());
+                    insertPlaceDeParking((DefaultTableModel) table.getModel(),this,networkConfigFile,logger);
                     break;
                 case VEHICLES:
                     insertVehicle((DefaultTableModel) table.getModel());
@@ -201,7 +203,7 @@ public class MainFrontEndSwing extends JFrame {
                     supprimerAbonnement((DefaultTableModel) table.getModel(), table);
                     break;
                 case PLACES_DE_PARKING:
-                    supprimerPlaceDeParking((DefaultTableModel) table.getModel(), table);
+                   PlaceDeParkingViewModel.supprimerPlaceDeParking((DefaultTableModel) table.getModel(), table,this,placesDeParkings,networkConfigFile,logger);
                     break;
             
                 default:
@@ -219,7 +221,7 @@ public class MainFrontEndSwing extends JFrame {
                     break;
                 case PLACES_DE_PARKING:
                     logger.debug("Modification pour {}", type);
-                    updatePlaceDeParking((DefaultTableModel) table.getModel());
+                    updatePlaceDeParking(networkConfig,(DefaultTableModel) table.getModel(),this,networkConfigFile,logger);
                     break;
 
                 default:
@@ -314,35 +316,7 @@ public class MainFrontEndSwing extends JFrame {
         model.addRow(new Object[]{newVehicle.getNumPlaque(), newVehicle.getType(), newVehicle.getMarque()});
     }
 
-    private DefaultTableModel createPlaceDeParkingTableModel(NetworkConfig networkConfig) {
-        final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(networkConfig);
-        String[] columns = {"ID", "Emplacement", "typePlace", "statutPlace"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0);
 
-        try {
-            placesDeParkings = placeDeParkingService.selectPlaceDeParkings();
-            if (placesDeParkings != null && placesDeParkings.getPlaceDeParkings() != null) {
-
-                // Forcer le tri par emplacement ou ID
-                List<PlaceDeParking> sortedList = new ArrayList<>(placesDeParkings.getPlaceDeParkings());
-                sortedList.sort(Comparator.comparing(PlaceDeParking::getIdPlace)); // Change ici selon le critère voulu
-                logger.debug("PlaceDeParkings sorted list {}", sortedList);
-
-                for (PlaceDeParking place : sortedList) {
-                    model.addRow(new Object[]{
-                            place.getIdPlace(),
-                            place.getEmplacement(),
-                            place.getStatutPlace(),
-                            place.getTypePlace()
-                    });
-                }
-            }
-        } catch (IOException | InterruptedException e) {
-            logger.error("Error fetching places de parking", e);
-        }
-
-        return model;
-    }
 
     private DefaultTableModel createAbonnementTableModel(NetworkConfig networkConfig) {
         final AbonementService abonementService = new AbonementService(networkConfig);
@@ -413,41 +387,6 @@ public class MainFrontEndSwing extends JFrame {
         return model;
     }
 
-    private void insertPlaceDeParking(DefaultTableModel model) {
-        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
-        final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(networkConfig);
-        String emplacement = JOptionPane.showInputDialog(this, "Entrer Emplacement:");
-        if (emplacement == null || emplacement.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Emplacement cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String typePlace = JOptionPane.showInputDialog(this, "Entrer Type de Place:");
-        if (typePlace == null || typePlace.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Type cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String statutPlace = JOptionPane.showInputDialog(this, "Entrer Statut de Place (Occupée, Libre):");
-        if (statutPlace == null || statutPlace.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "statut ne peut etre vide.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        PlaceDeParking newPlace = new PlaceDeParking(UUID.randomUUID().toString(), emplacement, typePlace, statutPlace);
-
-
-        try {
-            placeDeParkingService.insertPlaceDeParkings(newPlace);
-
-            model.addRow(new Object[]{newPlace.getIdPlace(), newPlace.getEmplacement(), newPlace.getTypePlace(), newPlace.getStatutPlace()});
-            //model.addRow(new Object[]{newPlace.getIdPlace(), newPlace.getEmplacement(), newPlace.getStatutPlace(), newPlace.getTypePlace()});
-            JOptionPane.showMessageDialog(this, "Place de parking inseré !.");
-        } catch (IOException | InterruptedException e) {
-            logger.error("echec insertion place de parking", e);
-            JOptionPane.showMessageDialog(this, "echec insertion place de parking.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
 
     private void insertAbonnements(DefaultTableModel model) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
@@ -530,36 +469,6 @@ public class MainFrontEndSwing extends JFrame {
         }
     }
 
-    private void supprimerPlaceDeParking(DefaultTableModel model, JTable table) {
-        String idPlace = JOptionPane.showInputDialog(this, "Entrez l'identifiant de la place de parking à supprimer :",
-                "Suppression d'une place de parking", JOptionPane.QUESTION_MESSAGE);
-
-        if (idPlace == null || idPlace.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "L'identifiant est invalide.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        int confirm = JOptionPane.showConfirmDialog(this, "Voulez-vous vraiment supprimer cette place de parking ?", "Confirmation", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
-                placeDeParkingService.deletePlaceDeParking(idPlace);
-
-                for (int i = 0; i < model.getRowCount(); i++) {
-                    if (model.getValueAt(i, 0).equals(idPlace)) {
-                        model.removeRow(i);
-                        break;
-                    }
-                }
-
-                JOptionPane.showMessageDialog(this, "Place de parking supprimée avec succès !");
-            } catch (Exception e) {
-                logger.error("Erreur lors de la suppression de la place de parking", e);
-                JOptionPane.showMessageDialog(this, "Erreur lors de la suppression de la place de parking.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
 
     private void updateAbonnement(DefaultTableModel model) {
 
@@ -590,65 +499,6 @@ public class MainFrontEndSwing extends JFrame {
     }
 
 
-
-
-    private void updatePlaceDeParking(DefaultTableModel model) {
-        String idPlace = JOptionPane.showInputDialog(this, "ID de la place à modifier :");
-        if (idPlace == null || idPlace.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "L'ID de la place ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String newEmplacement = JOptionPane.showInputDialog(this, "Nouvel emplacement :");
-        if (newEmplacement == null || newEmplacement.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "L'emplacement ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String newType = JOptionPane.showInputDialog(this, "Nouveau type de place :");
-        if (newType == null || newType.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Le type de place ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String newStatut = JOptionPane.showInputDialog(this, "Nouveau statut de place (Occupée, Libre) :");
-        if (newStatut == null || newStatut.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Le statut de la place ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        boolean placeTrouvee = false;
-        for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
-            if (place.getIdPlace().equals(idPlace)) {
-                place.setEmplacement(newEmplacement);
-                place.setTypePlace(newType);
-                place.setStatutPlace(newStatut);
-                placeTrouvee = true;
-                break;
-            }
-        }
-
-        if (!placeTrouvee) {
-            JOptionPane.showMessageDialog(this, "Place de parking non trouvée.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        try {
-            PlaceDeParking updatedPlace = new PlaceDeParking(idPlace, newEmplacement, newType, newStatut);
-            final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
-            placeDeParkingService.updatePlaceDeParking(updatedPlace);
-
-            model.setRowCount(0); // Réinitialiser les lignes de la table
-            for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
-                model.addRow(new Object[]{place.getIdPlace(), place.getEmplacement(), place.getTypePlace(), place.getStatutPlace()});
-            }
-
-            JOptionPane.showMessageDialog(this, "Place de parking mise à jour avec succès.");
-        } catch (IOException | InterruptedException e) {
-            logger.error("Erreur lors de la mise à jour de la place de parking", e);
-            JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour de la place de parking.", "Erreur", JOptionPane.ERROR_MESSAGE);
-        }
-    }
 
 
     private void insertLocal(DefaultTableModel model) {
