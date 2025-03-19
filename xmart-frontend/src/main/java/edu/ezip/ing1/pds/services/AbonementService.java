@@ -40,6 +40,8 @@ public class AbonementService {
 
         int birthdate = 0;
 
+            System.out.println("abonnement = " + abonnement);
+
             final ObjectMapper objectMapper = new ObjectMapper();
             final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(abonnement);
             logger.trace("Abonnement with its JSON face : {}", jsonifiedGuy);
@@ -48,6 +50,7 @@ public class AbonementService {
             request.setRequestId(requestId);
             request.setRequestOrder(insertRequestOrder);
             request.setRequestContent(jsonifiedGuy);
+            request.toString();
             objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
             final byte []  requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
 
