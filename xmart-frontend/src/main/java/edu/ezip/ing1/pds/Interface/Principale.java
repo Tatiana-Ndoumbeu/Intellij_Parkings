@@ -51,20 +51,34 @@ public class Principale extends JFrame {
 
         JPanel pannelAccueuil = new JPanel(new BorderLayout());
         pannelAccueuil.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        pannelAccueuil.setBackground(Color.decode("#8d9496"));
 
 
         JLabel titre = new JLabel("BONJOUR ET BIENVENUE DANS INTELLIJ PARKING", JLabel.CENTER);
-        titre.setFont(new Font("Arial", Font.BOLD, 20));
-        titre.setForeground(Color.BLUE);
-        pannelAccueuil.add(titre, BorderLayout.CENTER);
+       // titre.setFont(new Font("Arial", Font.BOLD, 20));
+        titre.setFont(new Font("Garamond", Font.BOLD, 25));
 
-       // JLabel iconLabel = new JLabel(chargerIcone( "Imagefond2.png", 100, 100));
-       // pannelAccueuil.add(iconLabel, BorderLayout.NORTH);
+
+
+
+
+
+
+        titre.setForeground(Color.BLUE);
+        pannelAccueuil.add(titre, BorderLayout.NORTH);
+
+        JPanel imagePanel = new JPanel(new GridBagLayout());
+        imagePanel.setBackground(Color.decode("#8d9496"));
+        JLabel iconLabel = new JLabel(chargerIcone("/icons/logoFond.png", 280, 280)); // Charger l'image
+        imagePanel.add(iconLabel); // Ajouter l'image centrée
+
+        pannelAccueuil.add(imagePanel, BorderLayout.CENTER);
 
 
 
         //JPanel pannel = new JPanel(new GridLayout(4, 1, 10, 10));
         JPanel pannel = new JPanel();
+        pannel.setBackground(Color.decode("#8d9496"));
         pannel.setLayout(new BoxLayout(pannel, BoxLayout.Y_AXIS));
 
         Bouton1 = new JButton("ATTRIBUTION RAPIDE", chargerIcone("/icons/attribution.png", 30, 30));
