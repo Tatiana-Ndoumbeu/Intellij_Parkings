@@ -22,6 +22,7 @@ public class PlaceDeParkingViewModel {
         String idPlace = JOptionPane.showInputDialog(parentComponent, "Entrez l'identifiant de la place de parking à supprimer :",
                 "Suppression d'une place de parking", JOptionPane.QUESTION_MESSAGE);
 
+        // verifie si l'id est valide
         if (idPlace == null || idPlace.trim().isEmpty()) {
             JOptionPane.showMessageDialog(parentComponent, "L'identifiant est invalide.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
