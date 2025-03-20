@@ -7,7 +7,7 @@ import edu.ezip.ing1.pds.commons.Request;
 
 import java.io.IOException;
 import java.util.Map;
-//utilisation de la genericite pour les appels dínsertions de tous objets
+//utilisation de la genericite pour les appels d'ínsertions de tous objets
 public class InsertClientRequest<T, R> extends ClientRequest<T, R> {
 
     private final Class<Map> mapClass = Map.class;
