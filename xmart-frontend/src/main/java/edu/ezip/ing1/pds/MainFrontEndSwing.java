@@ -71,7 +71,12 @@ public class MainFrontEndSwing extends JFrame {
     }
 
 
+    private ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
 
+        ImageIcon icon = new ImageIcon(getClass().getResource(chemin));
+        Image image = icon.getImage().getScaledInstance(largeur, hauteur, Image.SCALE_SMOOTH);
+        return new ImageIcon(image);
+    }
 
 
 
@@ -93,7 +98,8 @@ public class MainFrontEndSwing extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        JButton insertButton = new JButton("Ajouter un " + LOCAL);
+        JButton insertButton = new JButton("Ajouter un " + LOCAL, chargerIcone("/icons/ajouter.png", 30, 30));
+        insertButton.setBackground(Color.GREEN);
         insertButton.addActionListener(e -> {
             logger.debug("Ajout d'un local pour {}", LOCAL);
             switch (LOCAL) {
@@ -107,7 +113,8 @@ public class MainFrontEndSwing extends JFrame {
         });
         panelsud.add(insertButton);
 
-        JButton disponibutton = new JButton("modifier une disponibilité");
+        JButton disponibutton = new JButton("modifier une disponibilité", chargerIcone("/icons/modifier.png", 30, 30));
+        disponibutton.setBackground(Color.YELLOW);
    
          disponibutton.addActionListener(e -> {
             logger.debug("Modification de la disponibilité pour {}", LOCAL);
@@ -124,7 +131,8 @@ public class MainFrontEndSwing extends JFrame {
     }
          });
         panelsud.add(disponibutton);
-        JButton supprimebouton = new JButton("supprimer un Local");
+        JButton supprimebouton = new JButton("supprimer un Local", chargerIcone("/icons/supprimer.png", 30, 30));
+        supprimebouton.setBackground(Color.RED);
 
         supprimebouton.addActionListener(e -> {
             logger.debug("Suppression  {}", LOCAL);
@@ -171,7 +179,8 @@ public class MainFrontEndSwing extends JFrame {
         panel.add(scrollPane, BorderLayout.CENTER);
 
 
-        JButton insertButton = new JButton("Ajouter " + type);
+        JButton insertButton = new JButton("Ajouter " + type, chargerIcone("/icons/ajouter.png", 30, 30));
+        insertButton.setBackground(Color.GREEN);
         logger.debug("Load Network config file : {}", networkConfig.toString());
         insertButton.addActionListener(e -> {
             switch (type) {
@@ -196,7 +205,8 @@ public class MainFrontEndSwing extends JFrame {
         panelsud.add(insertButton);
 
 
-        JButton deleteButton = new JButton("Supprimer "+type);
+        JButton deleteButton = new JButton("Supprimer "+type, chargerIcone("/icons/supprimer.png", 30, 30));
+        deleteButton.setBackground(Color.RED);
         deleteButton.addActionListener(e -> {
             switch (type) {
                 case ABONNEMENTS:
@@ -212,7 +222,8 @@ public class MainFrontEndSwing extends JFrame {
         });
         panelsud.add(deleteButton);
 
-        JButton updateAbobutton = new JButton("modification " +type);
+        JButton updateAbobutton = new JButton("modification " +type, chargerIcone("/icons/modifier.png", 30, 30));
+        updateAbobutton.setBackground(Color.yellow);
         updateAbobutton.addActionListener(e ->{
             switch (type) {
                 case ABONNEMENTS:
