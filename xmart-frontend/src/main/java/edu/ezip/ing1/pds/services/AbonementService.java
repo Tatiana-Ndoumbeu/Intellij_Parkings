@@ -132,7 +132,7 @@ public class AbonementService {
 
     public void updateAbonnement(Abonnement abonnement) throws InterruptedException, IOException {
         final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
-        int birthdate = 0;
+        //int birthdate = 0;
         final ObjectMapper objectMapper = new ObjectMapper();
         final String jsonifiedAbonnement = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(abonnement);
         logger.trace("Abonnement en JSON : {}", jsonifiedAbonnement);
@@ -144,9 +144,13 @@ public class AbonementService {
         objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
         final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
 
-        final InsertClientRequest clientRequest = new InsertClientRequest(
+        /* InsertClientRequest clientRequest = new InsertClientRequest(
                 networkConfig,
                 birthdate++, request, abonnement, requestBytes);
+        clientRequests.push(clientRequest); */
+        final InsertClientRequest clientRequest = new InsertClientRequest(
+                networkConfig,
+                requestId.hashCode(), request, abonnement, requestBytes);
         clientRequests.push(clientRequest);
 
         while (!clientRequests.isEmpty()) {
@@ -154,8 +158,12 @@ public class AbonementService {
             clientResponse.join();
 
             final Abonnement updatedAbonnement = (Abonnement) clientResponse.getInfo();
-            logger.debug("Mise à jour terminée : {} id_Abonnement= {}",
-                    updatedAbonnement.getIdAbonnement(), updatedAbonnement.getTypeAbonnement());;
+            logger.debug("Thread {} complete: {} {} {} {} {} {} --> {}",
+                   clientResponse.getThreadName(),
+                    updatedAbonnement.getIdAbonnement(), updatedAbonnement.getTypeAbonnement(),
+                    updatedAbonnement.getPrix(), updatedAbonnement.getStatutAbonnement(),
+                    updatedAbonnement.getDateDebut(), updatedAbonnement.getDateFin(),
+                    clientResponse.getResult());
         }
     }
 }

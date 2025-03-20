@@ -391,31 +391,45 @@ public class MainFrontEndSwing extends JFrame {
     private void insertAbonnements(DefaultTableModel model) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         final AbonementService abonementService = new AbonementService(networkConfig);
-
-
-        //private double prix;
-        //private Date dateDebut;
-        //private Date dateFin;
-        //private String statutAbonnement;
-        // Collecter la saisie pour nouvel abonnement
-        String typeAbonnement = JOptionPane.showInputDialog(this, "Enter typeAbonnement:");
-        if (typeAbonnement == null || typeAbonnement.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "typeAbonnement doit etre non vide.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+        
+        String typeAbonnement;
+        while (true) {
+            typeAbonnement = JOptionPane.showInputDialog(this, "Entrer le type d'abonnement (Premium ou Standard)");
+            if (typeAbonnement == null) {
+                JOptionPane.showMessageDialog(this, "Opération annulée.", "Annulation", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            if (isValidType(typeAbonnement)) {
+                break;
+            }
+            JOptionPane.showMessageDialog(this, "Type d'abonnement invalide. Choisissez parmi : Premium, Standard", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
 
-        String prix = JOptionPane.showInputDialog(this, "Entrer prix:");
-        if (prix == null || prix.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "prix doit etre non vide", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+        String prix;
+        while (true) {
+            prix = JOptionPane.showInputDialog(this, "Entrer le prix de l'abonnement:");
+            if (prix==null){
+                JOptionPane.showMessageDialog(this, "Opération annulée.", "Annulation", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            if (isValidPrix(prix)) {
+                break;
+            }
+            JOptionPane.showMessageDialog(this, "Prix invalide : entrez un nombre positif", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
 
-        String statutAbonnement = JOptionPane.showInputDialog(this, "Entrer statutAbonnement  (ex, actif, inactif):");
-        if (statutAbonnement == null || statutAbonnement.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Statut  doit etre non vide.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+        String statutAbonnement;
+        while (true) {
+            statutAbonnement = JOptionPane.showInputDialog(this, "Entrer le statut de l'abonnement (Actif, Inactif, Suspendu) :");
+            if (statutAbonnement==null){
+                JOptionPane.showMessageDialog(this, "Opération annulée.", "Annulation", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            if (isValidStatut(statutAbonnement)) {
+                break;
+            }
+            JOptionPane.showMessageDialog(this, "Statut invalide : choisissez parmi (Actif, Inactif ou Suspendu)", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
-
         // nouvel abonnement
         Abonnement abonnement = new Abonnement();
         abonnement.setStatutAbonnement(statutAbonnement);
@@ -439,6 +453,19 @@ public class MainFrontEndSwing extends JFrame {
             logger.error("Erreur insertion abonnement", e);
             JOptionPane.showMessageDialog(this, "Erreur insertion abonnement.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private boolean isValidType(String type) {
+        return type != null && (type.equalsIgnoreCase("Premium") || type.equalsIgnoreCase("Standard"));
+    }
+    private boolean isValidPrix(String prix) {
+        try {
+            return prix != null && Double.parseDouble(prix) > 0;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }private boolean isValidStatut(String statut) {
+        return statut != null && (statut.equalsIgnoreCase("Actif") || statut.equalsIgnoreCase("Inactif") || statut.equalsIgnoreCase("Suspendu"));
     }
 
     private void supprimerAbonnement(DefaultTableModel model, JTable table){
@@ -473,34 +500,68 @@ public class MainFrontEndSwing extends JFrame {
     private void updateAbonnement(DefaultTableModel model) {
 
         String idAbo = JOptionPane.showInputDialog(this, "Identifiant de l'abonnement à modifier :");
+        AbonementService abonementService = new AbonementService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
         if (idAbo == null || idAbo.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "L'identifiant ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        String typeAbo = JOptionPane.showInputDialog(this, "Nouveau type de l'abonnement :");
-        if (typeAbo == null || typeAbo.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Le type de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
+        String typeAbo;
+        while (true) {
+            typeAbo = JOptionPane.showInputDialog(this, "Nouveau type de l'abonnement :");
+            if (typeAbo == null || typeAbo.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Le type de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
+                continue;
+            }
+            if (!isValidType(typeAbo)) {
+                JOptionPane.showMessageDialog(this, "Type d'abonnement invalide. Choisissez parmi : Premium, Standard", "Erreur", JOptionPane.ERROR_MESSAGE);
+                continue;
+            }
+            break;
+        }
+        String prix;
+        while (true) {
+            prix = JOptionPane.showInputDialog(this, "Nouveau prix de l'abonnement :");
+            if (prix == null || prix.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Le prix de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
+                continue;
+            }
+            if (!isValidPrix(prix)) {
+                JOptionPane.showMessageDialog(this, "Prix invalide : entrez un nombre positif", "Erreur", JOptionPane.ERROR_MESSAGE);
+                continue;
+            }
+            break;
+        }
+        String statut;
+        while (true) {
+            statut = JOptionPane.showInputDialog(this, "Nouveau statut de l'abonnement :");
+            if (statut == null || statut.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Le statut de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
+                continue;  
+            }
+            if (!isValidStatut(statut)) {  
+                JOptionPane.showMessageDialog(this, "Statut invalide : choisissez parmi (Actif, Inactif ou Suspendu)", "Erreur", JOptionPane.ERROR_MESSAGE);
+                continue;  
+            }
+            break;  
         }
 
-        String prix = JOptionPane.showInputDialog(this, "Nouveau prix de l'abonnement :");
-        if (prix == null || prix.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Le prix de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
+        Abonnement AboUpdated= new Abonnement();
+        AboUpdated.setIdAbonnement(idAbo);
+        AboUpdated.setTypeAbonnement(typeAbo);
+        AboUpdated.setPrix(Double.parseDouble(prix));
+        AboUpdated.setStatutAbonnement(statut);
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            if (model.getValueAt(i, 0).equals(idAbo)) {
+                model.setValueAt(typeAbo, i, 1);
+                model.setValueAt(prix, i, 2);
+                model.setValueAt(statut, i, 3);
+                break;
+            }
         }
 
-        String statut = JOptionPane.showInputDialog(this, "Nouveau statut de l'abonnement :");
-        if (statut == null || statut.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Le statut de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
 
     }
-
-
-
-
     private void insertLocal(DefaultTableModel model) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         final LocalLaveriesService localService = new LocalLaveriesService(networkConfig);
