@@ -30,9 +30,9 @@ public class IntelijjParkingService {
         INSERT_VEHICULE("INSERT INTO Vehicule (num_plaque, type, marque) VALUES (?, ?, ?)"),
 
         SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin FROM Abonnement t"),
-        INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix, statutAbonnement, dateDebut, dateFin ) VALUES (?, ?, ?, ?, ?, ?)"),
+        INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin ) VALUES (?, ?, ?, ?, ?, ?)"),
         DELETE_ABONNEMENT("DELETE FROM Abonnement WHERE id_abonnement = ?"),
-        UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=? WHERE id_abonnement=?"),
+        UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=?, WHERE id_abonnement=?"),
 
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel,mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
@@ -175,7 +175,7 @@ public class IntelijjParkingService {
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(vehicles));
     }
 
-    public Response SelectAllAbonnements(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+    private Response SelectAllAbonnements(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
         final ObjectMapper objectMapper = new ObjectMapper();
         final Statement stmt = connection.createStatement();
         final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_ABONNEMENTS.getQuery());
@@ -249,47 +249,19 @@ public class IntelijjParkingService {
     }
 
     private Response InsertAbonnement(final Request request, final Connection connection) throws SQLException, IOException {
-        logger.debug("Méthode InsertAbonnement appelée !");
         final ObjectMapper objectMapper = new ObjectMapper();
         Abonnement abonnement = objectMapper.readValue(request.getRequestBody(), Abonnement.class);
-        System.out.println("abonnement : ---- {}" + abonnement);
-
-        String generatedId = UUID.randomUUID().toString().substring(0, 8);
-        logger.debug("ID généré pour l'abonnement : {}", generatedId);
-        abonnement.setIdAbonnement(generatedId);
-        logger.debug("Objet abonnement avant insertion : {}", abonnement);
-
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_ABONNEMENT.getQuery())) {
-            pstmt.setString(1, generatedId);
+            pstmt.setString(1, UUID.randomUUID().toString().substring(0, 8)); //Prend les 8 premiers caractères Sde l'UUID
             pstmt.setDouble(3, abonnement.getPrix());
             pstmt.setString(2, abonnement.getTypeAbonnement());
             pstmt.setString(4, abonnement.getStatutAbonnement());
-            pstmt.setDate(5, new java.sql.Date(abonnement.getDateDebut().getTime()));
-            pstmt.setDate(6, new java.sql.Date(abonnement.getDateFin().getTime()));
-
-            if (abonnement.getDateDebut() != null) {
-                pstmt.setDate(5, new java.sql.Date(abonnement.getDateDebut().getTime()));
-            } else {
-                pstmt.setNull(5, java.sql.Types.DATE);
-            }
-
-            if (abonnement.getDateFin() != null) {
-                pstmt.setDate(6, new java.sql.Date(abonnement.getDateFin().getTime()));
-            } else {
-                pstmt.setNull(6, java.sql.Types.DATE);
-            }
+            pstmt.setDate(5, abonnement.getDateDebut());
+            pstmt.setDate(6, abonnement.getDateFin());
 
             int affectedRows = pstmt.executeUpdate();
-            logger.debug("Requête exécutée, lignes affectées : {}", affectedRows);
-            if (affectedRows > 0) {
-                abonnement.setIdAbonnement(generatedId);
-                logger.debug("Abonnement inséré avec ID : {}", abonnement.getIdAbonnement());
-                return new Response(request.getRequestId(), objectMapper.writeValueAsString(abonnement));
-            } else {
-                logger.error("Échec de l'insertion de l'abonnement : {}", abonnement);
-                return new Response(request.getRequestId(), "Échec de l'insertion");
-            }
+            return new Response(request.getRequestId(), affectedRows > 0 ? "abonnement inséré avec succès" : "Échec de l'insertion");
         }
     }
 
@@ -327,13 +299,12 @@ public class IntelijjParkingService {
 
 
         try (PreparedStatement stmt = connection.prepareStatement(Queries.UPDATE_ABONNEMENT.getQuery())) {
-            stmt.setString(1, abonnement.getIdAbonnement());
-            stmt.setString(2, abonnement.getTypeAbonnement());
-            stmt.setDouble(3, abonnement.getPrix());
-            stmt.setString(4, abonnement.getStatutAbonnement());
-            stmt.setDate(5, new java.sql.Date(abonnement.getDateDebut().getTime()) );
-            stmt.setDate(6, new java.sql.Date(abonnement.getDateFin().getTime()) );
-
+            stmt.setString(1, abonnement.getTypeAbonnement());
+            stmt.setDouble(2, abonnement.getPrix());
+            stmt.setString(3, abonnement.getStatutAbonnement());
+            stmt.setDate(4, abonnement.getDateDebut() );
+            stmt.setDate(5, abonnement.getDateFin() );
+            stmt.setString(6, abonnement.getIdAbonnement());
 
             int affectedRows = stmt.executeUpdate();
 

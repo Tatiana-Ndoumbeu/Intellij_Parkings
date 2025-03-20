@@ -354,12 +354,6 @@ public class MainFrontEndSwing extends JFrame {
             abonnements = abonementService.selectAbonnements();
             if (abonnements != null && abonnements.getAbonnements() != null) {
                 for (Abonnement place : abonnements.getAbonnements()) {
-                    System.out.println("\nInfo = " + place.getIdAbonnement()+
-                            place.getTypeAbonnement()+" "+
-                            place.getPrix()+" "+
-                            place.getStatutAbonnement()+" "+
-                            place.getDateDebut()+" "+
-                            place.getDateFin());
                     model.addRow(new Object[]{
                             place.getIdAbonnement(),
                             place.getTypeAbonnement(),
@@ -523,16 +517,10 @@ public class MainFrontEndSwing extends JFrame {
             AbonementService abonementService = new AbonementService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
             abonementService.supprimerAbonnement(idAbonnement);
             for (int i = 0; i < model.getRowCount(); i++) {
-                if (model.getValueAt(i,0) != null && model.getValueAt(i,0) instanceof UUID) {
-                    if (model.getValueAt(i,0).toString().equals(idAbonnement)) {
-                        model.removeRow(i);
-                        break;
-                    }
-                }
-                /*if (model.getValueAt(i, 0).equals(idAbonnement)) {
+                if (model.getValueAt(i, 0).equals(idAbonnement)) {
                     model.removeRow(i);
                     break;
-                } */
+                }
             }
             JOptionPane.showMessageDialog(this, "Abonnement supprimé avec succès !");
         } catch (Exception e) {
@@ -581,8 +569,8 @@ public class MainFrontEndSwing extends JFrame {
             return;
         }
 
-        String newtype = JOptionPane.showInputDialog(this, "Nouveau type de l'abonnement :");
-        if (newtype == null || newtype.trim().isEmpty()) {
+        String typeAbo = JOptionPane.showInputDialog(this, "Nouveau type de l'abonnement :");
+        if (typeAbo == null || typeAbo.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Le type de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -592,49 +580,11 @@ public class MainFrontEndSwing extends JFrame {
             JOptionPane.showMessageDialog(this, "Le prix de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        double newprix;
-        try {
-            newprix = Double.parseDouble(prix);
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Le prix doit être un nombre.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
 
-        String newstatut = JOptionPane.showInputDialog(this, "Nouveau statut de l'abonnement :");
-        if (newstatut == null || newstatut.trim().isEmpty()) {
+        String statut = JOptionPane.showInputDialog(this, "Nouveau statut de l'abonnement :");
+        if (statut == null || statut.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Le statut de l'abonnement ne peut pas être vide", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
-        }
-        boolean abonnementTrouve = false;
-        Abonnement aboToUpdate = null;
-        for (Abonnement abo : abonnements.getAbonnements()) {
-            if (abo.getIdAbonnement().equals(idAbo)) {
-                aboToUpdate = abo;
-                abo.setTypeAbonnement(newtype);
-                abo.setPrix(newprix);
-                abo.setStatutAbonnement(newstatut);
-                abonnementTrouve = true;
-                break;
-            }
-        }
-
-        if (!abonnementTrouve) {
-            JOptionPane.showMessageDialog(this, "Aucun abonnement trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        try {
-            Abonnement updatedAbonnement = new Abonnement(idAbo, newtype, newprix, aboToUpdate.getDateDebut(), aboToUpdate.getDateFin(), newstatut );
-            final AbonementService abonementService = new AbonementService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
-            abonementService.updateAbonnement(updatedAbonnement);
-            model.setRowCount(0);
-            for (Abonnement abo : abonnements.getAbonnements()) {
-                model.addRow(new Object[]{abo.getIdAbonnement(), abo.getTypeAbonnement(), abo.getPrix(), abo.getStatutAbonnement()});
-            }
-            JOptionPane.showMessageDialog(this, "Abonnement mis à jour avec succès.");
-
-        } catch (IOException | InterruptedException e) {
-            logger.error("Erreur lors de la mise à jour de l'abonnement", e);
-            JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour de l'abonnement.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
 
     }

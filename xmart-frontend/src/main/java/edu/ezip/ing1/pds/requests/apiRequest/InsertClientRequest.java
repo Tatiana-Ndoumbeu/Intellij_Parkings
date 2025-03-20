@@ -18,24 +18,8 @@ public class InsertClientRequest<T, R> extends ClientRequest<T, R> {
 
     @Override
     public R readResult(String body) throws IOException {
-        System.out.println("Réponse brute du serveur : " + body);
-
-        if (body == null || body.trim().isEmpty()) {
-            System.out.println("Erreur : la réponse du serveur est vide !");
-            return null;
-        }
-
         final ObjectMapper mapper = new ObjectMapper();
         final Map<String, Object> resultMap = mapper.readValue(body, mapClass);
-        System.out.println("Contenu du map : " + resultMap.toString());
-
-        String message = (String) resultMap.get("message");
-        Integer idAbonnement = (Integer) resultMap.get("idAbonnement");
-        if (message!=null){
-            return (R) ("Réponse du serveur: " + message + " (ID: " + idAbonnement + ")");
-        }
-
-
         @SuppressWarnings("unchecked")
         R result = (R) resultMap.toString();
         return result;
