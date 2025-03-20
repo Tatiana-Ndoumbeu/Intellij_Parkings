@@ -1,9 +1,10 @@
 placeDeParkings:
   - idPlace: "PD001"
+    emplacement: "Niveau 1, Section A"
     typePlace: "PMR"
     statutPlace: "Libre"
-    emplacement: "Niveau 1, Section A"
+
   - idPlace: "PD002"
+    emplacement: "Niveau 2, Section B"
     typePlace: "VIP"
     statutPlace: "Occupée"
-    emplacement: "Niveau 2, Section B"
