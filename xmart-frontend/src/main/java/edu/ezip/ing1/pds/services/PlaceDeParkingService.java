@@ -39,13 +39,14 @@ public class PlaceDeParkingService {
     }
 
     public void insertPlaceDeParkings(PlaceDeParking placeDeParking) throws InterruptedException, IOException {
+        logger.debug("PlaceDeParking with its JSON face : {}", placeDeParking);
         final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
         final PlacesDeParkings guys = ConfigLoader.loadConfig(PlacesDeParkings.class, PlaceDeParkingsToBeInserted);
 
         int birthdate = 0;
             final ObjectMapper objectMapper = new ObjectMapper();
             final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(placeDeParking);
-            logger.trace("PlaceDeParking with its JSON face : {}", jsonifiedGuy);
+            logger.debug("PlaceDeParking with its JSON face : {}", jsonifiedGuy);
             final String requestId = UUID.randomUUID().toString();
             final Request request = new Request();
             request.setRequestId(requestId);
@@ -105,16 +106,22 @@ public class PlaceDeParkingService {
         final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
         final ObjectMapper objectMapper = new ObjectMapper();
 
+        PlaceDeParking placeDeParking = new PlaceDeParking();
+        placeDeParking.setIdPlace(idPlace);
+
+        final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(placeDeParking);
+        logger.debug("PlaceDeParking with its JSON face : {}", jsonifiedGuy);
+
         final String requestId = UUID.randomUUID().toString();
         final Request request = new Request();
         request.setRequestId(requestId);
         request.setRequestOrder(deleplaceDeParkingOrder);
-        request.setRequestContent(idPlace);
+        request.setRequestContent(jsonifiedGuy);
 
         objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
         final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
 
-        final DeleteClientRequest clientRequest = new DeleteClientRequest(
+        final InsertClientRequest clientRequest = new InsertClientRequest<>(
                 networkConfig,
                 requestId.hashCode(), request, null, requestBytes);
         clientRequests.push(clientRequest);

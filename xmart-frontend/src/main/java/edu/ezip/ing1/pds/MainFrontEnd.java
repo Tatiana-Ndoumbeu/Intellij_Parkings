@@ -1,9 +1,6 @@
 package edu.ezip.ing1.pds;
 
-import de.vandermeer.asciitable.AsciiTable;
 import edu.ezip.ing1.pds.business.dto.*;
-import edu.ezip.ing1.pds.business.dto.Student;
-import edu.ezip.ing1.pds.business.dto.Students;
 
 import edu.ezip.ing1.pds.Interface.Principale;
 
