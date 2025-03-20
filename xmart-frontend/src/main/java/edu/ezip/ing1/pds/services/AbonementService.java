@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import edu.ezip.commons.LoggingUtils;
 import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.business.dto.Abonnements;
+import edu.ezip.ing1.pds.business.server.IntelijjParkingService;
 import edu.ezip.ing1.pds.client.commons.ClientRequest;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.commons.Request;
@@ -19,6 +20,8 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.UUID;
+import java.sql.*;
+
 
 public class AbonementService {
     private final static String LoggingLabel = "FrontEnd - AbonementService";
@@ -29,6 +32,8 @@ public class AbonementService {
     final String suppRequestOrder = "DELETE_ABONNEMENT";
     final String updateRequestOrder = "UPDATE_ABONNEMENT";
 
+    public IntelijjParkingService intellijParkingService;
+    public Connection connection ;
     private final NetworkConfig networkConfig;
 
     public AbonementService(NetworkConfig networkConfig) {
@@ -36,6 +41,8 @@ public class AbonementService {
     }
 
     public void insertAbonements(Abonnement abonnement) throws InterruptedException, IOException {
+        logger.info("Méthode insertAbonnement appelé");
+
         final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
 
         int birthdate = 0;
@@ -68,6 +75,7 @@ public class AbonementService {
                     clientResponse.getThreadName(),
                     guy.getIdAbonnement(), guy.getPrix(), guy.getStatutAbonnement(),
                     clientResponse.getResult());
+            logger.debug("Résultat de l'insertion : {}", clientResponse.getResult());
         }
     }
 
@@ -82,9 +90,10 @@ public class AbonementService {
         objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
         final byte []  requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
         LoggingUtils.logDataMultiLine(logger, Level.TRACE, requestBytes);
+        birthdate ++;
         final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
                 networkConfig,
-                birthdate++, request, null, requestBytes, Abonnements.class);
+                birthdate, request, null, requestBytes, Abonnements.class);
         clientRequests.push(clientRequest);
 
         if(!clientRequests.isEmpty()) {
@@ -92,14 +101,19 @@ public class AbonementService {
             joinedClientRequest.join();
             logger.debug("Thread {} complete.", joinedClientRequest.getThreadName());
             return (Abonnements) joinedClientRequest.getResult();
-        }
-        else {
+
+            //this.intellijParkingService.SelectAllAbonnements(request.getRequestId(), this.connection)
+            //Abonnements abonnements = (Abonnements) joinedClientRequest.getInfo();
+            //return abonnements;
+        } else {
             logger.error("No Abonnements found");
             return null;
+            //return new Abonnements();
         }
     }
 
     public void supprimerAbonnement(String id_Abonnement) throws InterruptedException, IOException {
+        logger.info("Méthode supprimerAbonnements appelée");
         int birthdate = 0;
         final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
         final ObjectMapper objectMapper = new ObjectMapper();
@@ -131,6 +145,7 @@ public class AbonementService {
     }
 
     public void updateAbonnement(Abonnement abonnement) throws InterruptedException, IOException {
+        logger.info("Méthode updateAbonnements appelée");
         final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
         int birthdate = 0;
         final ObjectMapper objectMapper = new ObjectMapper();
