@@ -299,13 +299,12 @@ public class IntelijjParkingService {
 
 
         try (PreparedStatement stmt = connection.prepareStatement(Queries.UPDATE_ABONNEMENT.getQuery())) {
-            stmt.setString(1, abonnement.getTypeAbonnement());
-            stmt.setDouble(2, abonnement.getPrix());
-            stmt.setString(3, abonnement.getStatutAbonnement());
-            stmt.setDate(4, abonnement.getDateDebut() );
-            stmt.setDate(5, abonnement.getDateFin() );
-            stmt.setString(6, abonnement.getIdAbonnement());
-
+            stmt.setString(1, abonnement.getIdAbonnement());
+            stmt.setString(2, abonnement.getTypeAbonnement());
+            stmt.setDouble(3, abonnement.getPrix());
+            stmt.setString(4, abonnement.getStatutAbonnement());
+            stmt.setDate(5, abonnement.getDateDebut() );
+            stmt.setDate(6, abonnement.getDateFin() );
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows > 0) {
