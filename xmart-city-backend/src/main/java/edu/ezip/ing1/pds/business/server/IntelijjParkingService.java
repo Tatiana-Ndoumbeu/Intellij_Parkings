@@ -50,6 +50,8 @@ public class IntelijjParkingService {
         UPDATE_LOCAL_T("UPDATE LocalTechnique SET disponibilite = ? WHERE numLocalT = ?"),
         DELETE_LOCAL_T("DELETE FROM LocalTechnique WHERE numLocalT = ?"),
 
+        SELECT_ZONE_SPE_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t WHERE t.type_place <> 'simple'"),
+
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
         INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)"),
         UPDATE_PLACE_DE_PARKING("UPDATE PlaceDeParking t  SET t.emplacement = ?, t.type_place = ?, t.statut_place = ? WHERE t.id_place = ? "),
@@ -145,6 +147,9 @@ public class IntelijjParkingService {
             case DELETE_PLACE_DE_PARKING:
                     response = DeletePlaceDeParking(request, connection);
                     break;
+            case SELECT_ZONE_SPE_PLACE_DE_PARKING:
+                response = selectZoneSpeciale(request, connection);
+                break;
             case SELECT_ALL_MECANICIEN:
                 response = SelectAllMecaniciens(request, connection);
                 break;
@@ -668,6 +673,24 @@ private Response UpdateLocalT(final Request request, final Connection connection
             return new Response(request.getRequestId(), "Erreur de traitement de la requête.");
         }
 
+
+    }
+    private Response selectZoneSpeciale(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_ZONE_SPE_PLACE_DE_PARKING.query);
+        PlacesDeParkings placesDeParkings = new PlacesDeParkings();
+
+        while (res.next()) {
+            PlaceDeParking placeDeParking = new PlaceDeParking();
+            placeDeParking.setIdPlace(res.getString(1));
+            placeDeParking.setEmplacement(res.getString(2));
+            placeDeParking.setTypePlace(res.getString(3));
+            placeDeParking.setStatutPlace(res.getString(4));
+            placesDeParkings.add(placeDeParking);
+        }
+
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(placesDeParkings));
 
     }
 }
