@@ -116,8 +116,22 @@ public class Formulaires {
 
         dialog.setVisible(true);
     }
+    public static void FormulaireAbonnements(JFrame parent) {
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception ignored) {
+        }
 
-    private static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
+
+
+        //à completer
+
+
+
+
+    }
+
+        private static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
 
         ImageIcon icon = new ImageIcon(Formulaires.class.getResource(chemin));
         Image image = icon.getImage().getScaledInstance(largeur, hauteur, Image.SCALE_SMOOTH);
