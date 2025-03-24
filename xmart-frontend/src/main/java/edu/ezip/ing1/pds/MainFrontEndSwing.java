@@ -3,11 +3,7 @@ package edu.ezip.ing1.pds;
 import edu.ezip.ing1.pds.business.dto.*;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
-import edu.ezip.ing1.pds.services.AbonementService;
-import edu.ezip.ing1.pds.services.LocalLaveriesService;
-import edu.ezip.ing1.pds.services.LocalTechniqueService;
-import edu.ezip.ing1.pds.services.PlaceDeParkingService;
-import edu.ezip.ing1.pds.services.MecanicienService;
+import edu.ezip.ing1.pds.services.*;
 import edu.ezip.ing1.pds.uiUtils.PlaceDeParkingViewModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -255,9 +251,17 @@ public class MainFrontEndSwing extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        JButton reserverButton = new JButton("reserver une zone spéciale");
+        JButton reserverButton = new JButton("reserver une zone spéciale",chargerIcone("/icons/reserver.png", 30, 30));
+        reserverButton.setBackground(Color.CYAN);
+        reserverButton.addActionListener( e -> Formulaires.FormulaireReservation(this));
         panelsud.add(reserverButton);
         panel.add(panelsud, BorderLayout.SOUTH);
+
+        JButton reservationEnCoursButton = new JButton("Afficher toutes les reservvations", chargerIcone("/icons/liste.png", 30, 30));
+        reservationEnCoursButton.setBackground(Color.CYAN);
+        //reservationEnCoursButton.addActionListener( e -> Formulaires.FormulaireReservation(this));
+        panelsud.add(reservationEnCoursButton);
+
 
         return panel;
     }
@@ -301,8 +305,24 @@ public class MainFrontEndSwing extends JFrame {
         return model;
     }
     private DefaultTableModel createReservationTableModel(NetworkConfig networkConfig) {
-        String[] columns = {"Jour debut", "Type de place", "du", "jusqu'au" , "place"};
+        final ReservationService reservationService = new ReservationService(networkConfig);
+        String[] columns = {"Identifiant", "emplacement", "disponibilite", "type"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
+        try {
+            placesDeParkings = reservationService.selectZoneSpeciale();
+            if (placesDeParkings != null && placesDeParkings.getPlaceDeParkings() != null) {
+                for (PlaceDeParking placeDeParking : placesDeParkings.getPlaceDeParkings()) {
+                    model.addRow(new Object[]{
+                            placeDeParking.getIdPlace(),
+                            placeDeParking.getEmplacement(),
+                            placeDeParking.getStatutPlace(),
+                            placeDeParking.getTypePlace()
+                    });
+
+                }}
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur recuperation mecanicien", e);
+        }
 
         return model;
     }
