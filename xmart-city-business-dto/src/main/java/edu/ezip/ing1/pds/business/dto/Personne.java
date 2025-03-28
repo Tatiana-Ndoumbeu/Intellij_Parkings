@@ -5,20 +5,20 @@ import java.util.UUID;
 
 public class Personne {
     private String idPersonne;
-    private String mail;
     private String nom;
     private String prenom;
-    private String tel;
-    private String pays;
+    private String telephone;
+    private String mail;
     private String codePostal;
 
     public Personne() {}
-    public Personne(String mail, String nom, String prenom, String tel, String pays, String codePostal) {
-        this.mail = mail;
+
+    public Personne(String idPersonne, String nom, String prenom, String telephone, String mail, String codePostal) {
+        this.idPersonne = idPersonne;
         this.nom = nom;
         this.prenom = prenom;
-        this.tel = tel;
-        this.pays = pays;
+        this.telephone = telephone;
+        this.mail = mail;
         this.codePostal = codePostal;
     }
     public String getIdPersonne() {
@@ -29,14 +29,6 @@ public class Personne {
         this.idPersonne = idPersonne;
     }
 
-    public String getMail() {
-        return mail;
-    }
-
-
-    public void setMail(String mail) {
-        this.mail = mail;
-    }
 
     public String getNom() {
         return nom;
@@ -54,20 +46,19 @@ public class Personne {
         this.prenom = prenom;
     }
 
-    public String getTel() {
-        return tel;
+    public String getTelephone() {
+        return telephone;
     }
 
-    public void setTel(String tel) {
-        this.tel = tel;
+    public void setTelephone(String tel) {
+        this.telephone = tel;
+    }
+    public String getMail() {
+        return mail;
     }
 
-    public String getPays() {
-        return pays;
-    }
-
-    public void setPays(String pays) {
-        this.pays = pays;
+    public void setMail(String mail) {
+        this.mail = mail;
     }
 
     public String getCodePostal() {

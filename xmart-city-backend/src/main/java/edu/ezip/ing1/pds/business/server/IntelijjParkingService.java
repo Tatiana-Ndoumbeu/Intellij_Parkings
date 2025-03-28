@@ -34,8 +34,8 @@ public class IntelijjParkingService {
         DELETE_ABONNEMENT("DELETE FROM Abonnement WHERE id_abonnement = ?"),
         UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=?, WHERE id_abonnement=?"),
 
-        SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
-        INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel,mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
+        SELECT_ALL_PERSONNES("SELECT t.id_personne, t.nom, t.prenom, t.telephone,t.mail, t.code_postal FROM Personne t"),
+        INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, telephone, mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
 
         SELECT_ALL_MECANICIEN("SELECT m.nom, m.prenom, m.telephone, m.disponibilite, m.specialite,m.mail FROM Mecanicien m"),
         INSERT_MECANICIEN("INSERT INTO Mecanicien (nom, prenom, telephone, disponibilite, specialite, mail) VALUES (?, ?, ?,?, ?, ?)"),
@@ -211,8 +211,8 @@ public class IntelijjParkingService {
             personne.setIdPersonne(res.getString(1));
             personne.setNom(res.getString(2));
             personne.setNom(res.getString(3));
-            personne.setMail(res.getString(4));
-            personne.setTel(res.getString(5));
+            personne.setTelephone(res.getString(4));
+            personne.setMail(res.getString(5));
             personne.setCodePostal(res.getString(6));
 
             personnes.add(personne);
@@ -378,8 +378,8 @@ public class IntelijjParkingService {
             pstmt.setString(1, UUID.randomUUID().toString());
             pstmt.setString(2, personne.getNom());
             pstmt.setString(3, personne.getPrenom());
-            pstmt.setString(4, personne.getMail());
-            pstmt.setString(5, personne.getTel());
+            pstmt.setString(4, personne.getTelephone());
+            pstmt.setString(5, personne.getMail());
             pstmt.setString(6, personne.getCodePostal());
             int affectedRows = pstmt.executeUpdate();
             return new Response(request.getRequestId(), affectedRows > 0 ? "personne inséré avec succès" : "Échec de l'insertion");
