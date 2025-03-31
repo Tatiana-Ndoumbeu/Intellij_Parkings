@@ -4,6 +4,7 @@ import edu.ezip.ing1.pds.business.dto.*;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.services.*;
+import edu.ezip.ing1.pds.uiUtils.MecanicienViewModel;
 import edu.ezip.ing1.pds.uiUtils.PlaceDeParkingViewModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,11 +14,12 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.IOException;
 import java.sql.Date;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.DayOfWeek;
 
+import java.util.*;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Comparator;
 
 import static edu.ezip.ing1.pds.uiUtils.PlaceDeParkingViewModel.*;
 
@@ -37,12 +39,15 @@ public class MainFrontEndSwing extends JFrame {
     private Personnes personnes = new Personnes();
     private Vehicles vehicles = new Vehicles();
     private Mecaniciens mecaniciens = new Mecaniciens();
-    private final static String LoggingLabel = "FrontEnd";
-    private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
-    private final static String networkConfigFile = "network.yaml";
+    private Reservations reservations = new Reservations();
     private PlacesDeParkings placesDeParkings = new PlacesDeParkings();
     private LocalLaveries localLaveries = new LocalLaveries();
     private LocalTechniques localTechniques = new LocalTechniques();
+
+    private final static String LoggingLabel = "FrontEnd";
+    private final static String networkConfigFile = "network.yaml";
+
+    private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
 
 
     public MainFrontEndSwing() {
@@ -193,7 +198,8 @@ public class MainFrontEndSwing extends JFrame {
                     insertVehicle((DefaultTableModel) table.getModel());
                     break;
                 case MECANICIEN:
-                    insertMecanicien((DefaultTableModel) table.getModel());
+                    //insertMecanicien((DefaultTableModel) table.getModel());
+                    MecanicienViewModel.insertMecanicien( (DefaultTableModel) table.getModel(), networkConfigFile,this, logger);
                     break;
 
             }
@@ -259,11 +265,64 @@ public class MainFrontEndSwing extends JFrame {
 
         JButton reservationEnCoursButton = new JButton("Afficher toutes les reservvations", chargerIcone("/icons/liste.png", 30, 30));
         reservationEnCoursButton.setBackground(Color.CYAN);
-        //reservationEnCoursButton.addActionListener( e -> Formulaires.FormulaireReservation(this));
+        reservationEnCoursButton.addActionListener(e->table.setModel(reservationEnregistreesTableModel(networkConfig)));
         panelsud.add(reservationEnCoursButton);
 
+        JButton calendrierResa = new JButton("Calendrier");
+        calendrierResa.setBackground(Color.CYAN);
+        calendrierResa.addActionListener( e -> ouvrirCalendrier());
+            //table.setModel(createCalendrierTableModel(LocalDate.now().getYear(), LocalDate.now().getMonthValue()));
+
+        panelsud.add(calendrierResa);
 
         return panel;
+    }
+    private void ouvrirCalendrier() {
+
+        Map<LocalDate, List<String>> reservations = new HashMap<>();
+
+        JFrame calendrierFrame = new JFrame("Calendrier des réservations");
+        calendrierFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        calendrierFrame.setSize(550, 450);
+
+        CalendrierPanel calendrierPanel = new CalendrierPanel(reservations);
+        calendrierFrame.add(calendrierPanel);
+        calendrierFrame.setVisible(true);
+    }
+    public DefaultTableModel createCalendrierTableModel(int annee, int mois) {
+        JPanel pannelNord = new JPanel(new FlowLayout());
+        JButton boutonPrecedent = new JButton("Mois précédent");
+        JButton boutonSuivant = new JButton("Mois suivant");
+
+        //boutonPrecedent.addActionListener(e -> changerMois(-1));
+        //boutonSuivant.addActionListener(e -> changerMois(1));
+
+        pannelNord.add(boutonPrecedent);
+        pannelNord.add(boutonSuivant);
+        add(pannelNord, BorderLayout.NORTH);
+
+        String[] columns = {"Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+
+        YearMonth yearMonth = YearMonth.of(annee, mois);
+        LocalDate premierJour = yearMonth.atDay(1);// Premier jour du mois
+        int premierJourSemaine = premierJour.getDayOfWeek().getValue();// Jour de la semaine du premier jour (1 = Lundi, 7 = Dimanche)
+        int joursDansMois = yearMonth.lengthOfMonth(); // Nombre de jours dans le mois
+
+        Object[][] donnees = new Object[6][7];
+        int jour = 1;
+
+        for (int i = (premierJourSemaine - 1) % 7; jour <= joursDansMois; i++) {
+            int ligne = i / 7;
+            int colonne = i % 7;
+            donnees[ligne][colonne] = jour++;
+        }
+
+        for (Object[] row : donnees) {
+            model.addRow(row);
+        }
+
+        return model;
     }
 
     private DefaultTableModel createPersonneTableModel() {
@@ -306,7 +365,7 @@ public class MainFrontEndSwing extends JFrame {
     }
     private DefaultTableModel createReservationTableModel(NetworkConfig networkConfig) {
         final ReservationService reservationService = new ReservationService(networkConfig);
-        String[] columns = {"Identifiant", "emplacement", "disponibilite", "type"};
+        String[] columns = {"id","emplacement", "diponibilite", "type "};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         try {
             placesDeParkings = reservationService.selectZoneSpeciale();
@@ -315,17 +374,46 @@ public class MainFrontEndSwing extends JFrame {
                     model.addRow(new Object[]{
                             placeDeParking.getIdPlace(),
                             placeDeParking.getEmplacement(),
-                            placeDeParking.getStatutPlace(),
                             placeDeParking.getTypePlace()
                     });
 
                 }}
         } catch (IOException | InterruptedException e) {
-            logger.error("Erreur recuperation mecanicien", e);
+            logger.error("Erreur recuperation reservation", e);
         }
-
         return model;
     }
+
+
+
+
+    private DefaultTableModel reservationEnregistreesTableModel(NetworkConfig networkConfig) {
+        final ReservationService reservationService = new ReservationService(networkConfig);
+        String[] columns = {"id reservation","Position", "type", "date début"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        try{
+            reservations = reservationService.selectReservations();
+            if (reservations != null && reservations.getReservations() != null){
+                for (Reservation reservation : reservations.getReservations()) {
+                    PlaceDeParking place = reservation.getPlaceDeParking();
+                    model.addRow(new Object[]{
+                            reservation.getIdReservation(),
+                            (place != null) ? place.getIdPlace() : "Non attribué",
+                            (place != null) ? place.getTypePlace() : "Non attribué",
+                            reservation.getDateEntree()
+                    });
+
+                }
+            }
+
+        } catch (IOException | InterruptedException e) {
+            logger.error("Erreur recuperation reservation", e);
+        }
+        return model;
+    }
+
+
+
 
 
     private void insertPersonne(DefaultTableModel model) {

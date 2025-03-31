@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.UUID;
-
+import java.sql.Date;
 
 import edu.ezip.ing1.pds.business.dto.*;
 
@@ -51,6 +51,8 @@ public class IntelijjParkingService {
         DELETE_LOCAL_T("DELETE FROM LocalTechnique WHERE numLocalT = ?"),
 
         SELECT_ZONE_SPE_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t WHERE t.type_place <> 'simple'"),
+        SELECT_ALL_RESERVATIONS("SELECT r.idReservation, r.dateReservation, r.heure, r.dateEntree, r.dateSortie, t.position, t.typePlace, t.statutPlace, t.emplacement FROM Reservation r INNER JOIN PlaceDeParking t ON t.idPlace = r.idPlace;"),
+        INSERT_RESERVATION("INSERT into Reservation (idReservation, dateReservation, heure, dateEntree, dateSortie, heureEntree, heureSortie, id_Personne, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "),
 
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
         INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)"),
@@ -152,6 +154,9 @@ public class IntelijjParkingService {
                 break;
             case SELECT_ALL_MECANICIEN:
                 response = SelectAllMecaniciens(request, connection);
+                break;
+            case INSERT_RESERVATION:
+                response=InsertReservation(request, connection);
                 break;
             case INSERT_MECANICIEN:
                 response = InsertMecanicien(request, connection);
@@ -691,6 +696,74 @@ private Response UpdateLocalT(final Request request, final Connection connection
         }
 
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(placesDeParkings));
+
+    }
+
+    private Response InsertReservation(final Request request, final Connection connection) throws SQLException, IOException {
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Reservation reservation;
+        try {
+            reservation = objectMapper.readValue(request.getRequestBody(), Reservation.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données de reservation invalides");
+        }
+
+        if (reservation.getDateReservation() == null || reservation.getDateEntree() == null) {
+            return new Response(request.getRequestId(), "Champs  manquants");
+        }
+
+
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.INSERT_RESERVATION.query)) {
+            stmt.setString(1, reservation.getIdReservation());
+            stmt.setDate(2, java.sql.Date.valueOf(reservation.getDateReservation()));
+            stmt.setTime(3, java.sql.Time.valueOf(reservation.getHeure()));
+            stmt.setDate(4, new java.sql.Date(reservation.getDateEntree().getTime()));
+            stmt.setDate(5, new java.sql.Date(reservation.getDateSortie().getTime()));
+            stmt.setTime(6, new java.sql.Time(reservation.getHeureEntre().getTime()));
+            stmt.setTime(7, new java.sql.Time(reservation.getHeureSortie().getTime()));
+            stmt.setString(8, reservation.getIdPersonne());
+            stmt.setString(9, reservation.getPosition());
+            stmt.executeUpdate();
+            return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservation));
+
+        } catch (SQLException e) {
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+        } catch (IOException e) {
+            return new Response(request.getRequestId(), "Erreur de traitement de la requête.");
+        }
+
+
+    }
+    private Response SelectAllReservations(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_RESERVATIONS.query);
+        Reservations reservations = new Reservations();
+
+        while (res.next()) {
+            Reservation reservation = new Reservation();
+            reservation.setIdReservation(res.getString("idReservation"));
+            reservation.setDateReservation(res.getDate("dateReservation").toLocalDate());
+            reservation.setHeure(res.getTime("heure").toLocalTime());
+            reservation.setDateEntree(res.getDate("dateEntree"));
+            reservation.setDateSortie(res.getDate("dateSortie"));
+
+
+            PlaceDeParking placeDeParking = new PlaceDeParking();
+            placeDeParking.setIdPlace(res.getString("position"));
+            placeDeParking.setTypePlace(res.getString("typePlace"));
+            placeDeParking.setStatutPlace(res.getString("statutPlace"));
+            placeDeParking.setEmplacement(res.getString("emplacement"));
+
+            reservation.setPlaceDeParking(placeDeParking); //pour les associer
+
+            reservations.add(reservation);
+
+        }
+
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservations));
 
     }
 }

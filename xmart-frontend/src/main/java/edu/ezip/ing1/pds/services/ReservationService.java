@@ -3,10 +3,14 @@ package edu.ezip.ing1.pds.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import edu.ezip.commons.LoggingUtils;
+import edu.ezip.ing1.pds.business.dto.LocalLaverie;
 import edu.ezip.ing1.pds.business.dto.PlacesDeParkings;
+import edu.ezip.ing1.pds.business.dto.Reservation;
+import edu.ezip.ing1.pds.business.dto.Reservations;
 import edu.ezip.ing1.pds.client.commons.ClientRequest;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.commons.Request;
+import edu.ezip.ing1.pds.requests.apiRequest.InsertClientRequest;
 import edu.ezip.ing1.pds.requests.apiRequest.SelectAllClientRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +26,8 @@ public class ReservationService {
     private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
 
     final String selectZoneSpecRequestOrder = "SELECT_ZONE_SPE_PLACE_DE_PARKING";
+    final String selectRequestOrder = "SELECT_ALL_RESERVATIONS";
+    final String insertRequestOrder = "INSERT_RESERVATION";
 
     private final NetworkConfig networkConfig;
 
@@ -54,6 +60,68 @@ public class ReservationService {
         else {
             logger.error("No apiRequest found");
             return null;
+        }
+    }
+
+    public Reservations selectReservations() throws InterruptedException, IOException {
+        int birthdate = 0;
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(selectRequestOrder);
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte []  requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+        LoggingUtils.logDataMultiLine(logger, Level.TRACE, requestBytes);
+        final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
+                networkConfig,
+                birthdate++, request, null, requestBytes, Reservations.class);
+        clientRequests.push(clientRequest);
+
+        if(!clientRequests.isEmpty()) {
+            final ClientRequest joinedClientRequest = clientRequests.pop();
+            joinedClientRequest.join();
+            logger.debug("Thread {} complete.", joinedClientRequest.getThreadName());
+            Reservations result=  (Reservations) joinedClientRequest.getResult();
+            logger.debug("Reservations got  {} complete.", result);
+            return result;
+        }
+        else {
+            logger.error("No apiRequest found");
+            return null;
+        }
+    }
+
+    public void insertReservations(Reservation reservation) throws InterruptedException, IOException {
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
+        int birthdate = 0;
+        logger.trace("Reservation with its JSON face : {}", reservation);
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(reservation);
+        logger.trace("LocalLaverie with its JSON face : {}", jsonifiedGuy);
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(insertRequestOrder);
+        request.setRequestContent(jsonifiedGuy);
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte []  requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+
+        final InsertClientRequest clientRequest = new InsertClientRequest(
+                networkConfig,
+                birthdate++, request, reservation, requestBytes);
+        clientRequests.push(clientRequest);
+
+
+        while (!clientRequests.isEmpty()) {
+            final ClientRequest clientResponse = clientRequests.pop();
+            clientResponse.join();
+            final Reservation guy = (Reservation)clientResponse.getInfo();
+            logger.debug("Thread {} complete : {} {} --> {}",
+                    clientResponse.getThreadName(),
+                    guy.getIdReservation(), guy.getHeureEntre(),
+                    clientResponse.getResult());
         }
     }
 

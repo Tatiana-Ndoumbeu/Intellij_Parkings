@@ -6,23 +6,22 @@ CREATE TABLE LocalLaverie(
 );
 
 
-CREATE TABLE Mécanicien(
-   id_mecanicien VARCHAR(50),
-   nom VARCHAR(50) NOT NULL,
-   prenom VARCHAR(50),
-   telephone INT NOT NULL,
-   Diponibilité BOOLEAN,
-   Spécialité VARCHAR(50),
-   mail VARCHAR(50),
-   PRIMARY KEY(id_mecanicien)
+CREATE TABLE Mecanicien (
+    id_mecanicien INT NOT NULL AUTO_INCREMENT,
+    nom VARCHAR(50) NOT NULL,
+    prenom VARCHAR(50),
+    telephone VARCHAR(20) NOT NULL,
+    disponibilite BOOLEAN,
+    specialite VARCHAR(50),
+    mail VARCHAR(50),
+    PRIMARY KEY (id_mecanicien)
 );
-
-CREATE TABLE Place_de_parking(
-   id_place VARCHAR(50),
-   typePlace VARCHAR(50),
-   statutPlace VARCHAR(50) NOT NULL,
-   emplacement VARCHAR(50),
-   PRIMARY KEY(id_place)
+CREATE TABLE PlaceDeParking (
+    position VARCHAR(10),
+    typePlace VARCHAR(50),
+    statutPlace VARCHAR(50) NOT NULL, -- Correction ici
+    emplacement VARCHAR(50),
+    PRIMARY KEY(position)
 );
 
 CREATE TABLE LocalTechnique(
@@ -41,16 +40,16 @@ CREATE TABLE Véhicule(
    FOREIGN KEY(id_place) REFERENCES Place_de_parking(id_place)
 );
 
-CREATE TABLE Usager(
-   id_usager INT AUTO_INCREMENT,
-   nom VARCHAR(100) NOT NULL,
-   prenom VARCHAR(100),
+CREATE TABLE Personnes(
+   id_Personne VARCHAR(50) AUTO_INCREMENT,
+   nom VARCHAR(50) NOT NULL,
+   prenom VARCHAR(50),
    mail VARCHAR(255),
    codePostal INT,
    telephone INT,
    pays VARCHAR(50),
    num_plaque VARCHAR(50) NOT NULL,
-   PRIMARY KEY(id_usager),
+   PRIMARY KEY(id_Personne),
    UNIQUE(mail),
    FOREIGN KEY(num_plaque) REFERENCES Véhicule(num_plaque)
 );
@@ -60,9 +59,9 @@ CREATE TABLE Service(
    date_service DATETIME,
    type_service VARCHAR(50) NOT NULL,
    Libellé VARCHAR(50),
-   id_usager INT NOT NULL,
+   id_Personne INT NOT NULL,
    PRIMARY KEY(id_service),
-   FOREIGN KEY(id_usager) REFERENCES Usager(id_usager)
+   FOREIGN KEY(id_Personne) REFERENCES Personnes(id_Personne)
 );
 
 CREATE TABLE Abonnement(
@@ -74,8 +73,8 @@ CREATE TABLE Abonnement(
    statutAbonnement VARCHAR(50) NOT NULL,
    id_usager INT NOT NULL,
    PRIMARY KEY(id_abonnement),
-   UNIQUE(id_usager),
-   FOREIGN KEY(id_usager) REFERENCES Usager(id_usager)
+   UNIQUE(id_Personne),
+   FOREIGN KEY(id_Personne) REFERENCES Personnes(id_Personne)
 );
 
 CREATE TABLE Paiement(
@@ -89,17 +88,21 @@ CREATE TABLE Paiement(
 );
 
 CREATE TABLE Reservation(
-   id_reservation VARCHAR(50),
-   date_reservation DATE NOT NULL,
-   heure TIME,
-   date_entree DATETIME,
-   date_sortie DATETIME,
-   id_usager INT NOT NULL,
-   id_paiement VARCHAR(50) NOT NULL,
-   PRIMARY KEY(id_reservation),
-   FOREIGN KEY(id_usager) REFERENCES Usager(id_usager),
-   FOREIGN KEY(id_paiement) REFERENCES Paiement(id_paiement)
+ idReservation VARCHAR(50) PRIMARY KEY,
+ dateReservation DATE NOT NULL,
+ heure TIME,
+ dateEntree DATETIME NOT NULL,
+ dateSortie DATETIME,
+ heureEntree TIME NOT NULL,
+ heureSortie TIME NOT NULL
+ id_Personne VARCHAR(50) NOT NULL,
+ position VARCHAR(50),
+
+ FOREIGN KEY (id_Personne) REFERENCES Personne(id_Personne),
+ FOREIGN KEY (position) REFERENCES PlaceDeParking(position)
 );
+--FOREIGN KEY (id_paiement) REFERENCES Paiement(id_paiement)
+--id_paiement VARCHAR(50),
 
 CREATE TABLE Concerner(
    id_place VARCHAR(50),
@@ -126,4 +129,3 @@ CREATE TABLE Rendre(
    FOREIGN KEY(id_mecanicien) REFERENCES Mécanicien(id_mecanicien),
    FOREIGN KEY(id_service) REFERENCES Service(id_service)
 );
-INSERT INTO LocalLaverie (NumLocalL, disponibilite) VALUES (433, true);

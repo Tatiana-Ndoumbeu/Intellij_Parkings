@@ -3,6 +3,7 @@ package edu.ezip.ing1.pds.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import edu.ezip.commons.LoggingUtils;
+import edu.ezip.ing1.pds.business.dto.Mecanicien;
 import edu.ezip.ing1.pds.business.dto.Personne;
 import edu.ezip.ing1.pds.business.dto.Personnes;
 import edu.ezip.ing1.pds.client.commons.ClientRequest;
@@ -34,7 +35,7 @@ public class PersonneService {
         this.networkConfig = networkConfig;
     }
 
-    public void insertPersonnes() throws InterruptedException, IOException {
+    /*public void insertPersonnes() throws InterruptedException, IOException {
         final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
         final Personnes guys = ConfigLoader.loadConfig(Personnes.class, PersonnesToBeInserted);
 
@@ -65,6 +66,39 @@ public class PersonneService {
                     clientRequest.getThreadName(),
                     guy.getIdPersonne(), guy.getNom(), guy.getNom(),
                     clientRequest.getResult());
+        }
+    }*/
+
+    public void insertPersonnes(Personne personne) throws InterruptedException, IOException {
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
+
+        int birthdate = 0;
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(personne);
+        logger.trace("Personne with its JSON face : {}", jsonifiedGuy);
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(insertRequestOrder);
+        request.setRequestContent(jsonifiedGuy);
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+
+        final InsertClientRequest clientRequest = new InsertClientRequest(
+                networkConfig,
+                birthdate++, request, personne, requestBytes);
+        clientRequests.push(clientRequest);
+
+
+        while (!clientRequests.isEmpty()) {
+            final ClientRequest clientResponse = clientRequests.pop();
+            clientResponse.join();
+            final Personne guy = (Personne) clientResponse.getInfo();
+            logger.debug("Thread {} complete : {} {} {} --> {}",
+                    clientResponse.getThreadName(),
+                    guy.getNom(), guy.getPrenom(), guy.getTelephone(),
+                    clientResponse.getResult());
         }
     }
 

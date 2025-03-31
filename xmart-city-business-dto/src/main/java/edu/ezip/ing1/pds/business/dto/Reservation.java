@@ -3,16 +3,19 @@ package edu.ezip.ing1.pds.business.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Date;
 
 public class Reservation {
 
     private String idReservation;
     private LocalDate dateReservation;
     private LocalTime heure;
-    private LocalDateTime dateEntree;
-    private LocalDateTime dateSortie;
+    private Date dateEntree;
+    private Date dateSortie;
+    private Date heureEntree;
+    private Date heureSortie;
     private String idPersonne;
-    private String idPlace;
+    private String position;
     private Personne personne;
     private PlaceDeParking placeDeParking;
    // private String idPaiement; plus tard
@@ -20,17 +23,18 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(String idReservation, LocalTime heure, LocalDate dateReservation, LocalDateTime dateEntree, LocalDateTime dateSortie, String idPersonne, String idPlace, Personne personne, PlaceDeParking placeDeParking) {
+    public Reservation(String idReservation, LocalDate dateReservation, LocalTime heure, Date dateEntree, Date dateSortie, Date heureEntree, Date heureSortie, String idPersonne, String position, Personne personne, PlaceDeParking placeDeParking) {
         this.idReservation = idReservation;
-        this.heure = heure;
         this.dateReservation = dateReservation;
+        this.heure = heure;
         this.dateEntree = dateEntree;
         this.dateSortie = dateSortie;
+        this.heureEntree = heureEntree;
+        this.heureSortie = heureSortie;
         this.idPersonne = idPersonne;
-        this.idPlace = idPlace;
+        this.position = position;
         this.personne = personne;
         this.placeDeParking = placeDeParking;
-
     }
 
     public String getIdReservation() {
@@ -57,19 +61,19 @@ public class Reservation {
         this.heure = heure;
     }
 
-    public LocalDateTime getDateEntree() {
+    public Date getDateEntree() {
         return dateEntree;
     }
 
-    public void setDateEntree(LocalDateTime dateEntree) {
+    public void setDateEntree(Date dateEntree) {
         this.dateEntree = dateEntree;
     }
 
-    public LocalDateTime getDateSortie() {
+    public Date getDateSortie() {
         return dateSortie;
     }
 
-    public void setDateSortie(LocalDateTime dateSortie) {
+    public void setDateSortie(Date dateSortie) {
         this.dateSortie = dateSortie;
     }
 
@@ -81,12 +85,12 @@ public class Reservation {
         this.idPersonne = idPersonne;
     }
 
-    public String getIdPlace() {
-        return idPlace;
+    public String getPosition() {
+        return position;
     }
 
-    public void setIdPlace(String idPlace) {
-        this.idPlace = idPlace;
+    public void setPosition(String position) {
+        this.position = position;
     }
 
     public Personne getPersonne() {
@@ -105,6 +109,22 @@ public class Reservation {
         this.placeDeParking = placeDeParking;
     }
 
+    public Date getHeureSortie() {
+        return heureSortie;
+    }
+
+    public void setHeureSortie(Date heureSortie) {
+        this.heureSortie = heureSortie;
+    }
+
+    public Date getHeureEntre() {
+        return heureEntree;
+    }
+
+    public void setHeureeEntre(Date heureEntree) {
+        this.heureEntree = heureEntree;
+    }
+
     @Override
     public String toString() {
         return "Reservation{" +
@@ -113,8 +133,10 @@ public class Reservation {
                 ", heure=" + heure +
                 ", dateEntree=" + dateEntree +
                 ", dateSortie=" + dateSortie +
+                ", heureEntree=" + heureEntree +
+                ", heureSortie=" + heureSortie +
                 ", idPersonne='" + idPersonne + '\'' +
-                ", idPlace='" + idPlace + '\'' +
+                ", position='" + position + '\'' +
                 ", personne=" + personne +
                 ", placeDeParking=" + placeDeParking +
                 '}';

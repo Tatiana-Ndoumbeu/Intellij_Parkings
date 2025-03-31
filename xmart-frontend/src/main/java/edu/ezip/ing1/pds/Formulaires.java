@@ -1,16 +1,42 @@
 package edu.ezip.ing1.pds;
 
+import edu.ezip.ing1.pds.MainFrontEndSwing;
+import edu.ezip.ing1.pds.business.dto.*;
+import edu.ezip.ing1.pds.client.commons.ConfigLoader;
+import edu.ezip.ing1.pds.client.commons.NetworkConfig;
+import edu.ezip.ing1.pds.services.*;
+
 import com.toedter.calendar.JDateChooser;
+import edu.ezip.ing1.pds.business.dto.Reservation;
+import edu.ezip.ing1.pds.business.dto.Reservations;
+
+
+import java.io.IOException;
+import java.time.LocalTime;
+import java.util.Random;
+
+
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
 import java.util.Date;
 
 public class Formulaires {
 
+    private static final Random RANDOM = new Random();
+    private Reservations reservations = new Reservations();
+    private final static String LoggingLabel = "formulaires";
+    private final static String networkConfigFile = "network.yaml";
+    final static NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
+    final static ReservationService reservationService = new ReservationService(networkConfig);
+    final static PersonneService personneService = new PersonneService(networkConfig);
+
     public static void FormulaireReservation(JFrame parent) {
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
+
 
         JDialog dialog = new JDialog(parent, "Reserver une zone spéciale", true);
         dialog.setSize(500, 800);
@@ -19,7 +45,7 @@ public class Formulaires {
         JPanel panel = new JPanel(new GridLayout(12, 2, 5, 5));
 
         panel.add(new JLabel("Type de place:"));
-        String[] typesDePlace = {"PMR", "Electrique", "Livraison"};
+        String[] typesDePlace = {"PMR", "VIP", "Electrique", "Livraison"};
         JComboBox<String> comboBoxTypePlace = new JComboBox<>(typesDePlace);
         comboBoxTypePlace.setPreferredSize(new Dimension(100, 30));
         panel.add(comboBoxTypePlace);
@@ -90,7 +116,9 @@ public class Formulaires {
             String Emplacement = comboBoxEmplacement.getSelectedItem().toString();
             String Position = champPosition.getText();
             Date dateDebut = dateDebutChooser.getDate();
+            Date heureDebut = (Date) hourSpinner.getValue();
             Date dateFin = dateFinChooser.getDate();
+            Date heureFin = (Date) hourSpinnerFin.getValue();
             //heures
             String Nom = champNom.getText();
             String Prenom = champPrenom.getText();
@@ -101,11 +129,45 @@ public class Formulaires {
 
             //RAJOUTER DES REGLES METIERS PLUS TARD
 
-            if (champPosition.getText().isEmpty()||champNom.getText().isEmpty() || champTelephone.getText().isEmpty() || champCodeP.getText().isEmpty()|| dateDebut == null || dateFin == null) {
+            if (champPosition.getText().isEmpty() || champNom.getText().isEmpty() || champTelephone.getText().isEmpty() || champCodeP.getText().isEmpty() || dateDebut == null || dateFin == null) {
                 JOptionPane.showMessageDialog(dialog, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
             } else {
-            JOptionPane.showMessageDialog(dialog, "Prenom: " + Prenom + "\nNom: " + Nom + "\nTelephone: " + Telephone + "\nE-Mail: " + Mail + "\nCode Postal: " + codePostal+ "\nPosition: " + Position+ "\nEmplacement: " + Emplacement+ "\nType de place: " + typePlace+ "\ndate de debut: " +dateDebut+ "\ndate de fin: "+dateFin);
-            dialog.dispose();}
+                Reservation reservation = new Reservation();
+                reservation.setIdReservation(generateUniqueId());
+                reservation.setDateReservation(LocalDate.now());
+                reservation.setHeure(LocalTime.now());
+                reservation.setDateEntree(dateDebut);
+                reservation.setDateSortie(dateFin);
+                reservation.setHeureeEntre(heureDebut);
+                reservation.setHeureSortie(heureFin);
+
+                Personne personne = new Personne();
+                personne.setNom(Nom);
+                personne.setPrenom(Prenom);
+                personne.setTelephone(Telephone);
+                personne.setMail(Mail);
+                personne.setCodePostal(codePostal);
+
+                // ajouter les positions aussi (update placedeparking)
+
+
+                try {
+                    System.out.println(reservation);
+                    reservationService.insertReservations(reservation);
+                    System.out.println(personne);
+                    personneService.insertPersonnes(personne);
+                }
+                 catch (IOException | InterruptedException u) {
+
+                    JOptionPane.showMessageDialog(parent, "Erreur insertion reservation.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+
+                // LocalDate reservationDate = LocalDate.ofInstant(dateDebut.toInstant(), ZoneId.systemDefault());
+                //   reservations.computeIfAbsent(reservationDate, k -> new ArrayList<>()).add("Réservation ajoutée le " + reservationDate.toString());
+
+                JOptionPane.showMessageDialog(dialog, "Prenom: " + Prenom + "\nNom: " + Nom + "\nTelephone: " + Telephone + "\nE-Mail: " + Mail + "\nCode Postal: " + codePostal + "\nPosition: " + Position + "\nEmplacement: " + Emplacement + "\nType de place: " + typePlace + "\ndate de debut: " + dateDebut + "\ndate de fin: " + dateFin);
+                dialog.dispose();
+            }
         });
 
         panelBouton.add(boutonValider);
@@ -116,6 +178,7 @@ public class Formulaires {
 
         dialog.setVisible(true);
     }
+
     public static void FormulaireAbonnements(JFrame parent) {
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
@@ -123,18 +186,23 @@ public class Formulaires {
         }
 
 
-
         //à completer
-
-
 
 
     }
 
-        private static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
+    private static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
 
         ImageIcon icon = new ImageIcon(Formulaires.class.getResource(chemin));
         Image image = icon.getImage().getScaledInstance(largeur, hauteur, Image.SCALE_SMOOTH);
         return new ImageIcon(image);
     }
+
+
+    public static String generateUniqueId() {
+        return String.format("%04d", RANDOM.nextInt(10000));
+    }
+
+
+
 }
