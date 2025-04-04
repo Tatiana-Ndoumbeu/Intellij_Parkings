@@ -11,6 +11,18 @@ public class Personne {
     private String mail;
     private String codePostal;
 
+    @Override
+    public String toString() {
+        return "Personne{" +
+                "idPersonne='" + idPersonne + '\'' +
+                ", nom='" + nom + '\'' +
+                ", prenom='" + prenom + '\'' +
+                ", telephone='" + telephone + '\'' +
+                ", mail='" + mail + '\'' +
+                ", codePostal='" + codePostal + '\'' +
+                '}';
+    }
+
     public Personne() {}
 
     public Personne(String idPersonne, String nom, String prenom, String telephone, String mail, String codePostal) {
