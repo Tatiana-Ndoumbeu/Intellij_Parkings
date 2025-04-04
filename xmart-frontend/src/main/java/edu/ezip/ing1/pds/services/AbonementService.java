@@ -82,9 +82,10 @@ public class AbonementService {
         objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
         final byte []  requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
         LoggingUtils.logDataMultiLine(logger, Level.TRACE, requestBytes);
+        birthdate++;
         final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
                 networkConfig,
-                birthdate++, request, null, requestBytes, Abonnements.class);
+                birthdate, request, null, requestBytes, Abonnements.class);
         clientRequests.push(clientRequest);
 
         if(!clientRequests.isEmpty()) {

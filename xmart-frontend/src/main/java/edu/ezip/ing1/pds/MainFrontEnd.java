@@ -37,7 +37,7 @@ public class MainFrontEnd {
         final VehicleService vehicleService = new VehicleService(networkConfig);
         final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(networkConfig);
         //studentService.insertStudents();
-        personneService.insertPersonnes();
+        //personneService.insertPersonnes();
        //abonementService.insertAbonements();
          //vehicleService.insertVehicles();
         //placeDeParkingService.insertPlaceDeParkings();

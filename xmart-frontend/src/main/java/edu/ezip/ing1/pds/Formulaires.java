@@ -11,6 +11,7 @@ import edu.ezip.ing1.pds.business.dto.Reservation;
 import edu.ezip.ing1.pds.business.dto.Reservations;
 
 
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.Random;
@@ -20,6 +21,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.UUID;
 
 public class Formulaires {
 
@@ -30,6 +32,9 @@ public class Formulaires {
     final static NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
     final static ReservationService reservationService = new ReservationService(networkConfig);
     final static PersonneService personneService = new PersonneService(networkConfig);
+
+    final static AbonementService abonementService = new AbonementService(networkConfig);
+
 
     public static void FormulaireReservation(JFrame parent) {
         try {
@@ -185,8 +190,107 @@ public class Formulaires {
         } catch (Exception ignored) {
         }
 
+        JDialog dialog = new JDialog(parent, "Ajouter un abonnement", true);
+        dialog.setSize(500, 800);
+        dialog.setLocationRelativeTo(parent);
 
-        //à completer
+        JPanel panel = new JPanel(new GridLayout(12, 2, 5, 5));
+
+        panel.add(new JLabel("Type d'abonnement (Standard ou Premium):"));
+        String[] typesAbonnements = {"Standard", "Premium"};
+        JComboBox<String> comboBoxTypeAbonnement = new JComboBox<>(typesAbonnements);
+        comboBoxTypeAbonnement.setPreferredSize(new Dimension(100, 30));
+        panel.add(comboBoxTypeAbonnement);
+
+        panel.add(new JLabel("Prix de l'abonnement:"));
+        JTextField champPrix = new JTextField();
+        panel.add(champPrix);
+
+        panel.add(new JLabel("Statut de l'abonnement (Actif, Inactif, Suspendu):"));
+        String[] statutAbonnement = {"Actif", "Inactif", "Suspendu"};
+        JComboBox<String> comboBoxStatut = new JComboBox<>(statutAbonnement);
+        comboBoxStatut.setPreferredSize(new Dimension(100, 30));
+        panel.add(comboBoxStatut);
+
+        panel.add(new JLabel("Nom:"));
+        JTextField champNom = new JTextField();
+        panel.add(champNom);
+
+        panel.add(new JLabel("Prénom:"));
+        JTextField champPrenom = new JTextField();
+        panel.add(champPrenom);
+
+        panel.add(new JLabel("Téléphone:"));
+        JTextField champTelephone = new JTextField();
+        panel.add(champTelephone);
+
+        panel.add(new JLabel("e-Mail:"));
+        JTextField champMail = new JTextField();
+        panel.add(champMail);
+
+        panel.add(new JLabel("code Postal:"));
+        JTextField champCodeP = new JTextField();
+        panel.add(champCodeP);
+
+        JPanel panelBouton = new JPanel();
+        JButton boutonValider = new JButton("Valider", chargerIcone("/icons/ajouter.png", 30, 30));
+        boutonValider.setPreferredSize(new Dimension(150, 40));
+        boutonValider.setBackground(Color.GREEN);
+        boutonValider.setForeground(Color.WHITE);
+
+        boutonValider.addActionListener(e -> {
+            String typeAbonnement = comboBoxTypeAbonnement.getSelectedItem().toString();
+            String prix = champPrix.getText();
+            String statut = comboBoxStatut.getSelectedItem().toString();
+
+            String Nom = champNom.getText();
+            String Prenom = champPrenom.getText();
+            String Telephone = champTelephone.getText();
+            String Mail = champMail.getText();
+            String codePostal = champCodeP.getText();
+
+            if (champPrix.getText().isEmpty() || champNom.getText().isEmpty() || champPrenom.getText().isEmpty() || champTelephone.getText().isEmpty() || champMail.getText().isEmpty() || champCodeP.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            } else {
+
+                Abonnement abonnement = new Abonnement();
+                abonnement.setIdAbonnement(UUID.randomUUID().toString().substring(0, 8));
+                abonnement.setTypeAbonnement(typeAbonnement);
+                abonnement.setPrix(Double.parseDouble(prix));
+                abonnement.setStatutAbonnement(statut);
+                abonnement.setDateDebut( new java.sql.Date(2025,12,12));
+                abonnement.setDateFin( new java.sql.Date(2025,12,23));
+
+                Personne personne = new Personne();
+                personne.setIdPersonne(generateUniqueId());
+                personne.setNom(Nom);
+                personne.setPrenom(Prenom);
+                personne.setTelephone(Telephone);
+                personne.setMail(Mail);
+                personne.setCodePostal(codePostal);
+
+                try{
+                    System.out.println(abonnement);
+                    abonementService.insertAbonements(abonnement);
+                    System.out.println(personne);
+                    personneService.insertPersonnes(personne);
+                }catch (IOException | InterruptedException u) {
+                    JOptionPane.showMessageDialog(parent, "Erreur insertion abonnement.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+
+                JOptionPane.showMessageDialog(dialog, "Type Abonnement: " + typeAbonnement + "\nPrix: " + prix + "\nStatut Abonnement: " + statut + "\nNom: " + Nom + "\nPrénom: " + Prenom + "\nTéléphone: " + Telephone + "\nEmail: " + Mail + "\nCode postal: " + codePostal + "\nAbonnement: " + abonnement);
+                dialog.dispose();
+            }
+
+        });
+
+        panelBouton.add(boutonValider);
+
+        dialog.setLayout(new BorderLayout());
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.add(panelBouton, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
 
 
     }

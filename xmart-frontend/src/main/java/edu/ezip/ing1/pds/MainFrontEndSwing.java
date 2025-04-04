@@ -4,7 +4,7 @@ import edu.ezip.ing1.pds.business.dto.*;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.services.*;
-import edu.ezip.ing1.pds.uiUtils.MecanicienViewModel;
+//import edu.ezip.ing1.pds.uiUtils.MecanicienViewModel;
 import edu.ezip.ing1.pds.uiUtils.PlaceDeParkingViewModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,10 +186,12 @@ public class MainFrontEndSwing extends JFrame {
         insertButton.addActionListener(e -> {
             switch (type) {
                 case ABONNEMENTS:
-                    insertAbonnements((DefaultTableModel) table.getModel());
+                    //insertAbonnements((DefaultTableModel) table.getModel());
+                    Formulaires.FormulaireAbonnements(this);
                     break;
                 case PERSONNES:
-                    insertPersonne((DefaultTableModel) table.getModel());
+                    //insertPersonne((DefaultTableModel) table.getModel());
+                    Formulaires.FormulaireAbonnements(this);
                     break;
                 case PLACES_DE_PARKING:
                     insertPlaceDeParking((DefaultTableModel) table.getModel(),this,networkConfigFile,logger);
@@ -198,8 +200,8 @@ public class MainFrontEndSwing extends JFrame {
                     insertVehicle((DefaultTableModel) table.getModel());
                     break;
                 case MECANICIEN:
-                    //insertMecanicien((DefaultTableModel) table.getModel());
-                    MecanicienViewModel.insertMecanicien( (DefaultTableModel) table.getModel(), networkConfigFile,this, logger);
+                    insertMecanicien((DefaultTableModel) table.getModel());
+                    //MecanicienViewModel.insertMecanicien( (DefaultTableModel) table.getModel(), networkConfigFile,this, logger);
                     break;
 
             }
@@ -285,8 +287,8 @@ public class MainFrontEndSwing extends JFrame {
         calendrierFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         calendrierFrame.setSize(550, 450);
 
-        CalendrierPanel calendrierPanel = new CalendrierPanel(reservations);
-        calendrierFrame.add(calendrierPanel);
+        //CalendrierPanel calendrierPanel = new CalendrierPanel(reservations);
+        //calendrierFrame.add(calendrierPanel);
         calendrierFrame.setVisible(true);
     }
     public DefaultTableModel createCalendrierTableModel(int annee, int mois) {
