@@ -233,7 +233,7 @@ public class Formulaires {
         panel.add(champCodeP);
 
         JPanel panelBouton = new JPanel();
-        JButton boutonValider = new JButton("Valider", chargerIcone("/icons/ajouter.png", 30, 30));
+        JButton boutonValider = new JButton("Valider l'ajout de l'abonnement", chargerIcone("/icons/ajouter.png", 30, 30));
         boutonValider.setPreferredSize(new Dimension(150, 40));
         boutonValider.setBackground(Color.GREEN);
         boutonValider.setForeground(Color.WHITE);
@@ -293,6 +293,45 @@ public class Formulaires {
         dialog.setVisible(true);
 
 
+    }
+
+    public static void FormulaireUpdateAbonnement(JFrame parent, Abonnement abonnement) {
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception ignored) {
+        }
+
+        JDialog dialog = new JDialog(parent, "Modifier un abonnement", true);
+        dialog.setSize(500, 800);
+        dialog.setLocationRelativeTo(parent);
+
+        JPanel panel = new JPanel(new GridLayout(4, 2, 5, 5));
+
+        JTextField champType = new JTextField(abonnement.getTypeAbonnement());
+        JTextField champPrix = new JTextField(String.valueOf(abonnement.getPrix()));
+        JTextField champStatut = new JTextField(abonnement.getStatutAbonnement());
+
+        panel.add(new JLabel("Type :")); panel.add(champType);
+        panel.add(new JLabel("Prix :")); panel.add(champPrix);
+        panel.add(new JLabel("Statut :")); panel.add(champStatut);
+
+        JButton boutonValider = new JButton("Valider les modifications", chargerIcone("/icons/modifier.png", 30, 30));
+        JButton boutonAnnuler = new JButton("Annuler", chargerIcone("/icons/quitter.png", 30, 30));
+        boutonValider.setBackground(Color.GREEN);
+        boutonValider.setForeground(Color.WHITE);
+        boutonAnnuler.setBackground(Color.RED);
+        boutonAnnuler.setForeground(Color.WHITE);
+
+        JPanel panelBoutons = new JPanel(new BorderLayout());
+        panelBoutons.add(boutonValider, BorderLayout.WEST);
+        panelBoutons.add(boutonAnnuler, BorderLayout.EAST);
+
+
+        dialog.setLayout(new BorderLayout());
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.add(panelBoutons, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
     }
 
     private static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {

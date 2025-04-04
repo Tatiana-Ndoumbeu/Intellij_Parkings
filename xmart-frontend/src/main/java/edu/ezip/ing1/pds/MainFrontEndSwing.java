@@ -232,7 +232,7 @@ public class MainFrontEndSwing extends JFrame {
             switch (type) {
                 case ABONNEMENTS:
                     logger.debug("Modification pour {}", type);
-                    updateAbonnement((DefaultTableModel) table.getModel());
+                    updateAbonnement((DefaultTableModel) table.getModel(), table);
                     break;
                 case PLACES_DE_PARKING:
                     logger.debug("Modification pour {}", type);
@@ -625,9 +625,30 @@ public class MainFrontEndSwing extends JFrame {
     }
 
 
-    private void updateAbonnement(DefaultTableModel model) {
+    private void updateAbonnement(DefaultTableModel model, JTable table) {
 
-        String idAbo = JOptionPane.showInputDialog(this, "Identifiant de l'abonnement à modifier :");
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1){
+            JOptionPane.showMessageDialog(this, "Aucun abonnement sélectionné", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+
+        String idAbonnement = model.getValueAt(selectedRow,0).toString();
+        String typeAbonnement = model.getValueAt(selectedRow, 1).toString();
+        double prix = Double.parseDouble(model.getValueAt(selectedRow, 2).toString());
+        String statutAbonnement = model.getValueAt(selectedRow, 3).toString();
+
+        Abonnement abonnement = new Abonnement();
+        abonnement.setIdAbonnement(idAbonnement);
+        abonnement.setTypeAbonnement(typeAbonnement);
+        abonnement.setPrix(prix);
+        abonnement.setStatutAbonnement(statutAbonnement);
+
+        Formulaires formulaire = new Formulaires();
+        formulaire.FormulaireUpdateAbonnement(this, abonnement);
+
+
+
+        /*String idAbo = JOptionPane.showInputDialog(this, "Identifiant de l'abonnement à modifier :");
         AbonementService abonementService = new AbonementService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
         if (idAbo == null || idAbo.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "L'identifiant ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
@@ -686,7 +707,7 @@ public class MainFrontEndSwing extends JFrame {
                 model.setValueAt(statut, i, 3);
                 break;
             }
-        }
+        } */
 
 
     }
