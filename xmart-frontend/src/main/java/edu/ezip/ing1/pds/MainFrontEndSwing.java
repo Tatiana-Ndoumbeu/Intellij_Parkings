@@ -590,13 +590,20 @@ public class MainFrontEndSwing extends JFrame {
     }
 
     private void supprimerAbonnement(DefaultTableModel model, JTable table){
-        String idAbonnement = JOptionPane.showInputDialog(this, "Entrez l'identifiant de l'abonnement à supprimer :",
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1){
+            JOptionPane.showMessageDialog(this, "Aucun abonnement sélectionné", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+        String  idAbonnement = (String) model.getValueAt(selectedRow, 0);
+
+
+        /*String idAbonnement = JOptionPane.showInputDialog(this, "Entrez l'identifiant de l'abonnement à supprimer :",
                 "Suppression d'un abonnement", JOptionPane.QUESTION_MESSAGE);
 
         if (idAbonnement == null || idAbonnement.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "L'identifiant est invalide.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
-        }
+        } */
 
         int confirm = JOptionPane.showConfirmDialog(this, "Voulez-vous vraiment supprimer cet abonnement ?", "Confirmation", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {

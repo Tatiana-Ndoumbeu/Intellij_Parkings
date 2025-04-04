@@ -101,33 +101,35 @@ public class AbonementService {
     }
 
     public void supprimerAbonnement(String id_Abonnement) throws InterruptedException, IOException {
-        int birthdate = 0;
-        final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
+
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
         final ObjectMapper objectMapper = new ObjectMapper();
+
+        Abonnement abonnement = new Abonnement();
+        abonnement.setIdAbonnement(id_Abonnement);
+
+        final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(abonnement);
+        logger.debug("PlaceDeParking with its JSON face : {}", jsonifiedGuy);
+
         final String requestId = UUID.randomUUID().toString();
         final Request request = new Request();
         request.setRequestId(requestId);
         request.setRequestOrder(suppRequestOrder);
-        request.setRequestContent(id_Abonnement);  
-    
-        final byte[] requestBytes = objectMapper.writeValueAsBytes(request);
-    
-        
-        final DeleteClientRequest<String> deleteRequest = new DeleteClientRequest<>(
-            networkConfig, birthdate++, request, id_Abonnement, requestBytes );
-    
-        clientRequests.push(deleteRequest);
-    
-        if (!clientRequests.isEmpty()) {
+        request.setRequestContent(jsonifiedGuy);
+
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+
+        final InsertClientRequest clientRequest = new InsertClientRequest<>(
+                networkConfig,
+                requestId.hashCode(), request, null, requestBytes);
+        clientRequests.push(clientRequest);
+
+        while (!clientRequests.isEmpty()) {
             final ClientRequest clientResponse = clientRequests.pop();
-            clientResponse.join(); 
-    
-             
-            if (clientResponse.getResult() != null && clientResponse.getResult().toString().contains("success")) {
-                logger.debug("Abonnement supprimé avec succès.");
-            } else {
-                logger.error("Échec de la suppression de l'abonnement.");
-            }
+            clientResponse.join();
+            logger.debug("Thread {} complete. Deleted Abonnement with ID: {} --> {}",
+                    clientResponse.getThreadName(), id_Abonnement, clientResponse.getResult());
         }
     }
 
