@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.sql.Date;
 
@@ -49,6 +51,10 @@ public class IntelijjParkingService {
         INSERT_LOCAL_T("INSERT into LocalTechnique (numLocalT, disponibilite) VALUES (? , ?)"),
         UPDATE_LOCAL_T("UPDATE LocalTechnique SET disponibilite = ? WHERE numLocalT = ?"),
         DELETE_LOCAL_T("DELETE FROM LocalTechnique WHERE numLocalT = ?"),
+
+        INSERT_UTILISATEUR("INSERT INTO Admin (id_admin, nom, email, mot_de_passe) VALUES (?, ?, ?, ?)"),
+        LOGIN_UTILISATEUR("SELECT COUNT(*) FROM Admin WHERE email = ? AND mot_de_passe = ?"),
+        SELECT_ALL_UTILISATEUR("SELECT id_admin, nom, email FROM Admin"),
 
         SELECT_ZONE_SPE_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t WHERE t.type_place <> 'simple'"),
         SELECT_ALL_RESERVATIONS("SELECT r.idReservation, r.dateReservation, r.heure, r.dateEntree, r.dateSortie, t.position, t.typePlace, t.statutPlace, t.emplacement FROM Reservation r INNER JOIN PlaceDeParking t ON t.idPlace = r.idPlace;"),
@@ -104,6 +110,16 @@ public class IntelijjParkingService {
             case DELETE_ABONNEMENT:
                 response = SupprimerAbonnement(request, connection);
                 break;
+            case INSERT_UTILISATEUR:
+                response = insertAdmin(request, connection);
+                break;
+            case LOGIN_UTILISATEUR:
+                response = loginAdmin(request, connection);
+                break;
+            case SELECT_ALL_UTILISATEUR:
+                response = selectAllAdmins(request, connection);
+                break;
+
             case UPDATE_ABONNEMENT:
                 response = UpdateAbonnement(request, connection);
                 break;
@@ -766,4 +782,58 @@ private Response UpdateLocalT(final Request request, final Connection connection
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservations));
 
     }
+
+    private Response insertAdmin(final Request request, final Connection connection) throws SQLException, IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Admin admin = objectMapper.readValue(request.getRequestBody(), Admin.class);
+
+        if (admin.getName() == null || admin.getEmail() == null || admin.getPassword() == null) {
+            return new Response(request.getRequestId(), "Champs manquants");
+        }
+
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.INSERT_UTILISATEUR.query)) {
+            stmt.setString(1, UUID.randomUUID().toString());
+            stmt.setString(2, admin.getName());
+            stmt.setString(3, admin.getEmail());
+            stmt.setString(4, admin.getPassword());
+            int affectedRows = stmt.executeUpdate();
+
+            return new Response(request.getRequestId(), affectedRows > 0 ? "Inscription réussie" : "Erreur à l'inscription");
+        }
+    }
+
+    private Response loginAdmin(final Request request, final Connection connection) throws SQLException, IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Admin admin = objectMapper.readValue(request.getRequestBody(), Admin.class);
+
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.LOGIN_UTILISATEUR.query)) {
+            stmt.setString(1, admin.getEmail());
+            stmt.setString(2, admin.getPassword());
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                return new Response(request.getRequestId(), "OK");
+            } else {
+                return new Response(request.getRequestId(), "INVALID");
+            }
+        }
+    }
+    private Response selectAllAdmins(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Statement stmt = connection.createStatement();
+        ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_UTILISATEUR.query);
+
+        List<Admin> admins = new ArrayList<>();
+        while (res.next()) {
+            Admin admin = new Admin();
+            admin.setEmail(res.getString("id_admin"));
+            admin.setName(res.getString("nom"));
+            admin.setEmail(res.getString("email"));
+            admins.add(admin);
+        }
+
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(admins));
+    }
+
+
 }
