@@ -95,9 +95,10 @@ public class PersonneService {
             final ClientRequest clientResponse = clientRequests.pop();
             clientResponse.join();
             final Personne guy = (Personne) clientResponse.getInfo();
-            logger.debug("Thread {} complete : {} {} {} --> {}",
+            logger.debug("Thread {} complete : {} {} {} {} {} --> {}",
                     clientResponse.getThreadName(),
                     guy.getNom(), guy.getPrenom(), guy.getTelephone(),
+                    guy.getMail(), guy.getCodePostal(),
                     clientResponse.getResult());
         }
     }

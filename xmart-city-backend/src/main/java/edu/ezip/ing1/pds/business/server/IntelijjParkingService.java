@@ -33,11 +33,11 @@ public class IntelijjParkingService {
 
         SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin FROM Abonnement t"),
         INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin ) VALUES (?, ?, ?, ?, ?, ?)"),
-        DELETE_ABONNEMENT("DELETE FROM Abonnement WHERE id_abonnement = ?"),
+        DELETE_ABONNEMENT("DELETE FROM Abonnement t WHERE t.id_abonnement = ?"),
         UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=?, WHERE id_abonnement=?"),
 
-        SELECT_ALL_PERSONNES("SELECT t.id_personne, t.nom, t.prenom, t.telephone,t.mail, t.code_postal FROM Personne t"),
-        INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, telephone, mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
+        SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
+        INSERT_PERSONNE("INSERT INTO Personne (id_personne, mail, nom, prenom, tel, code_postal) VALUES (?, ?, ?, ?, ?, ?)"),
 
         SELECT_ALL_MECANICIEN("SELECT m.nom, m.prenom, m.telephone, m.disponibilite, m.specialite,m.mail FROM Mecanicien m"),
         INSERT_MECANICIEN("INSERT INTO Mecanicien (nom, prenom, telephone, disponibilite, specialite, mail) VALUES (?, ?, ?,?, ?, ?)"),
@@ -230,10 +230,10 @@ public class IntelijjParkingService {
         while (res.next()) {
             Personne personne = new Personne();
             personne.setIdPersonne(res.getString(1));
-            personne.setNom(res.getString(2));
+            personne.setMail(res.getString(2));
             personne.setNom(res.getString(3));
-            personne.setTelephone(res.getString(4));
-            personne.setMail(res.getString(5));
+            personne.setPrenom(res.getString(4));
+            personne.setTelephone(res.getString(5));
             personne.setCodePostal(res.getString(6));
 
             personnes.add(personne);
@@ -291,21 +291,16 @@ public class IntelijjParkingService {
         }
     }
 
-    private Response SupprimerAbonnement(final Request request, final Connection connection) throws SQLException {
-        String id_abonnement = request.getRequestBody();
+    private Response SupprimerAbonnement(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Abonnement abonnement = objectMapper.readValue(request.getRequestBody(), Abonnement.class);
     
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.DELETE_ABONNEMENT.getQuery())) {
-            pstmt.setString(1, id_abonnement);
+            pstmt.setString(1, abonnement.getIdAbonnement());
+
             int affectedRows = pstmt.executeUpdate();
-    
-            if (affectedRows > 0) {
-                return new Response(request.getRequestId(), "Abonnement supprimé avec succès");
-            } else {
-                return new Response(request.getRequestId(), "Aucun abonnement trouvé avec cet identifiant");
-            }
-        } catch (SQLException e) {
-            logger.error("Erreur SQL lors de la suppression de l'abonnement", e);
-            return new Response(request.getRequestId(), "Erreur SQL");
+            return new Response(request.getRequestId(), affectedRows > 0 ? "Abonnement supprimée avec succès" : "Échec de la suppression");
+
         }
     }
     private Response UpdateAbonnement(final Request request, final Connection connection) throws SQLException, IOException {
@@ -397,10 +392,10 @@ public class IntelijjParkingService {
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_PERSONNE.getQuery())) {
             pstmt.setString(1, UUID.randomUUID().toString());
-            pstmt.setString(2, personne.getNom());
-            pstmt.setString(3, personne.getPrenom());
-            pstmt.setString(4, personne.getTelephone());
-            pstmt.setString(5, personne.getMail());
+            pstmt.setString(2, personne.getMail());
+            pstmt.setString(3, personne.getNom());
+            pstmt.setString(4, personne.getPrenom());
+            pstmt.setString(5, personne.getTelephone());
             pstmt.setString(6, personne.getCodePostal());
             int affectedRows = pstmt.executeUpdate();
             return new Response(request.getRequestId(), affectedRows > 0 ? "personne inséré avec succès" : "Échec de l'insertion");
