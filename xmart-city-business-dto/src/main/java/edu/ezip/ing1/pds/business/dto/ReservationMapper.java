@@ -23,7 +23,7 @@ public class ReservationMapper {
             reservation.setHeureeEntre(timeFormat.parse(request.getHeureEntree()));
             reservation.setHeureSortie(timeFormat.parse(request.getHeureSortie()));
             reservation.setIdPersonne(request.getIdPersonne());
-            reservation.setPosition(request.getPosition());
+            reservation.setPosition(request.getIdPlace());
             reservation.setIdPlace(request.getPersonne());
             reservation.setPlaceDeParking(request.getPlaceDeParking());
         } catch (ParseException e) {

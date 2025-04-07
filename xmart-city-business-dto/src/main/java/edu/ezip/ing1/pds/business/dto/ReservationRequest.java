@@ -23,7 +23,7 @@ public class ReservationRequest {
 
     @JsonFormat(pattern = "HH:mm")
     private String heureSortie;
-
+private String idPlace;
     private String idPersonne;
     private Personne personne;
     private PlaceDeParking placeDeParking;
@@ -34,10 +34,12 @@ public class ReservationRequest {
     public ReservationRequest(String idReservation, String dateReservation, String heure,
                               String dateEntree, String dateSortie,
                               String heureEntree, String heureSortie,
+                              String idPlace, String idPersonne,
                               Personne personne, PlaceDeParking placeDeParking) {
         this.idReservation = idReservation;
         this.dateReservation = dateReservation;
         this.heure = heure;
+        this.idPlace = idPlace;
         this.dateEntree = dateEntree;
         this.dateSortie = dateSortie;
         this.heureEntree = heureEntree;
@@ -107,16 +109,16 @@ public class ReservationRequest {
         return idPersonne;
     }
 
+    public String getIdPlace() {
+        return idPlace;
+    }
+
+    public void setIdPlace(String idPlace) {
+        this.idPlace = idPlace;
+    }
+
     public void setIdPersonne(String idPersonne) {
         this.idPersonne = idPersonne;
-    }
-
-    public String getPosition() {
-        return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
     }
 
     public Personne getPersonne() {
@@ -146,7 +148,6 @@ public class ReservationRequest {
                 ", heureEntree='" + heureEntree + '\'' +
                 ", heureSortie='" + heureSortie + '\'' +
                 ", idPersonne='" + idPersonne + '\'' +
-                ", position='" + position + '\'' +
                 ", personne=" + personne +
                 ", placeDeParking=" + placeDeParking +
                 '}';
