@@ -25,7 +25,7 @@ import static edu.ezip.ing1.pds.uiUtils.MecanicienViewModel.createReservationTab
 
 public class ReservationViewModel {
 
-    private JPanel createTablePanelresa(PlacesDeParkings placesDeParkings, Logger logger,JFrame component)
+    public static JPanel createTablePanelresa(PlacesDeParkings placesDeParkings, Logger logger,JFrame component,Reservations reservations)
     {
         JPanel panelsud = new JPanel(new FlowLayout());
         JPanel panel = new JPanel(new BorderLayout());
@@ -44,7 +44,7 @@ public class ReservationViewModel {
 
         JButton reservationEnCoursButton = new JButton("Afficher toutes les reservvations", chargerIcone("/icons/liste.png", 30, 30));
         reservationEnCoursButton.setBackground(Color.CYAN);
-        reservationEnCoursButton.addActionListener(e->table.setModel(reservationEnregistreesTableModel(networkConfig)));
+        reservationEnCoursButton.addActionListener(e->table.setModel(reservationEnregistreesTableModel(networkConfig,reservations,logger)));
         panelsud.add(reservationEnCoursButton);
 
         JButton calendrierResa = new JButton("Calendrier");
@@ -56,7 +56,7 @@ public class ReservationViewModel {
 
         return panel;
     }
-    private void ouvrirCalendrier() {
+    private static void ouvrirCalendrier() {
 
         Map<LocalDate, List<String>> reservations = new HashMap<>();
 
@@ -78,7 +78,7 @@ public class ReservationViewModel {
 
         pannelNord.add(boutonPrecedent);
         pannelNord.add(boutonSuivant);
-        add(pannelNord, BorderLayout.NORTH);
+       // add(pannelNord, BorderLayout.NORTH);
 
         String[] columns = {"Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
@@ -108,7 +108,7 @@ public class ReservationViewModel {
 
 
 
-    private DefaultTableModel reservationEnregistreesTableModel(NetworkConfig networkConfig, Reservations  reservations, Logger logger) {
+    private static DefaultTableModel reservationEnregistreesTableModel(NetworkConfig networkConfig, Reservations reservations, Logger logger) {
         final ReservationService reservationService = new ReservationService(networkConfig);
         String[] columns = {"id reservation","Position", "type", "date début"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
@@ -133,9 +133,9 @@ public class ReservationViewModel {
         return model;
     }
 
-    private ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
+    private static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
 
-        ImageIcon icon = new ImageIcon(getClass().getResource(chemin));
+        ImageIcon icon = new ImageIcon(ReservationViewModel.class.getResource(chemin));
         Image image = icon.getImage().getScaledInstance(largeur, hauteur, Image.SCALE_SMOOTH);
         return new ImageIcon(image);
     }

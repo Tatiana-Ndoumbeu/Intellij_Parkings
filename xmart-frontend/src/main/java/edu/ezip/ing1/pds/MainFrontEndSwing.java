@@ -20,6 +20,7 @@ import java.time.DayOfWeek;
 import java.util.*;
 import java.util.List;
 
+import static edu.ezip.ing1.pds.Formulaires.chargerIcone;
 import static edu.ezip.ing1.pds.uiUtils.AbonnementViewModel.*;
 import static edu.ezip.ing1.pds.uiUtils.LocalTechniqueViewModel.*;
 import static edu.ezip.ing1.pds.uiUtils.LocalViewModel.*;
@@ -27,6 +28,7 @@ import static edu.ezip.ing1.pds.uiUtils.MecanicienViewModel.createMecanicienTabl
 import static edu.ezip.ing1.pds.uiUtils.MecanicienViewModel.createReservationTableModel;
 import static edu.ezip.ing1.pds.uiUtils.PersonneViewModel.*;
 import static edu.ezip.ing1.pds.uiUtils.PlaceDeParkingViewModel.*;
+import static edu.ezip.ing1.pds.uiUtils.ReservationViewModel.createTablePanelresa;
 import static edu.ezip.ing1.pds.uiUtils.VehiculeViewMdel.insertVehicle;
 
 public class MainFrontEndSwing extends JFrame {
@@ -71,7 +73,7 @@ public class MainFrontEndSwing extends JFrame {
         tabbedPane.addTab(MECANICIEN, createTablePanel(MECANICIEN));
         tabbedPane.addTab(LOCAL_LAVERIES, createTablePanelLocaux(LOCAL_LAVERIES));
         tabbedPane.addTab(LOCAL_TECHNIQUE, createTablePanelLocaux(LOCAL_TECHNIQUE));
-        tabbedPane.addTab(RESERVATION, createTablePanelresa());
+        tabbedPane.addTab(RESERVATION, createTablePanelresa(placesDeParkings,logger,this,reservations));
 
 
         add(tabbedPane);

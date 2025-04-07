@@ -334,7 +334,7 @@ public class Formulaires {
         dialog.setVisible(true);
     }
 
-    private static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
+    public static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
 
         ImageIcon icon = new ImageIcon(Formulaires.class.getResource(chemin));
         Image image = icon.getImage().getScaledInstance(largeur, hauteur, Image.SCALE_SMOOTH);
