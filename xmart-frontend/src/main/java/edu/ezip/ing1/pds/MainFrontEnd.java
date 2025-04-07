@@ -45,7 +45,7 @@ public class MainFrontEnd {
         Personnes personnes = personneService.selectPersonnes();
         Abonnements abonnements = abonementService.selectAbonnements();
         Vehicles vehicles = vehicleService.selectVehicles();
-        PlacesDeParkings placeDeParkings = placeDeParkingService.selectPlaceDeParkings();
+        var placeDeParkings = placeDeParkingService.findAll();
         //final AsciiTable asciiTable = new AsciiTable();
 
         // ajout d'une vérification que apiRequest et getStudents ne sont pas nuls pour éviter l'exception du pointeur nul

@@ -2,11 +2,9 @@ package edu.ezip.ing1.pds.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import edu.ezip.commons.LoggingUtils;
+import edu.ezip.ing1.pds.api.PlaceDeParkingRepository;
 import edu.ezip.ing1.pds.business.dto.PlaceDeParking;
 import edu.ezip.ing1.pds.business.dto.PlacesDeParkings;
-import edu.ezip.ing1.pds.client.commons.ClientRequest;
-import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.commons.Request;
 import edu.ezip.ing1.pds.requests.apiRequest.DeleteClientRequest;
@@ -14,23 +12,17 @@ import edu.ezip.ing1.pds.requests.apiRequest.InsertClientRequest;
 import edu.ezip.ing1.pds.requests.apiRequest.SelectAllClientRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
-
-import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.List;
 import java.util.UUID;
 
-public class PlaceDeParkingService {
+public class PlaceDeParkingService implements PlaceDeParkingRepository {
     private final static String LoggingLabel = "FrontEnd - PlaceDeParkingService";
     private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
-    private final static String PlaceDeParkingsToBeInserted = "places-to-be-inserted.yaml";
 
     final String insertRequestOrder = "INSERT_PLACE_DE_PARKING";
     final String selectRequestOrder = "SELECT_ALL_PLACE_DE_PARKING";
     final String updatePlaceDeParkingOrder = "UPDATE_PLACE_DE_PARKING";
-    final String deleplaceDeParkingOrder = "DELETE_PLACE_DE_PARKING";
-
+    final String deletePlaceDeParkingOrder = "DELETE_PLACE_DE_PARKING";
 
     private final NetworkConfig networkConfig;
 
@@ -38,133 +30,158 @@ public class PlaceDeParkingService {
         this.networkConfig = networkConfig;
     }
 
-    public void insertPlaceDeParkings(PlaceDeParking placeDeParking) throws InterruptedException, IOException {
-        logger.debug("PlaceDeParking with its JSON face : {}", placeDeParking);
-        final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
-        final PlacesDeParkings guys = ConfigLoader.loadConfig(PlacesDeParkings.class, PlaceDeParkingsToBeInserted);
-
-        int birthdate = 0;
+    @Override
+    public boolean save(PlaceDeParking placeDeParking) {
+        try {
+            logger.debug("Saving PlaceDeParking: {}", placeDeParking);
             final ObjectMapper objectMapper = new ObjectMapper();
-            final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(placeDeParking);
-            logger.debug("PlaceDeParking with its JSON face : {}", jsonifiedGuy);
+            final String jsonifiedPlace = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(placeDeParking);
             final String requestId = UUID.randomUUID().toString();
             final Request request = new Request();
             request.setRequestId(requestId);
             request.setRequestOrder(insertRequestOrder);
-            request.setRequestContent(jsonifiedGuy);
+            request.setRequestContent(jsonifiedPlace);
+
             objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
-            final byte []  requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+            final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
 
             final InsertClientRequest clientRequest = new InsertClientRequest(
                     networkConfig,
-                    birthdate++, request, placeDeParking, requestBytes);
-            clientRequests.push(clientRequest);
+                    requestId.hashCode(), request, placeDeParking, requestBytes);
+            clientRequest.join();
 
-        while (!clientRequests.isEmpty()) {
-            final ClientRequest clientResponse = clientRequests.pop();
-            clientResponse.join();
-            final PlaceDeParking guy = (PlaceDeParking)clientRequest.getInfo();
-            logger.debug("Thread {} complete : {} {} {} {} --> {}",
-                    clientResponse.getThreadName(),
-                    guy.getIdPlace(), guy.getEmplacement(), guy.getTypePlace(),guy.getStatutPlace(),
-                    clientResponse.getResult());
+            logger.debug("PlaceDeParking saved: {}", placeDeParking);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error saving PlaceDeParking", e);
+            return false;
         }
     }
 
-    public PlacesDeParkings selectPlaceDeParkings() throws InterruptedException, IOException {
-        int birthdate = 0;
-        final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final String requestId = UUID.randomUUID().toString();
-        final Request request = new Request();
-        request.setRequestId(requestId);
-        request.setRequestOrder(selectRequestOrder);
-        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
-        final byte []  requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
-        LoggingUtils.logDataMultiLine(logger, Level.TRACE, requestBytes);
-        final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
-                networkConfig,
-                birthdate++, request, null, requestBytes, PlacesDeParkings.class);
-        clientRequests.push(clientRequest);
+    @Override
+    public PlaceDeParking findById(String idPlace) {
+        // This method would require an actual request to the backend to find a PlaceDeParking by ID.
+        try {
+            logger.debug("Finding PlaceDeParking by ID: {}", idPlace);
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final String requestId = UUID.randomUUID().toString();
+            final Request request = new Request();
+            request.setRequestId(requestId);
+            request.setRequestOrder(selectRequestOrder);
+            objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
 
-        if(!clientRequests.isEmpty()) {
-            final ClientRequest joinedClientRequest = clientRequests.pop();
-            joinedClientRequest.join();
-            logger.debug("Thread {} complete.", joinedClientRequest.getThreadName());
-            PlacesDeParkings result=  (PlacesDeParkings) joinedClientRequest.getResult();
-            logger.debug("place de parking got  {} complete.", result);
-            return result;
-        }
-        else {
-            logger.error("No apiRequest found");
+            final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+            final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
+                    networkConfig,
+                    requestId.hashCode(), request, null, requestBytes, PlacesDeParkings.class);
+            clientRequest.join();
+
+            // In a real case, you would filter by idPlace and return the matching object
+            PlacesDeParkings placesDeParkings = (PlacesDeParkings) clientRequest.getResult();
+            for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
+                if (place.getIdPlace().equals(idPlace)) {
+                    return place;
+                }
+            }
+
+            return null;
+        } catch (Exception e) {
+            logger.error("Error finding PlaceDeParking by ID", e);
             return null;
         }
     }
 
+    @Override
+    public boolean delete(String idPlace) {
+        try {
+            logger.debug("Deleting PlaceDeParking with ID: {}", idPlace);
+            final ObjectMapper objectMapper = new ObjectMapper();
+            PlaceDeParking placeDeParking = new PlaceDeParking();
+            placeDeParking.setIdPlace(idPlace);
 
-    public void deletePlaceDeParking(String idPlace) throws InterruptedException, IOException {
-        final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
-        final ObjectMapper objectMapper = new ObjectMapper();
+            final String jsonifiedPlace = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(placeDeParking);
+            final String requestId = UUID.randomUUID().toString();
+            final Request request = new Request();
+            request.setRequestId(requestId);
+            request.setRequestOrder(deletePlaceDeParkingOrder);
+            request.setRequestContent(jsonifiedPlace);
 
-        PlaceDeParking placeDeParking = new PlaceDeParking();
-        placeDeParking.setIdPlace(idPlace);
+            objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+            final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
 
-        final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(placeDeParking);
-        logger.debug("PlaceDeParking with its JSON face : {}", jsonifiedGuy);
+            final DeleteClientRequest clientRequest = new DeleteClientRequest(
+                    networkConfig,
+                    requestId.hashCode(), request, placeDeParking, requestBytes);
+            clientRequest.join();
 
-        final String requestId = UUID.randomUUID().toString();
-        final Request request = new Request();
-        request.setRequestId(requestId);
-        request.setRequestOrder(deleplaceDeParkingOrder);
-        request.setRequestContent(jsonifiedGuy);
-
-        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
-        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
-
-        final InsertClientRequest clientRequest = new InsertClientRequest<>(
-                networkConfig,
-                requestId.hashCode(), request, null, requestBytes);
-        clientRequests.push(clientRequest);
-
-        while (!clientRequests.isEmpty()) {
-            final ClientRequest clientResponse = clientRequests.pop();
-            clientResponse.join();
-            logger.debug("Thread {} complete. Deleted PlaceDeParking with ID: {} --> {}",
-                    clientResponse.getThreadName(), idPlace, clientResponse.getResult());
+            logger.debug("PlaceDeParking deleted with ID: {}", idPlace);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error deleting PlaceDeParking", e);
+            return false;
         }
     }
 
-    public void updatePlaceDeParking(PlaceDeParking placeDeParking) throws InterruptedException, IOException {
-        final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final String jsonifiedPlace = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(placeDeParking);
-        logger.trace("Updating PlaceDeParking with JSON: {}", jsonifiedPlace);
+    @Override
+    public boolean reserver(String id) {
+        return false;
+    }
 
-        final String requestId = UUID.randomUUID().toString();
-        final Request request = new Request();
-        request.setRequestId(requestId);
-        request.setRequestOrder(updatePlaceDeParkingOrder);
-        request.setRequestContent(jsonifiedPlace);
+    @Override
+    public boolean affecter(String id, String vehicleId) {
+        return false;
+    }
 
-        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
-        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+    @Override
+    public boolean update(PlaceDeParking placeDeParking) {
+        try {
+            logger.debug("Updating PlaceDeParking: {}", placeDeParking);
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final String jsonifiedPlace = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(placeDeParking);
+            final String requestId = UUID.randomUUID().toString();
+            final Request request = new Request();
+            request.setRequestId(requestId);
+            request.setRequestOrder(updatePlaceDeParkingOrder);
+            request.setRequestContent(jsonifiedPlace);
 
-        final InsertClientRequest clientRequest = new InsertClientRequest(
-                networkConfig,
-                requestId.hashCode(), request, placeDeParking, requestBytes);
-        clientRequests.push(clientRequest);
+            objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+            final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
 
-        while (!clientRequests.isEmpty()) {
-            final ClientRequest clientResponse = clientRequests.pop();
-            clientResponse.join();
-            final PlaceDeParking updatedPlace = (PlaceDeParking) clientRequest.getInfo();
-            logger.debug("Thread {} complete: {} {} {} {} --> {}",
-                    clientResponse.getThreadName(),
-                    updatedPlace.getIdPlace(), updatedPlace.getEmplacement(), updatedPlace.getTypePlace(), updatedPlace.getStatutPlace(),
-                    clientResponse.getResult());
+            final InsertClientRequest clientRequest = new InsertClientRequest(
+                    networkConfig,
+                    requestId.hashCode(), request, placeDeParking, requestBytes);
+            clientRequest.join();
+
+            logger.debug("PlaceDeParking updated: {}", placeDeParking);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error updating PlaceDeParking", e);
+            return false;
         }
     }
 
+    @Override
+    public List<PlaceDeParking> findAll() {
+        try {
+            logger.debug("Retrieving all PlaceDeParking objects");
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final String requestId = UUID.randomUUID().toString();
+            final Request request = new Request();
+            request.setRequestId(requestId);
+            request.setRequestOrder(selectRequestOrder);
+            objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
 
+            final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+            final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
+                    networkConfig,
+                    requestId.hashCode(), request, null, requestBytes, PlacesDeParkings.class);
+            clientRequest.join();
 
+            PlacesDeParkings placesDeParkings = (PlacesDeParkings) clientRequest.getResult();
+            return placesDeParkings.getPlaceDeParkings(); // Assuming getPlaces() returns a List<PlaceDeParking>
+        } catch (Exception e) {
+            logger.error("Error retrieving all PlaceDeParking objects", e);
+            return null;
+        }
+    }
 }

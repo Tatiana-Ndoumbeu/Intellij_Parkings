@@ -1,5 +1,6 @@
 package edu.ezip.ing1.pds.uiUtils;
 
+import edu.ezip.ing1.pds.api.PlaceDeParkingRepository;
 import edu.ezip.ing1.pds.business.dto.PlaceDeParking;
 import edu.ezip.ing1.pds.business.dto.PlacesDeParkings;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
@@ -31,13 +32,13 @@ public class PlaceDeParkingViewModel {
         int confirm = JOptionPane.showConfirmDialog(parentComponent, "Voulez-vous vraiment supprimer cette place de parking ?", "Confirmation", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+                PlaceDeParkingRepository placeDeParkingService = new PlaceDeParkingService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
                 boolean placeTrouvee = false;
-                placesDeParkings = placeDeParkingService.selectPlaceDeParkings();
+                placesDeParkings.setPlaceDeParkings(placeDeParkingService.findAll()); ;
                 for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
                     if (place.getIdPlace().equals(idPlace)) {
                         placeTrouvee = true;
-                        placeDeParkingService.deletePlaceDeParking(idPlace);
+                        placeDeParkingService.delete(idPlace);
 
                         for (int i = 0; i < model.getRowCount(); i++) {
                             if (model.getValueAt(i, 0).equals(idPlace)) {
@@ -66,15 +67,11 @@ public class PlaceDeParkingViewModel {
     public static  void updatePlaceDeParking(NetworkConfig networkConfig,DefaultTableModel model,Component parentComponent, String networkConfigFile, Logger logger)  {
 
 
-        final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(networkConfig);
+        final PlaceDeParkingRepository placeDeParkingService = new PlaceDeParkingService(networkConfig);
         PlacesDeParkings placesDeParkings = null;
-        try {
-            placesDeParkings = placeDeParkingService.selectPlaceDeParkings();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+            placesDeParkings.setPlaceDeParkings(placeDeParkingService.findAll());
+
         logger.info("updatePlaceDeParking {}", placesDeParkings.getPlaceDeParkings().size());
         String idPlace = JOptionPane.showInputDialog(parentComponent, "ID de la place à modifier :");
         if (idPlace == null || idPlace.trim().isEmpty()) {
@@ -116,14 +113,14 @@ public class PlaceDeParkingViewModel {
             return;
         }
 
-        try {
+
             //idPlace, newEmplacement, newType, newStatut
             PlaceDeParking updatedPlace = new PlaceDeParking();
             updatedPlace.setIdPlace(idPlace);
             updatedPlace.setEmplacement(newEmplacement);
             updatedPlace.setTypePlace(newType);
             updatedPlace.setStatutPlace(newStatut);
-            placeDeParkingService.updatePlaceDeParking(updatedPlace);
+            placeDeParkingService.update(updatedPlace);
 
             model.setRowCount(0); // Réinitialiser les lignes de la table
             for (PlaceDeParking place : placesDeParkings.getPlaceDeParkings()) {
@@ -131,10 +128,7 @@ public class PlaceDeParkingViewModel {
             }
 
             JOptionPane.showMessageDialog(parentComponent, "Place de parking mise à jour avec succès.");
-        } catch (IOException | InterruptedException e) {
-            logger.error("Erreur lors de la mise à jour de la place de parking", e);
-            JOptionPane.showMessageDialog(parentComponent, "Erreur lors de la mise à jour de la place de parking.", "Erreur", JOptionPane.ERROR_MESSAGE);
-        }
+
     }
 
 
@@ -166,16 +160,13 @@ public class PlaceDeParkingViewModel {
         newPlace.setStatutPlace(statutPlace);
 
 
-        try {
-            placeDeParkingService.insertPlaceDeParkings(newPlace);
+
+            placeDeParkingService.save(newPlace);
 
             model.addRow(new Object[]{newPlace.getIdPlace(), newPlace.getEmplacement(), newPlace.getTypePlace(), newPlace.getStatutPlace()});
             //model.addRow(new Object[]{newPlace.getIdPlace(), newPlace.getEmplacement(), newPlace.getStatutPlace(), newPlace.getTypePlace()});
             JOptionPane.showMessageDialog(parentComponent, "Place de parking inseré !.");
-        } catch (IOException | InterruptedException e) {
-            logger.error("echec insertion place de parking", e);
-            JOptionPane.showMessageDialog(parentComponent, "echec insertion place de parking.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
+
     }
 
 
@@ -184,8 +175,8 @@ public class PlaceDeParkingViewModel {
         String[] columns = {"ID", "Emplacement", "typePlace", "statutPlace"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
 
-        try {
-            placesDeParkings = placeDeParkingService.selectPlaceDeParkings();
+
+            placesDeParkings.setPlaceDeParkings(placeDeParkingService.findAll()) ;
             if (placesDeParkings != null && placesDeParkings.getPlaceDeParkings() != null) {
 
                 // Forcer le tri par emplacement ou ID
@@ -202,9 +193,8 @@ public class PlaceDeParkingViewModel {
                     });
                 }
             }
-        } catch (IOException | InterruptedException e) {
-            logger.error("Error fetching places de parking", e);
-        }
+
+
 
         return model;
     }
