@@ -1,7 +1,6 @@
 package edu.ezip.ing1.pds.business.dto;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
 
@@ -16,14 +15,14 @@ public class Reservation {
     private Date heureSortie;
     private String idPersonne;
     private String position;
-    private Personne personne;
+    private Personne idPlace;
     private PlaceDeParking placeDeParking;
    // private String idPaiement; plus tard
 
     public Reservation() {
     }
 
-    public Reservation(String idReservation, LocalDate dateReservation, LocalTime heure, Date dateEntree, Date dateSortie, Date heureEntree, Date heureSortie, String idPersonne, String position, Personne personne, PlaceDeParking placeDeParking) {
+    public Reservation(String idReservation, LocalDate dateReservation, LocalTime heure, Date dateEntree, Date dateSortie, Date heureEntree, Date heureSortie, String idPersonne, String position, Personne idPlace, PlaceDeParking placeDeParking) {
         this.idReservation = idReservation;
         this.dateReservation = dateReservation;
         this.heure = heure;
@@ -33,7 +32,7 @@ public class Reservation {
         this.heureSortie = heureSortie;
         this.idPersonne = idPersonne;
         this.position = position;
-        this.personne = personne;
+        this.idPlace = idPlace;
         this.placeDeParking = placeDeParking;
     }
 
@@ -93,12 +92,12 @@ public class Reservation {
         this.position = position;
     }
 
-    public Personne getPersonne() {
-        return personne;
+    public Personne getIdPlace() {
+        return idPlace;
     }
 
-    public void setPersonne(Personne personne) {
-        this.personne = personne;
+    public void setIdPlace(Personne idPlace) {
+        this.idPlace = idPlace;
     }
 
     public PlaceDeParking getPlaceDeParking() {
@@ -137,7 +136,7 @@ public class Reservation {
                 ", heureSortie=" + heureSortie +
                 ", idPersonne='" + idPersonne + '\'' +
                 ", position='" + position + '\'' +
-                ", personne=" + personne +
+                ", personne=" + idPlace +
                 ", placeDeParking=" + placeDeParking +
                 '}';
     }

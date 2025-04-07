@@ -57,8 +57,10 @@ public class IntelijjParkingService {
         SELECT_ALL_UTILISATEUR("SELECT id_admin, nom, email FROM Admin"),
 
         SELECT_ZONE_SPE_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t WHERE t.type_place <> 'simple'"),
-        SELECT_ALL_RESERVATIONS("SELECT r.idReservation, r.dateReservation, r.heure, r.dateEntree, r.dateSortie, t.position, t.typePlace, t.statutPlace, t.emplacement FROM Reservation r INNER JOIN PlaceDeParking t ON t.idPlace = r.idPlace;"),
-        INSERT_RESERVATION("INSERT into Reservation (idReservation, dateReservation, heure, dateEntree, dateSortie, heureEntree, heureSortie, id_Personne, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "),
+        SELECT_ALL_RESERVATIONS("SELECT r.idReservation, r.dateReservation, r.heure, r.dateEntree, r.dateSortie, t.id_place, t.statut_place, t.emplacement, t.type_place \n" +
+                "FROM Reservation r \n" +
+                "INNER JOIN PlaceDeParking t ON t.id_place = r.id_place;\n"),
+        INSERT_RESERVATION("INSERT into Reservation (idReservation, dateReservation, heure, dateEntree, dateSortie, heureEntree, heureSortie, id_Personne, id_place) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "),
 
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
         INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)"),
@@ -176,6 +178,9 @@ public class IntelijjParkingService {
                 break;
             case INSERT_MECANICIEN:
                 response = InsertMecanicien(request, connection);
+                break;
+            case SELECT_ALL_RESERVATIONS:
+                response = SelectAllReservations(request, connection);
                 break;
             default:
                 break;
@@ -715,7 +720,8 @@ private Response UpdateLocalT(final Request request, final Connection connection
         final ObjectMapper objectMapper = new ObjectMapper();
         Reservation reservation;
         try {
-            reservation = objectMapper.readValue(request.getRequestBody(), Reservation.class);
+          ReservationRequest  reservationRequest = objectMapper.readValue(request.getRequestBody(), ReservationRequest.class);
+          reservation = ReservationMapper.toReservation(reservationRequest);
         } catch (JsonProcessingException e) {
             logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
             return new Response(request.getRequestId(), "Données de reservation invalides");
@@ -732,10 +738,10 @@ private Response UpdateLocalT(final Request request, final Connection connection
             stmt.setTime(3, java.sql.Time.valueOf(reservation.getHeure()));
             stmt.setDate(4, new java.sql.Date(reservation.getDateEntree().getTime()));
             stmt.setDate(5, new java.sql.Date(reservation.getDateSortie().getTime()));
-            stmt.setTime(6, new java.sql.Time(reservation.getHeureEntre().getTime()));
-            stmt.setTime(7, new java.sql.Time(reservation.getHeureSortie().getTime()));
+            stmt.setTime(6, new java.sql.Time(reservation.getDateEntree().getTime()));
+            stmt.setTime(7,  new java.sql.Time(reservation.getHeureSortie().getTime()));
             stmt.setString(8, reservation.getIdPersonne());
-            stmt.setString(9, reservation.getPosition());
+            stmt.setString(9, reservation.getPlaceDeParking().getIdPlace());
             stmt.executeUpdate();
             return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservation));
 
@@ -751,21 +757,21 @@ private Response UpdateLocalT(final Request request, final Connection connection
         final ObjectMapper objectMapper = new ObjectMapper();
         final Statement stmt = connection.createStatement();
         final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_RESERVATIONS.query);
-        Reservations reservations = new Reservations();
+        ReservationsResquests reservations = new ReservationsResquests();
 
         while (res.next()) {
-            Reservation reservation = new Reservation();
+            ReservationRequest reservation = new ReservationRequest();
             reservation.setIdReservation(res.getString("idReservation"));
-            reservation.setDateReservation(res.getDate("dateReservation").toLocalDate());
-            reservation.setHeure(res.getTime("heure").toLocalTime());
-            reservation.setDateEntree(res.getDate("dateEntree"));
-            reservation.setDateSortie(res.getDate("dateSortie"));
+            reservation.setDateReservation(res.getDate("dateReservation").toLocalDate().toString());
+            reservation.setHeure(res.getTime("heure").toLocalTime().toString());
+            reservation.setDateEntree(res.getDate("dateEntree").toString());
+            reservation.setDateSortie(res.getDate("dateSortie").toString());
 
 
             PlaceDeParking placeDeParking = new PlaceDeParking();
-            placeDeParking.setIdPlace(res.getString("position"));
-            placeDeParking.setTypePlace(res.getString("typePlace"));
-            placeDeParking.setStatutPlace(res.getString("statutPlace"));
+            placeDeParking.setIdPlace(res.getString("id_place"));
+            placeDeParking.setTypePlace(res.getString("type_place"));
+            placeDeParking.setStatutPlace(res.getString("statut_place"));
             placeDeParking.setEmplacement(res.getString("emplacement"));
 
             reservation.setPlaceDeParking(placeDeParking); //pour les associer

@@ -137,14 +137,14 @@ public class Formulaires {
             if (champPosition.getText().isEmpty() || champNom.getText().isEmpty() || champTelephone.getText().isEmpty() || champCodeP.getText().isEmpty() || dateDebut == null || dateFin == null) {
                 JOptionPane.showMessageDialog(dialog, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
             } else {
-                Reservation reservation = new Reservation();
+                ReservationRequest reservation = new ReservationRequest();
                 reservation.setIdReservation(generateUniqueId());
-                reservation.setDateReservation(LocalDate.now());
-                reservation.setHeure(LocalTime.now());
-                reservation.setDateEntree(dateDebut);
-                reservation.setDateSortie(dateFin);
-                reservation.setHeureeEntre(heureDebut);
-                reservation.setHeureSortie(heureFin);
+                reservation.setDateReservation(LocalDate.now().toString());
+                reservation.setHeure(LocalTime.now().toString());
+                reservation.setDateEntree(dateDebut.toString());
+                reservation.setDateSortie(dateFin.toString());
+                reservation.setHeureEntree(heureDebut.toString());
+                reservation.setHeureSortie(heureFin.toString());
 
                 Personne personne = new Personne();
                 personne.setNom(Nom);
@@ -158,7 +158,7 @@ public class Formulaires {
 
                 try {
                     System.out.println(reservation);
-                    reservationService.insertReservations(reservation);
+                    reservationService.insertReservation(reservation);
                     System.out.println(personne);
                     personneService.insertPersonnes(personne);
                 }

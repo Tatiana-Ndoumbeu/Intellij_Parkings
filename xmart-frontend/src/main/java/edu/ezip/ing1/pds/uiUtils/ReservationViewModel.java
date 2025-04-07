@@ -1,10 +1,7 @@
 package edu.ezip.ing1.pds.uiUtils;
 
 import edu.ezip.ing1.pds.Formulaires;
-import edu.ezip.ing1.pds.business.dto.PlaceDeParking;
-import edu.ezip.ing1.pds.business.dto.PlacesDeParkings;
-import edu.ezip.ing1.pds.business.dto.Reservation;
-import edu.ezip.ing1.pds.business.dto.Reservations;
+import edu.ezip.ing1.pds.business.dto.*;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.services.ReservationService;
@@ -113,7 +110,7 @@ public class ReservationViewModel {
         String[] columns = {"id reservation","Position", "type", "date début"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         try{
-            reservations = reservationService.selectReservations();
+            reservations = ReservationMapper.mapToReservations(reservationService.selectReservations()) ;
             if (reservations != null && reservations.getReservations() != null){
                 for (Reservation reservation : reservations.getReservations()) {
                     PlaceDeParking place = reservation.getPlaceDeParking();

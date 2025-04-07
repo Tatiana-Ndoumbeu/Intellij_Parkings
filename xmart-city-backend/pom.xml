@@ -60,7 +60,6 @@
             <artifactId>logback-classic</artifactId>
             <version>1.1.7</version>
         </dependency>
-
         <dependency>
             <groupId>edu.ezip.ing1.pds.commons</groupId>
             <artifactId>xmart-city-commons</artifactId>

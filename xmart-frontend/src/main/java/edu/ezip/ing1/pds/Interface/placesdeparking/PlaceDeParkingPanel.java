@@ -1,8 +1,9 @@
 package edu.ezip.ing1.pds.Interface.placesdeparking;
 
-import edu.ezip.ing1.pds.api.PlaceDeParkingRepository;
-import edu.ezip.ing1.pds.api.ReservationRepository;
+
 import edu.ezip.ing1.pds.business.dto.PlaceDeParking;
+import edu.ezip.ing1.pds.usecase.PlaceDeParkingUseCase;
+import edu.ezip.ing1.pds.usecase.ReservationUseCase;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -10,30 +11,16 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 
-import edu.ezip.ing1.pds.client.commons.ConfigLoader;
-import edu.ezip.ing1.pds.client.commons.NetworkConfig;
-import edu.ezip.ing1.pds.services.PlaceDeParkingService;
-import edu.ezip.ing1.pds.services.ReservationService;
-import edu.ezip.ing1.pds.usecase.PlaceDeParkingUseCase;
-import edu.ezip.ing1.pds.usecase.ReservationUseCase;
-
-
-public class PlaceDeParkingListFrame extends JFrame {
+public class PlaceDeParkingPanel extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
-    private PlaceDeParkingUseCase placeDeParkingUseCase; // The use case
     private List<PlaceDeParking> places;
-    private final static String networkConfigFile = "network.yaml";
 
-    public PlaceDeParkingListFrame(PlaceDeParkingUseCase placeDeParkingUseCase, ReservationUseCase  reservationUseCase) {
-        this.placeDeParkingUseCase = placeDeParkingUseCase;
-        this.places = placeDeParkingUseCase.getAllPlacesDeParking(); // Load data from use case
+    public PlaceDeParkingPanel(PlaceDeParkingUseCase placeDeParkingUseCase, ReservationUseCase reservationUseCase) {
+        setLayout(new BorderLayout());
+        setBackground(new Color(245, 245, 245));
 
-        setTitle("Gestion des places de parking");
-        setSize(1000, 600);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        getContentPane().setBackground(new Color(245, 245, 245));
+        this.places = placeDeParkingUseCase.getAllPlacesDeParking();
 
         String[] columns = {"ID", "Type", "Statut", "Emplacement"};
         tableModel = new DefaultTableModel(columns, 0) {
@@ -49,16 +36,16 @@ public class PlaceDeParkingListFrame extends JFrame {
 
         JButton addBtn = new JButton("Ajouter une place");
         styleButton(addBtn, new Color(255, 152, 0));
-        addBtn.addActionListener(e -> new AjouterPlaceFrame(this,placeDeParkingUseCase));
+        addBtn.addActionListener(e -> new AjouterPlaceFrame(null, placeDeParkingUseCase));
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(new Color(245, 245, 245));
         bottomPanel.add(addBtn);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        refreshTable(places);
+        refreshTable(placeDeParkingUseCase.getAllPlacesDeParking());
 
-        // Create Context Menu
+        // Menu contextuel
         JPopupMenu contextMenu = new JPopupMenu();
         JMenuItem modifierItem = new JMenuItem("Modifier");
         JMenuItem supprimerItem = new JMenuItem("Supprimer");
@@ -70,7 +57,6 @@ public class PlaceDeParkingListFrame extends JFrame {
         contextMenu.add(reserverItem);
         contextMenu.add(affecterItem);
 
-        // Add MouseListener for right-click context menu
         table.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
@@ -81,7 +67,6 @@ public class PlaceDeParkingListFrame extends JFrame {
 
                         PlaceDeParking selected = places.get(row);
 
-                        // Modifier
                         modifierItem.addActionListener(ev -> {
                             new ModifierPlaceFrame(selected, updatedList -> {
                                 places = updatedList;
@@ -89,27 +74,21 @@ public class PlaceDeParkingListFrame extends JFrame {
                             }, placeDeParkingUseCase);
                         });
 
-                        // Supprimer
                         supprimerItem.addActionListener(ev -> {
                             int res = JOptionPane.showConfirmDialog(table, "Supprimer cette place ?", "Confirmation", JOptionPane.YES_NO_OPTION);
                             if (res == JOptionPane.YES_OPTION) {
-                                placeDeParkingUseCase.deletePlaceDeParking(selected.getIdPlace()); // Call delete from use case
-                                places.remove(selected);  // Remove from local list
-                                refreshTable(places);  // Refresh the table
+                                placeDeParkingUseCase.deletePlaceDeParking(selected.getIdPlace());
+                                places.remove(selected);
+                                refreshTable(places);
                             }
                         });
 
-                        // Réserver
                         reserverItem.addActionListener(ev -> {
                             FormulaireReservation.showForm(
-                                    PlaceDeParkingListFrame.this, // Pass the current JFrame instance
-                                    reservationUseCase,
-                                    selected,// Pass the reservation use case
-                                    () -> refreshTable(placeDeParkingUseCase.getAllPlacesDeParking()) // Refresh the table after reservation
-                            );
+                                    null, reservationUseCase, selected,
+                                    () -> refreshTable(placeDeParkingUseCase.getAllPlacesDeParking()));
                         });
 
-                        // Affecter
                         affecterItem.addActionListener(ev -> {
                             JOptionPane.showMessageDialog(table, "Affectation à un véhicule pour " + selected.getIdPlace());
                         });
@@ -117,12 +96,8 @@ public class PlaceDeParkingListFrame extends JFrame {
                 }
             }
         });
-
-        setVisible(true);
     }
 
-
-    // Style for buttons
     private void styleButton(JButton button, Color bg) {
         button.setFont(new Font("SansSerif", Font.BOLD, 16));
         button.setBackground(bg);
@@ -131,23 +106,11 @@ public class PlaceDeParkingListFrame extends JFrame {
         button.setPreferredSize(new Dimension(200, 40));
     }
 
-    public void refreshTable(List<PlaceDeParking> updatedList) {
-        tableModel.setRowCount(0);  // Clear existing rows
+    private void refreshTable(List<PlaceDeParking> updatedList) {
+        tableModel.setRowCount(0);
         for (PlaceDeParking p : updatedList) {
             tableModel.addRow(new Object[]{p.getIdPlace(), p.getTypePlace(), p.getStatutPlace(), p.getEmplacement()});
         }
     }
-
-
-    // Main method to test with a use case
-    public static void main(String[] args) {
-        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
-        // Assuming PlaceDeParkingUseCase is your business layer
-        PlaceDeParkingRepository repository = new PlaceDeParkingService(networkConfig);  // Replace with your actual repository implementation
-        ReservationRepository reservationRepository = new ReservationService(networkConfig);  // Replace with your actual repository implementation
-        PlaceDeParkingUseCase placeDeParkingUseCase = new PlaceDeParkingUseCase(repository);
-        ReservationUseCase reservationUseCase = new ReservationUseCase(reservationRepository);
-
-        SwingUtilities.invokeLater(() -> new PlaceDeParkingListFrame(placeDeParkingUseCase,reservationUseCase));
-    }
 }
+

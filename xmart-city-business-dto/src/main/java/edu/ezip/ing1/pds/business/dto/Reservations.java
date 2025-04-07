@@ -18,10 +18,12 @@ public class Reservations {
         this.reservations = reservations;
     }
 
+
     public Reservations add(final Reservation reservation) {
         reservations.add(reservation);
         return this;
     }
+
 
     @Override
     public String toString() {
