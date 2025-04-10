@@ -33,7 +33,7 @@ public class MainFrontEnd {
 
         //final StudentService studentService = new StudentService(networkConfig);
         final PersonneService personneService = new PersonneService(networkConfig);
-        final AbonementService abonementService = new AbonementService(networkConfig);
+        final AbonnementService abonementService = new AbonnementService(networkConfig);
         final VehicleService vehicleService = new VehicleService(networkConfig);
         final PlaceDeParkingService placeDeParkingService = new PlaceDeParkingService(networkConfig);
         //studentService.insertStudents();
@@ -43,7 +43,7 @@ public class MainFrontEnd {
         //placeDeParkingService.insertPlaceDeParkings();
         // Students students = studentService.selectStudents();
         Personnes personnes = personneService.selectPersonnes();
-        Abonnements abonnements = abonementService.selectAbonnements();
+        Abonnements abonnements = abonementService.findAll();
         Vehicles vehicles = vehicleService.selectVehicles();
         var placeDeParkings = placeDeParkingService.findAll();
         //final AsciiTable asciiTable = new AsciiTable();

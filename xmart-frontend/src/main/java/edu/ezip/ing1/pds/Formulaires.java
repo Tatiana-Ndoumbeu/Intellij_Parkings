@@ -33,7 +33,7 @@ public class Formulaires {
     final static ReservationService reservationService = new ReservationService(networkConfig);
     final static PersonneService personneService = new PersonneService(networkConfig);
 
-    final static AbonementService abonementService = new AbonementService(networkConfig);
+    final static AbonnementService abonementService = new AbonnementService(networkConfig);
 
 
     public static void FormulaireReservation(JFrame parent) {
@@ -271,7 +271,7 @@ public class Formulaires {
 
                 try{
                     System.out.println(abonnement);
-                    abonementService.insertAbonements(abonnement);
+                    abonementService.save(abonnement);
                     System.out.println(personne);
                     personneService.insertPersonnes(personne);
                 }catch (IOException | InterruptedException u) {

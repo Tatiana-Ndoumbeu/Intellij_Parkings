@@ -1,26 +1,33 @@
 package edu.ezip.ing1.pds.Interface;
 
+import edu.ezip.ing1.pds.Interface.abonnement.AbonnementPanel;
 import edu.ezip.ing1.pds.Interface.placesdeparking.PlaceDeParkingPanel;
 import edu.ezip.ing1.pds.Interface.reservations.ReservationPanel;
 import edu.ezip.ing1.pds.api.PlaceDeParkingRepository;
 import edu.ezip.ing1.pds.api.ReservationRepository;
+import edu.ezip.ing1.pds.api.AbonnementRepository;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.services.PlaceDeParkingService;
 import edu.ezip.ing1.pds.services.ReservationService;
+import edu.ezip.ing1.pds.services.AbonnementService;
 import edu.ezip.ing1.pds.usecase.PlaceDeParkingUseCase;
 import edu.ezip.ing1.pds.usecase.ReservationUseCase;
+import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class DashboardFrame extends JFrame {
     private JPanel sideMenu;
     private JPanel mainContent;
     private PlaceDeParkingUseCase placeDeParkingUseCase;
     private ReservationUseCase reservationUseCase;
-    public DashboardFrame(PlaceDeParkingUseCase placeUseCase, ReservationUseCase reservUseCase) {
+    private AbonnementUseCase abonnementUseCase;
+
+    public DashboardFrame(PlaceDeParkingUseCase placeUseCase, ReservationUseCase reservUseCase, AbonnementUseCase abonUseCase) {
         setTitle("Tableau de bord - Gestion Parking");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
@@ -28,6 +35,7 @@ public class DashboardFrame extends JFrame {
         setLayout(new BorderLayout());
         this.placeDeParkingUseCase = placeUseCase;
         this.reservationUseCase = reservUseCase;
+        this.abonnementUseCase = abonUseCase;
 
         initSideMenu();
         initMainContent();
@@ -52,10 +60,20 @@ public class DashboardFrame extends JFrame {
 
         sideMenu.add(title);
 
+        // Menu items
         addMenuButton("Accueil", e -> showContent("Accueil"));
-        addMenuButton("Places de parking", e ->  showPlacesDeParking());
+        addMenuButton("Places de parking", e -> showPlacesDeParking());
         addMenuButton("Réservations", e -> showReservations());
-        addMenuButton("Affectations", e -> showContent("Affectations"));
+        addMenuButton("Abonnements", e -> {
+            try {
+                showAbonnements();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+        });  // New button for abonnements
+        addMenuButton("Gestion des entités", e -> showEntityManagement());
         addMenuButton("Déconnexion", e -> System.exit(0));
     }
 
@@ -78,12 +96,28 @@ public class DashboardFrame extends JFrame {
         mainContent.setLayout(new BorderLayout());
         showContent("Accueil");
     }
+
     private void showPlacesDeParking() {
         mainContent.removeAll();
         mainContent.add(new PlaceDeParkingPanel(placeDeParkingUseCase, reservationUseCase), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }
+
+    private void showReservations() {
+        mainContent.removeAll();
+        mainContent.add(new ReservationPanel(reservationUseCase), BorderLayout.CENTER);
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+
+    private void showAbonnements() throws IOException, InterruptedException {
+        mainContent.removeAll();
+        mainContent.add(new AbonnementPanel(abonnementUseCase), BorderLayout.CENTER);  // Add AbonnementPanel
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+
     private void showContent(String section) {
         mainContent.removeAll();
 
@@ -95,9 +129,12 @@ public class DashboardFrame extends JFrame {
         mainContent.repaint();
     }
 
-    private void showReservations() {
+    private void showEntityManagement() {
+        // Add your entity management logic here
         mainContent.removeAll();
-        mainContent.add(new ReservationPanel(reservationUseCase), BorderLayout.CENTER);  // Add ReservationPanel
+        JLabel label = new JLabel("Gestion des entités", SwingConstants.CENTER);
+        label.setFont(new Font("SansSerif", Font.BOLD, 24));
+        mainContent.add(label, BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }
@@ -106,10 +143,12 @@ public class DashboardFrame extends JFrame {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, "network.yaml");
         PlaceDeParkingRepository repository = new PlaceDeParkingService(networkConfig);
         ReservationRepository reservationRepository = new ReservationService(networkConfig);
+        AbonnementRepository abonnementRepository = new AbonnementService(networkConfig);
+
         PlaceDeParkingUseCase placeUseCase = new PlaceDeParkingUseCase(repository);
         ReservationUseCase reservUseCase = new ReservationUseCase(reservationRepository);
+        AbonnementUseCase abonUseCase = new AbonnementUseCase(abonnementRepository);
 
-        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase));
+        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase));
     }
 }
-

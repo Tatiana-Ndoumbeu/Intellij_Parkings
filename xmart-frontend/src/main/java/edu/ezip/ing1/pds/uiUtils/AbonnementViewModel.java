@@ -4,7 +4,7 @@ import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.business.dto.Abonnements;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
-import edu.ezip.ing1.pds.services.AbonementService;
+import edu.ezip.ing1.pds.services.AbonnementService;
 import org.slf4j.Logger;
 
 import javax.swing.*;
@@ -31,8 +31,8 @@ public class AbonnementViewModel {
         int confirm = JOptionPane.showConfirmDialog(component , "Voulez-vous vraiment supprimer cet abonnement ?", "Confirmation", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                AbonementService abonementService = new AbonementService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
-                abonementService.supprimerAbonnement(idAbonnement);
+                AbonnementService abonementService = new AbonnementService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+                abonementService.deleteById(idAbonnement);
                 for (int i = 0; i < model.getRowCount(); i++) {
                     if (model.getValueAt(i, 0).equals(idAbonnement)) {
                         model.removeRow(i);
@@ -51,7 +51,7 @@ public class AbonnementViewModel {
     public static   void updateAbonnement(DefaultTableModel model,Component component, Logger logger) {
 
         String idAbo = JOptionPane.showInputDialog(component , "Identifiant de l'abonnement à modifier :");
-        AbonementService abonementService = new AbonementService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
+        AbonnementService abonementService = new AbonnementService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
         if (idAbo == null || idAbo.trim().isEmpty()) {
             JOptionPane.showMessageDialog(component , "L'identifiant ne peut pas être vide.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
@@ -130,13 +130,13 @@ public class AbonnementViewModel {
 
 
     public static DefaultTableModel createAbonnementTableModel(NetworkConfig networkConfig, Abonnements abonnements,Logger logger) {
-        final AbonementService abonementService = new AbonementService(networkConfig);
+        final AbonnementService abonementService = new AbonnementService(networkConfig);
         String[] columns = { "idAbonnement", "typeAbonnement", "prix", "statutAbonnement", "dateDebut", "dateFin"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
 
         // Récupère et affiche les places de parking existantes depuis BD
         try {
-            abonnements = abonementService.selectAbonnements();
+            abonnements = abonementService.findAll();
             if (abonnements != null && abonnements.getAbonnements() != null) {
                 for (Abonnement place : abonnements.getAbonnements()) {
                     model.addRow(new Object[]{
@@ -158,7 +158,7 @@ public class AbonnementViewModel {
 
     public static   void insertAbonnements(DefaultTableModel model, Component component, Logger logger) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
-        final AbonementService abonementService = new AbonementService(networkConfig);
+        final AbonnementService abonementService = new AbonnementService(networkConfig);
 
         String typeAbonnement;
         while (true) {
@@ -207,7 +207,7 @@ public class AbonnementViewModel {
         abonnement.setDateFin( new Date(2025,12,23));
 
         try {
-            abonementService.insertAbonements(abonnement);
+            abonementService.save(abonnement);
 
             // rafraichir la table
             model.addRow(new Object[]{abonnement.getIdAbonnement(),
