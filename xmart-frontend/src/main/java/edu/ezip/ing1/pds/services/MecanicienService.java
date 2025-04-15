@@ -3,6 +3,7 @@ package edu.ezip.ing1.pds.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import edu.ezip.commons.LoggingUtils;
+import edu.ezip.ing1.pds.api.MecanicienRepository;
 import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.business.dto.Abonnements;
 import edu.ezip.ing1.pds.business.dto.Mecanicien;
@@ -22,7 +23,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.UUID;
 
-public class MecanicienService {
+public class MecanicienService implements MecanicienRepository {
     private final static String LoggingLabel = "FrontEnd - AbonementService";
     private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
 
@@ -37,7 +38,10 @@ public class MecanicienService {
         this.networkConfig = networkConfig;
     }
 
-    public void insertMecanicien(Mecanicien mecanicien) throws InterruptedException, IOException {
+    public Boolean insert(Mecanicien mecanicien) throws InterruptedException, IOException {
+
+        //j'dois mettre peut etre un try catch plus tard
+
         final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
 
         int birthdate = 0;
@@ -68,9 +72,10 @@ public class MecanicienService {
                     guy.getNom(), guy.getPrenom(), guy.getSpecialite(),
                     clientResponse.getResult());
         }
+        return true;
     }
 
-    public Mecaniciens selectMecanicien() throws InterruptedException, IOException {
+    public Mecaniciens select() throws InterruptedException, IOException {
         int birthdate = 0;
         final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
         final ObjectMapper objectMapper = new ObjectMapper();
