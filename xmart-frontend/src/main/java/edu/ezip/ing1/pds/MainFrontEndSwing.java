@@ -98,16 +98,16 @@ public class MainFrontEndSwing extends JFrame {
             logger.debug("Ajout d'un local pour {}", LOCAL);
             switch (LOCAL) {
                 case LOCAL_LAVERIES:
-                    insertLocal((DefaultTableModel) table.getModel(),this,this::createTablePanel,LOCAL_LAVERIES,logger);
+                    insertLocal((DefaultTableModel) table.getModel(),this,logger);
                     break;
                 case LOCAL_TECHNIQUE:
-                    insertLocalT((DefaultTableModel) table.getModel(),this,this::createTablePanel,LOCAL_TECHNIQUE,logger);
+                    insertLocalT((DefaultTableModel) table.getModel(),this,logger);
                     break;
                           }
         });
         panelsud.add(insertButton);
 
-        JButton disponibutton = new JButton("modifier une disponibilité", chargerIcone("/icons/modifier.png", 30, 30));
+        JButton disponibutton = new JButton("Occuper un local", chargerIcone("/icons/modifier.png", 30, 30));
         disponibutton.setBackground(Color.YELLOW);
    
          disponibutton.addActionListener(e -> {

@@ -61,7 +61,7 @@ public class LocalTechniqueViewModel {
             localTechniquemodif.setDisponibilite(newDisponibilite);
 
             final LocalTechniqueService localService = new LocalTechniqueService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
-            localService.updateLocTechnique(localTechniquemodif);
+            localService.update(localTechniquemodif);
 
             model.setRowCount(0);// on supprime dabord les anciennes lignes dans le tableau
             for (LocalTechnique place : localTechniques.getLocalTechniques()) {
@@ -77,8 +77,8 @@ public class LocalTechniqueViewModel {
 
     }
 
-    public static  void insertLocalT(DefaultTableModel model, Component component, Function<String, JPanel> createTablePanelFunction,
-                              String type,Logger logger) {
+    public static  void insertLocalT(DefaultTableModel model, Component component,
+                              Logger logger) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         final LocalTechniqueService localService = new LocalTechniqueService(networkConfig);
 
@@ -110,12 +110,10 @@ public class LocalTechniqueViewModel {
         localTechnique1.setDisponibilite(Boolean.parseBoolean(disponibilite));
 
         try {
-            localService.insertLocTechnique(localTechnique1);
+            localService.insert(localTechnique1);
             model.addRow(new Object[]{localTechnique1.getNumLocalT(), localTechnique1.getDisponibilite()});
             //JOptionPane.showMessageDialog(component, "Local Inséré.");
-            // Refresh  after insertion
-            JPanel refreshedPanel = createTablePanelFunction.apply(type);
-            logger.debug("Panel refreshed for type {}: {}", type, refreshedPanel.getName());
+
             JOptionPane.showMessageDialog(component, "Local inséré.");
         } catch (IOException | InterruptedException e) {
             logger.error("Erreur insertion Local", e);
@@ -160,7 +158,7 @@ public class LocalTechniqueViewModel {
 
         try {
             final LocalTechniqueService localService = new LocalTechniqueService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
-            localService.deleteLocalTechnique(localASupprimer);
+            localService.delete(localASupprimer);
 
             localTechniques.getLocalTechniques().remove(localASupprimer);
 
@@ -183,7 +181,7 @@ public class LocalTechniqueViewModel {
 
         //
         try {
-            localTechniques = localService.selectLocalTechnique();
+            localTechniques = localService.select();
             if (localTechniques != null && localTechniques.getLocalTechniques() != null) {
                 for (LocalTechnique place : localTechniques.getLocalTechniques()) {
                     model.addRow(new Object[]{place.getNumLocalT(),

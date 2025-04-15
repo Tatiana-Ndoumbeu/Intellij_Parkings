@@ -17,8 +17,8 @@ import static edu.ezip.ing1.pds.MainFrontEndSwing.networkConfigFile;
 
 public class LocalViewModel {
 
-    public static void insertLocal(DefaultTableModel model, Component component, Function<String, JPanel> createTablePanelFunction,
-                             String type, Logger logger) {
+    public static void insertLocal(DefaultTableModel model, Component component,
+                             Logger logger) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         final LocalLaveriesService localService = new LocalLaveriesService(networkConfig);
 
@@ -48,12 +48,10 @@ public class LocalViewModel {
         localLaverie1.setDisponibilite(Boolean.parseBoolean(disponibilite));
 
         try {
-            localService.insertLoclaLaveries(localLaverie1);
+            localService.insert(localLaverie1);
             model.addRow(new Object[]{localLaverie1.getNumLocalL(), localLaverie1.getDisponibilite()});
             JOptionPane.showMessageDialog(component, "Local Inséré.");
 
-            JPanel refreshedPanel = createTablePanelFunction.apply(type);
-            logger.debug("Panel refreshed for type {}: {}", type, refreshedPanel.getName());
             JOptionPane.showMessageDialog(component, "Local inséré.");
         } catch (IOException | InterruptedException e) {
             logger.error("Erreur insertion Local", e);
@@ -105,7 +103,7 @@ public class LocalViewModel {
             localLaveriemodif.setDisponibilite(newDisponibilite);
 
             final LocalLaveriesService localService = new LocalLaveriesService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
-            localService.updateLocLaveries(localLaveriemodif);
+            localService.update(localLaveriemodif);
 
             model.setRowCount(0);// on supprime dabord les anciennes lignes dans le tableau
             for (LocalLaverie place : localLaveries.getLocalLaveries()) {
@@ -159,7 +157,7 @@ public class LocalViewModel {
 
         try {
             final LocalLaveriesService localService = new LocalLaveriesService(ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile));
-            localService.deleteLocalLaverie(localASupprimer);
+            localService.delete(localASupprimer);
 
             localLaveries.getLocalLaveries().remove(localASupprimer);
 
@@ -184,7 +182,7 @@ public class LocalViewModel {
 
         //
         try {
-            localLaveries = localService.selectLocalLaveries();
+            localLaveries = localService.select();
             if (localLaveries != null && localLaveries.getLocalLaveries() != null) {
                 for (LocalLaverie place : localLaveries.getLocalLaveries()) {
                     model.addRow(new Object[]{place.getNumLocalL(),
