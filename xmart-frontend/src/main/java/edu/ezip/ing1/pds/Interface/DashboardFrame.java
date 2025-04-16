@@ -5,6 +5,7 @@ import edu.ezip.ing1.pds.Interface.abonnement.AbonnementPanel;
 import edu.ezip.ing1.pds.Interface.localTechnique.LocalTechniquePanel;
 import edu.ezip.ing1.pds.Interface.locallaverie.LocalLaveriePanel;
 import edu.ezip.ing1.pds.Interface.placesdeparking.PlaceDeParkingPanel;
+import edu.ezip.ing1.pds.Interface.reservations.ReservationLocauxPanel;
 import edu.ezip.ing1.pds.Interface.reservations.ReservationPanel;
 import edu.ezip.ing1.pds.api.*;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
@@ -66,7 +67,26 @@ public class DashboardFrame extends JFrame {
         // Menu items
         addMenuButton("Accueil", e -> showContent("Accueil"));
         addMenuButton("Places de parking", e -> showPlacesDeParking());
-        addMenuButton("Réservations", e -> showReservations());
+        //addMenuButton("Réservations", e -> showReservations());
+        JButton ReservationButton = boutonderoulant("Réservations");
+        JPopupMenu reservationMenu = new JPopupMenu();
+        reservationMenu.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100)));
+        reservationMenu.setBackground(new Color(60, 73, 85));
+
+        JMenuItem parkingReservationItem = new JMenuItem("Places de parking");
+        parkingReservationItem.addActionListener(e -> showReservations());
+
+        JMenuItem localReservationItem = new JMenuItem("Locaux services");
+        localReservationItem.addActionListener(e -> showReservationsLocaux());
+
+        ReservationButton.addActionListener(e -> reservationMenu.show(ReservationButton, 0, ReservationButton.getHeight()));
+
+        reservationMenu.add(parkingReservationItem);
+        reservationMenu.add(localReservationItem);
+
+        sideMenu.add(Box.createVerticalStrut(10));
+        sideMenu.add(ReservationButton);
+
         addMenuButton("Abonnements", e -> {
             try {
                 showAbonnements();
@@ -78,14 +98,7 @@ public class DashboardFrame extends JFrame {
         });  // New button for abonnements
 
 
-        JButton servicesButton = new JButton("Services");
-        servicesButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        servicesButton.setMaximumSize(new Dimension(180, 40));
-        servicesButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        servicesButton.setFocusPainted(false);
-        servicesButton.setBackground(new Color(70, 83, 96));
-        servicesButton.setForeground(Color.WHITE);
-        servicesButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        JButton servicesButton = boutonderoulant("Services");
 
         JPopupMenu servicesMenu = new JPopupMenu();
         servicesMenu.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100)));
@@ -129,10 +142,8 @@ public class DashboardFrame extends JFrame {
         servicesMenu.add(techniqueItem);
         servicesMenu.add(mecanicienItem);
 
-// Affichage du menu au clic sur le bouton
         servicesButton.addActionListener(e -> servicesMenu.show(servicesButton, 0, servicesButton.getHeight()));
 
-// Ajout au panneau
         sideMenu.add(Box.createVerticalStrut(10));
         sideMenu.add(servicesButton);
         addMenuButton("Gestion des entités", e -> showEntityManagement());
@@ -169,6 +180,12 @@ public class DashboardFrame extends JFrame {
     private void showReservations() {
         mainContent.removeAll();
         mainContent.add(new ReservationPanel(reservationUseCase), BorderLayout.CENTER);
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+    private void showReservationsLocaux() {
+        mainContent.removeAll();
+        mainContent.add(new ReservationLocauxPanel(reservationUseCase), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }
@@ -219,6 +236,18 @@ public class DashboardFrame extends JFrame {
         mainContent.revalidate();
         mainContent.repaint();
     }
+    private JButton boutonderoulant(String text) {
+        JButton button = new JButton(text);
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setMaximumSize(new Dimension(180, 40));
+        button.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        button.setFocusPainted(false);
+        button.setBackground(new Color(70, 83, 96));
+        button.setForeground(Color.WHITE);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        return button;
+    }
+
 
     public static void main(String[] args) {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, "network.yaml");

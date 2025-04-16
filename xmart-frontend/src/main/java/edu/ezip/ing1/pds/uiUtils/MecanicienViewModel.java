@@ -4,6 +4,7 @@ import edu.ezip.ing1.pds.business.dto.Mecanicien;
 import edu.ezip.ing1.pds.business.dto.Mecaniciens;
 import edu.ezip.ing1.pds.business.dto.PlaceDeParking;
 import edu.ezip.ing1.pds.business.dto.PlacesDeParkings;
+import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.services.MecanicienService;
 import edu.ezip.ing1.pds.services.ReservationService;
@@ -15,6 +16,8 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.function.Function;
 
+import static edu.ezip.ing1.pds.MainFrontEndSwing.networkConfigFile;
+
 public class MecanicienViewModel {
 
 
@@ -24,7 +27,7 @@ public class MecanicienViewModel {
         String[] columns = {"Nom", "Prenom", "Spécialité"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         try {
-            mecaniciens = mecanicienService.selectMecanicien();
+            mecaniciens = mecanicienService.select();
             if (mecaniciens != null && mecaniciens.getMecaniciens() != null) {
                 for (Mecanicien mecanicien : mecaniciens.getMecaniciens()) {
                     model.addRow(new Object[]{mecanicien.getNom(), mecanicien.getPrenom(), mecanicien.getSpecialite()});
@@ -34,7 +37,8 @@ public class MecanicienViewModel {
         }
         return model;
     }
-    public static DefaultTableModel createReservationTableModel(NetworkConfig networkConfig, PlacesDeParkings placesDeParkings,Logger logger) {
+    public static DefaultTableModel createReservationTableModel( PlacesDeParkings placesDeParkings,Logger logger) {
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         final ReservationService reservationService = new ReservationService(networkConfig);
         String[] columns = {"id","emplacement", "diponibilite", "type "};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
@@ -56,12 +60,10 @@ public class MecanicienViewModel {
     }
 
     public static void insertMecanicien(DefaultTableModel model,
-                                  NetworkConfig networkConfig,
                                   Component component,
-                                  Logger logger,
-                                  Function<String, JPanel> createTablePanelFunction,
-                                  String type) {
-
+                                  Logger logger
+                                  ) {
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         final MecanicienService mecanicienService = new MecanicienService(networkConfig);
 
         String nom = JOptionPane.showInputDialog(component, "nom du mecano :");
@@ -89,11 +91,9 @@ public class MecanicienViewModel {
         mecanicien1.setSpecialite(specialite);
         mecanicien1.setMail(mail);
         try {
-            mecanicienService.insertMecanicien(mecanicien1);
+            mecanicienService.insert(mecanicien1);
             model.addRow(new Object[]{mecanicien1.getNom(), mecanicien1.getPrenom(), mecanicien1.getSpecialite()});
             JOptionPane.showMessageDialog(component, "Mecanicien Inséré.");
-            JPanel refreshedPanel = createTablePanelFunction.apply(type);
-            logger.debug("Panel refreshed for type {}: {}", type, refreshedPanel.getName());
         } catch (IOException | InterruptedException e) {
             logger.error("Erreur insertion Mecanicien", e);
             JOptionPane.showMessageDialog(component, "Erreur insertion Mecanicien.", "Error", JOptionPane.ERROR_MESSAGE);

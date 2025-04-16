@@ -36,8 +36,8 @@ public class IntelijjParkingService {
         DELETE_ABONNEMENT("DELETE FROM Abonnement t WHERE t.id_abonnement = ?"),
         UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=?, WHERE id_abonnement=?"),
 
-        SELECT_ALL_PERSONNES("SELECT t.id_personne, t.mail, t.nom, t.prenom, t.tel, t.code_postal FROM Personne t"),
-        INSERT_PERSONNE("INSERT INTO Personne (id_personne, mail, nom, prenom, tel, code_postal) VALUES (?, ?, ?, ?, ?, ?)"),
+        SELECT_ALL_PERSONNES("SELECT t.id_personne, t.nom, t.prenom, t.tel, t.mail, t.code_postal FROM Personne t"),
+        INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel, mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
 
         SELECT_ALL_MECANICIEN("SELECT m.nom, m.prenom, m.telephone, m.disponibilite, m.specialite,m.mail FROM Mecanicien m"),
         INSERT_MECANICIEN("INSERT INTO Mecanicien (nom, prenom, telephone, disponibilite, specialite, mail) VALUES (?, ?, ?,?, ?, ?)"),
@@ -46,11 +46,13 @@ public class IntelijjParkingService {
         INSERT_LOCAL("INSERT into LocalLaverie (NumLocalL, disponibilite) VALUES (? , ?)"),
         UPDATE_LOCAL("UPDATE LocalLaverie SET disponibilite = ? WHERE NumLocalL = ?"),
         DELETE_LOCAL("DELETE FROM LocalLaverie WHERE NumLocalL = ?"),
+        SELECT_DISPO_LOCAUX("SELECT l.NumLocalL FROM LocalLaverie l WHERE disponibilite = true"),
 
         SELECT_ALL_LOCAL_T("SELECT l.numLocalT, l.disponibilite FROM LocalTechnique l"),
         INSERT_LOCAL_T("INSERT into LocalTechnique (numLocalT, disponibilite) VALUES (? , ?)"),
         UPDATE_LOCAL_T("UPDATE LocalTechnique SET disponibilite = ? WHERE numLocalT = ?"),
         DELETE_LOCAL_T("DELETE FROM LocalTechnique WHERE numLocalT = ?"),
+        SELECT_DISPO_LOCAUX_T("SELECT l.numLocalT FROM LocalTechnique l WHERE disponibilite = true"),
 
         INSERT_UTILISATEUR("INSERT INTO Admin (id_admin, nom, email, mot_de_passe) VALUES (?, ?, ?, ?)"),
         LOGIN_UTILISATEUR("SELECT COUNT(*) FROM Admin WHERE email = ? AND mot_de_passe = ?"),
@@ -65,6 +67,7 @@ public class IntelijjParkingService {
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
         INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)"),
         UPDATE_PLACE_DE_PARKING("UPDATE PlaceDeParking t  SET t.emplacement = ?, t.type_place = ?, t.statut_place = ? WHERE t.id_place = ? "),
+        //UPDATE_PLACE_DE_PARKING("UPDATE PlaceDeParking SET statut_place = ? WHERE position = ?"),
         DELETE_PLACE_DE_PARKING("DELETE FROM PlaceDeParking t WHERE t.id_place = ?");
 
         private final String query;
@@ -136,6 +139,12 @@ public class IntelijjParkingService {
                 break;
             case SELECT_ALL_LOCAL:
                 response = SelectAllLocalL(request, connection);
+                break;
+            case SELECT_DISPO_LOCAUX:
+                response = SelectLocalLDispo(request, connection);
+                break;
+            case SELECT_DISPO_LOCAUX_T:
+                response = SelectLocalTDispo(request, connection);
                 break;
             case SELECT_ALL_LOCAL_T:
                 response = SelectAllLocalT(request, connection);
@@ -235,10 +244,10 @@ public class IntelijjParkingService {
         while (res.next()) {
             Personne personne = new Personne();
             personne.setIdPersonne(res.getString(1));
-            personne.setMail(res.getString(2));
+            personne.setNom(res.getString(2));
             personne.setNom(res.getString(3));
-            personne.setPrenom(res.getString(4));
-            personne.setTelephone(res.getString(5));
+            personne.setTelephone(res.getString(4));
+            personne.setMail(res.getString(5));
             personne.setCodePostal(res.getString(6));
 
             personnes.add(personne);
@@ -393,17 +402,34 @@ public class IntelijjParkingService {
 
     private Response InsertPersonne(final Request request, final Connection connection) throws SQLException, IOException {
         final ObjectMapper objectMapper = new ObjectMapper();
-        Personne personne = objectMapper.readValue(request.getRequestBody(), Personne.class);
+
+        Personne personne;
+
+        try {
+            personne = objectMapper.readValue(request.getRequestBody(), Personne.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données  invalides");
+
+        }
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_PERSONNE.getQuery())) {
-            pstmt.setString(1, UUID.randomUUID().toString());
-            pstmt.setString(2, personne.getMail());
-            pstmt.setString(3, personne.getNom());
-            pstmt.setString(4, personne.getPrenom());
-            pstmt.setString(5, personne.getTelephone());
+            //pstmt.setString(1, UUID.randomUUID().toString());
+            pstmt.setString(1, personne.getIdPersonne());
+            pstmt.setString(2, personne.getNom());
+            pstmt.setString(3, personne.getPrenom());
+            pstmt.setString(4, personne.getTelephone());
+            pstmt.setString(5, personne.getMail());
             pstmt.setString(6, personne.getCodePostal());
-            int affectedRows = pstmt.executeUpdate();
-            return new Response(request.getRequestId(), affectedRows > 0 ? "personne inséré avec succès" : "Échec de l'insertion");
+
+            pstmt.executeUpdate();
+            return new Response(request.getRequestId(), objectMapper.writeValueAsString(personne));
+        }
+         catch (SQLException e) {
+        return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+
+        } catch (IOException e) {
+            return new Response(request.getRequestId(), "Erreur de traitement de la requête.");
         }
     }
 
@@ -449,6 +475,22 @@ public class IntelijjParkingService {
         final ObjectMapper objectMapper = new ObjectMapper();
         final Statement stmt = connection.createStatement();
         final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_LOCAL.query);
+        LocalLaveries localLaveries = new LocalLaveries();
+        while (res.next()) {
+
+            LocalLaverie localLaverie = new LocalLaverie();
+            localLaverie.setNumLocalL(res.getInt(1));
+            localLaverie.setDisponibilite(res.getBoolean(2));
+
+            localLaveries.add(localLaverie);
+        }
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(localLaveries));
+
+    }
+    private Response SelectLocalLDispo(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_DISPO_LOCAUX.query);
         LocalLaveries localLaveries = new LocalLaveries();
         while (res.next()) {
 
@@ -642,6 +684,22 @@ private Response UpdateLocalT(final Request request, final Connection connection
             logger.error("Erreur SQL lors de la suppression du local", e);
             return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
         }
+    }
+    private Response SelectLocalTDispo(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_DISPO_LOCAUX_T.query);
+        LocalTechniques localTechniques = new LocalTechniques();
+        while (res.next()) {
+
+            LocalTechnique localTechnique = new LocalTechnique();
+            localTechnique.setNumLocalT(res.getInt(1));
+            localTechnique.setDisponibilite(res.getBoolean(2));
+
+            localTechniques.add(localTechnique);
+        }
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(localTechniques));
+
     }
     private Response SelectAllMecaniciens(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
         final ObjectMapper objectMapper = new ObjectMapper();
