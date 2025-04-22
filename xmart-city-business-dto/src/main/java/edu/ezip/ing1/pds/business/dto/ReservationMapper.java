@@ -20,7 +20,7 @@ public class ReservationMapper {
             reservation.setHeure(LocalTime.parse(request.getHeure()));
             reservation.setDateEntree(dateFormat.parse(request.getDateEntree()));
             reservation.setDateSortie(dateFormat.parse(request.getDateSortie()));
-            reservation.setHeureeEntre(timeFormat.parse(request.getHeureEntree()));
+            reservation.setHeureEntree(timeFormat.parse(request.getHeureEntree()));
             reservation.setHeureSortie(timeFormat.parse(request.getHeureSortie()));
             reservation.setIdPersonne(request.getIdPersonne());
             reservation.setPosition(request.getIdPlace());

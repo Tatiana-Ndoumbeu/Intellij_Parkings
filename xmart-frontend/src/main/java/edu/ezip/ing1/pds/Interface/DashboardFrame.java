@@ -69,7 +69,7 @@ public class DashboardFrame extends JFrame {
         // Menu items
         addMenuButton("Accueil", e -> showContent("Accueil"));
         addMenuButton("Places de parking", e -> showPlacesDeParking());
-        //addMenuButton("Réservations", e -> showReservations());
+
         JButton ReservationButton = boutonderoulant("Réservations");
         JPopupMenu reservationMenu = new JPopupMenu();
         reservationMenu.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100)));
@@ -79,13 +79,19 @@ public class DashboardFrame extends JFrame {
         parkingReservationItem.addActionListener(e -> showReservations());
 
         JMenuItem localReservationItem = new JMenuItem("Locaux services");
-        localReservationItem.addActionListener(e -> showReservationsLocaux());
+        localReservationItem.addActionListener(e ->{
+        try {
+            showReservationsLocaux();
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);}
+        catch (InterruptedException ie) {
+            throw new RuntimeException(ie);
+        }
+        });
 
         ReservationButton.addActionListener(e -> reservationMenu.show(ReservationButton, 0, ReservationButton.getHeight()));
-
         reservationMenu.add(parkingReservationItem);
         reservationMenu.add(localReservationItem);
-
         sideMenu.add(Box.createVerticalStrut(10));
         sideMenu.add(ReservationButton);
 
@@ -185,7 +191,7 @@ public class DashboardFrame extends JFrame {
         mainContent.revalidate();
         mainContent.repaint();
     }
-    private void showReservationsLocaux() {
+    private void showReservationsLocaux() throws IOException, InterruptedException  {
         mainContent.removeAll();
         mainContent.add(new ReservationLocauxPanel(reservationLocalUseCase), BorderLayout.CENTER);
         mainContent.revalidate();

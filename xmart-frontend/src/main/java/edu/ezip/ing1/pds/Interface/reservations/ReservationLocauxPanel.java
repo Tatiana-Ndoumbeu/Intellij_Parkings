@@ -1,6 +1,8 @@
 package edu.ezip.ing1.pds.Interface.reservations;
 
 
+import edu.ezip.ing1.pds.business.dto.LocalLaverie;
+import edu.ezip.ing1.pds.business.dto.ReservationLocal;
 import edu.ezip.ing1.pds.usecase.ReservationLocalUseCase;
 import  edu.ezip.ing1.pds.CalendrierPanel;
 
@@ -8,6 +10,10 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static edu.ezip.ing1.pds.Formulaires.chargerIcone;
@@ -17,13 +23,13 @@ public class ReservationLocauxPanel extends JPanel {
     private DefaultTableModel tableModel;
     private ReservationLocalUseCase reservationLocalUseCase;
 
-    public ReservationLocauxPanel(ReservationLocalUseCase reservationLocalUseCase) {
+    public ReservationLocauxPanel(ReservationLocalUseCase reservationLocalUseCase) throws IOException, InterruptedException {
         this.reservationLocalUseCase = reservationLocalUseCase;
 
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
-        String[] columns = {"numero local", "Date début", "Date fin", "type de local"};
+        String[] columns = {"numero local", "Date début", "Date fin","durée", "type de local"};
         tableModel = new DefaultTableModel(columns, 0) {
             public boolean isCellEditable(int row, int column) {
 
@@ -59,5 +65,32 @@ public class ReservationLocauxPanel extends JPanel {
         panelSud.add(calendrierResa);
 
         add(panelSud, BorderLayout.SOUTH);
+
+        refreshTable(reservationLocalUseCase.getAllReservationsLocal().getReservationLocaux().stream().toList());
+    }
+    void refreshTable(List<ReservationLocal> updatedList) {
+        tableModel.setRowCount(0);
+
+        for (ReservationLocal resalocal : updatedList) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+
+            LocalTime entree = LocalTime.parse(resalocal.getHeureEntree(), formatter);
+            LocalTime sortie = LocalTime.parse(resalocal.getHeureSortie(), formatter);
+
+            Duration duree = Duration.between(entree, sortie);
+
+            long heures = duree.toHours();
+            long minutes = duree.toMinutes() % 60;
+
+            String dureeFormat = heures + "h " + minutes + "min";
+            tableModel.addRow(new Object[]{
+                    resalocal.getNumLocal(),
+                    resalocal.getDateDebut(),
+                    resalocal.getDateFin(),
+                    dureeFormat,
+                    resalocal.getTypeLocal()
+
+            });
+        }
     }
 }
