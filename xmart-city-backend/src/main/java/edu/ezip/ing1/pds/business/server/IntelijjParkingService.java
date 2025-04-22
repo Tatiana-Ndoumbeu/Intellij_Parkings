@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -47,6 +48,10 @@ public class IntelijjParkingService {
         UPDATE_LOCAL("UPDATE LocalLaverie SET disponibilite = ? WHERE NumLocalL = ?"),
         DELETE_LOCAL("DELETE FROM LocalLaverie WHERE NumLocalL = ?"),
         SELECT_DISPO_LOCAUX("SELECT l.NumLocalL FROM LocalLaverie l WHERE disponibilite = true"),
+
+        SELECT_ALL_RESERVATION_LOCAL("SELECT * FROM Reservation_local"),
+        SELECT_ALL_RESERVATION_LOCAL_MOIS("SELECT * FROM Reservation_local WHERE (YEAR(date_debut) = ? AND MONTH(date_debut) = ?) OR (YEAR(date_fin) = ? AND MONTH(date_fin) = ?)"),
+        INSERT_RESERVATION_LOCAL("INSERT INTO Reservation_local (numero_local, date_debut, date_fin, heure_entree, heure_sortie, type_local, id_personne) VALUES (?, ?, ?, ?, ?, ?, ?)"),
 
         SELECT_ALL_LOCAL_T("SELECT l.numLocalT, l.disponibilite FROM LocalTechnique l"),
         INSERT_LOCAL_T("INSERT into LocalTechnique (numLocalT, disponibilite) VALUES (? , ?)"),
@@ -161,6 +166,15 @@ public class IntelijjParkingService {
             case DELETE_LOCAL_T:
                 response = supprimerLocalT(request, connection);
                 break;
+            case SELECT_ALL_RESERVATION_LOCAL:
+                response = selectAllReservationLocal(request, connection);
+                break;
+            case SELECT_ALL_RESERVATION_LOCAL_MOIS:
+                response = selectReservationLocalParMois(request, connection);
+                break;
+            case INSERT_RESERVATION_LOCAL:
+                response = insertReservationLocal(request, connection);
+                break;
             case INSERT_PERSONNE:
                 response = InsertPersonne(request, connection);
                 break;
@@ -179,11 +193,11 @@ public class IntelijjParkingService {
             case SELECT_ZONE_SPE_PLACE_DE_PARKING:
                 response = selectZoneSpeciale(request, connection);
                 break;
-            case SELECT_ALL_MECANICIEN:
-                response = SelectAllMecaniciens(request, connection);
-                break;
             case INSERT_RESERVATION:
                 response=InsertReservation(request, connection);
+                break;
+            case SELECT_ALL_MECANICIEN:
+                response = SelectAllMecaniciens(request, connection);
                 break;
             case INSERT_MECANICIEN:
                 response = InsertMecanicien(request, connection);
@@ -840,6 +854,100 @@ private Response UpdateLocalT(final Request request, final Connection connection
 
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservations));
 
+    }
+    private Response selectAllReservationLocal(final Request request, final Connection connection)
+            throws SQLException, JsonProcessingException {
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_RESERVATION_LOCAL.query);
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        ReservationLocaux reservationLocaux = new ReservationLocaux();
+
+        while (res.next()) {
+            ReservationLocal reservationLocal = new ReservationLocal();
+            reservationLocal.setNumLocal(res.getInt("numero_local"));
+
+            Date dateDebut = res.getDate("date_debut");
+            Date dateFin = res.getDate("date_fin");
+
+            reservationLocal.setDateDebut(dateDebut != null ? dateDebut.toLocalDate().format(dateFormatter) : null);
+            reservationLocal.setDateFin(dateFin != null ? dateFin.toLocalDate().format(dateFormatter) : null);
+            Time heureEntree = res.getTime("heure_entree");
+            Time heureSortie = res.getTime("heure_sortie");
+
+            reservationLocal.setHeureEntree(heureEntree != null ? heureEntree.toLocalTime().format(timeFormatter) : null);
+            reservationLocal.setHeureSortie(heureSortie != null ? heureSortie.toLocalTime().format(timeFormatter) : null);
+
+            reservationLocal.setTypeLocal(res.getString("type_local"));
+
+            reservationLocaux.add(reservationLocal);
+        }
+
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservationLocaux));
+    }
+
+    private Response selectReservationLocalParMois(final Request request, final Connection connection)
+            throws SQLException, IOException {
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final ReservationLocalParMois params = objectMapper.readValue(
+                request.getRequestBody(), ReservationLocalParMois.class);
+
+        final PreparedStatement stmt = connection.prepareStatement(Queries.SELECT_ALL_RESERVATION_LOCAL_MOIS.query);
+
+        stmt.setInt(1, params.getAnnee());
+        stmt.setInt(2, params.getMois());
+        stmt.setInt(3, params.getAnnee());
+        stmt.setInt(4, params.getMois());
+
+        final ResultSet res = stmt.executeQuery();
+        ReservationLocaux reservationLocaux = new ReservationLocaux();
+
+        while (res.next()) {
+            ReservationLocal reservationLocal = new ReservationLocal();
+            reservationLocal.setNumLocal(res.getInt("numero_local"));
+            reservationLocal.setDateDebut(res.getString("date_debut"));
+            reservationLocal.setDateFin(res.getString("date_fin"));
+            reservationLocal.setTypeLocal(res.getString("type_local"));
+
+            reservationLocaux.add(reservationLocal);
+        }
+
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservationLocaux));
+    }
+
+    private Response insertReservationLocal(final Request request, final Connection connection)
+            throws SQLException, IOException {
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final ReservationLocal reservationLocal = objectMapper.readValue(
+                request.getRequestBody(), ReservationLocal.class);
+        System.out.println("DEBUG - ReservationLocal reçue : " + reservationLocal);
+
+
+        try (final PreparedStatement stmt = connection.prepareStatement(Queries.INSERT_RESERVATION_LOCAL.query)) {
+
+            stmt.setInt(1, reservationLocal.getNumLocal());
+            stmt.setDate(2, java.sql.Date.valueOf(reservationLocal.getDateDebut()));
+            stmt.setDate(3, java.sql.Date.valueOf(reservationLocal.getDateFin()));
+            stmt.setTime(4, java.sql.Time.valueOf(reservationLocal.getHeureEntree() + ":00"));
+            stmt.setTime(5, java.sql.Time.valueOf(reservationLocal.getHeureSortie() + ":00"));
+            stmt.setString(6, reservationLocal.getTypeLocal());
+            stmt.setString(7, reservationLocal.getIdPersonne());
+
+
+            stmt.executeUpdate();
+
+            return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservationLocal));
+        }catch (SQLException e) {
+            System.err.println("Erreur d'insertion dans la base de données : " + e.getMessage());
+            e.printStackTrace();
+            return new Response(request.getRequestId(), "Erreur d'insertion dans la base de données.");
+        }
     }
 
     private Response insertAdmin(final Request request, final Connection connection) throws SQLException, IOException {

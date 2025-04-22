@@ -93,6 +93,16 @@ CREATE TABLE Mecanicien (
                             mail VARCHAR(50),
                             PRIMARY KEY (id_mecanicien)
 );
+CREATE TABLE Reservation_local (
+                                   id INT AUTO_INCREMENT PRIMARY KEY,
+                                   numero_local VARCHAR(50) NOT NULL,
+                                   date_debut DATE NOT NULL,
+                                   date_fin DATE NOT NULL,
+                                   heure_entree TIME NOT NULL ,
+                                   heure_sortie TIME NOT NULL
+                                   type_local VARCHAR(100) NOT NULL
+);
+
 
 
 -- SQL statements for PlaceDeParking

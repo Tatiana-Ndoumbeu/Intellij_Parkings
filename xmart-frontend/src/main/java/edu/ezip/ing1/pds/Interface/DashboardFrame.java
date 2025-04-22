@@ -27,8 +27,9 @@ public class DashboardFrame extends JFrame {
     private LocalLaverieUseCase localLaverieUseCase;
     private LocalTechniqueUseCase localTechniqueUseCase;
     private MecanicienUseCase mecanicienUseCase;
+    private ReservationLocalUseCase reservationLocalUseCase;
 
-    public DashboardFrame(PlaceDeParkingUseCase placeUseCase, ReservationUseCase reservUseCase, AbonnementUseCase abonUseCase, LocalLaverieUseCase LLUsecase, LocalTechniqueUseCase LLUseCase, MecanicienUseCase MecaUseCase) {
+    public DashboardFrame(PlaceDeParkingUseCase placeUseCase, ReservationUseCase reservUseCase, AbonnementUseCase abonUseCase, LocalLaverieUseCase LLUsecase, LocalTechniqueUseCase LLUseCase, MecanicienUseCase MecaUseCase, ReservationLocalUseCase reservationLocalUseCase) {
         setTitle("Tableau de bord - Gestion Parking");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
@@ -36,6 +37,7 @@ public class DashboardFrame extends JFrame {
         setLayout(new BorderLayout());
         this.placeDeParkingUseCase = placeUseCase;
         this.reservationUseCase = reservUseCase;
+        this.reservationLocalUseCase = reservationLocalUseCase;
         this.abonnementUseCase = abonUseCase;
         this.localLaverieUseCase = LLUsecase;
         this.localTechniqueUseCase = LLUseCase;
@@ -185,7 +187,7 @@ public class DashboardFrame extends JFrame {
     }
     private void showReservationsLocaux() {
         mainContent.removeAll();
-        mainContent.add(new ReservationLocauxPanel(reservationUseCase), BorderLayout.CENTER);
+        mainContent.add(new ReservationLocauxPanel(reservationLocalUseCase), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }
@@ -257,6 +259,7 @@ public class DashboardFrame extends JFrame {
         LocalLaverieRepository localLaverieRepository = new LocalLaveriesService(networkConfig);
         LocalTechniqueRepository localTechniqueRepository = new LocalTechniqueService(networkConfig);
         MecanicienRepository mecanicienRepository = new MecanicienService(networkConfig);
+        ReservationLocalRepository reservationLocalRepository = new ReservationLocalService(networkConfig);
 
         PlaceDeParkingUseCase placeUseCase = new PlaceDeParkingUseCase(repository);
         ReservationUseCase reservUseCase = new ReservationUseCase(reservationRepository);
@@ -264,7 +267,8 @@ public class DashboardFrame extends JFrame {
         LocalLaverieUseCase LLUsecase = new LocalLaverieUseCase(localLaverieRepository);
         LocalTechniqueUseCase LTUsecase = new LocalTechniqueUseCase(localTechniqueRepository);
         MecanicienUseCase MecaUseCase = new MecanicienUseCase(mecanicienRepository);
+        ReservationLocalUseCase ResaLocalUseCase = new ReservationLocalUseCase(reservationLocalRepository);
 
-        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase, LLUsecase, LTUsecase, MecaUseCase));
+        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase, LLUsecase, LTUsecase, MecaUseCase, ResaLocalUseCase));
     }
 }

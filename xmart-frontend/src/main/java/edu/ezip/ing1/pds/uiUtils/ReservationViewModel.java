@@ -1,5 +1,6 @@
 package edu.ezip.ing1.pds.uiUtils;
 
+import edu.ezip.ing1.pds.CalendrierPanel;
 import edu.ezip.ing1.pds.Formulaires;
 import edu.ezip.ing1.pds.business.dto.*;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
@@ -28,7 +29,7 @@ public class ReservationViewModel {
         JPanel panel = new JPanel(new BorderLayout());
         JTable table = new JTable();
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
-        table.setModel(createReservationTableModel(networkConfig,placesDeParkings,logger));
+        table.setModel(createReservationTableModel(placesDeParkings,logger));
 
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -46,7 +47,7 @@ public class ReservationViewModel {
 
         JButton calendrierResa = new JButton("Calendrier");
         calendrierResa.setBackground(Color.CYAN);
-        calendrierResa.addActionListener( e -> ouvrirCalendrier());
+        //calendrierResa.addActionListener( e -> CalendrierPanel.afficherCalendrier());
         //table.setModel(createCalendrierTableModel(LocalDate.now().getYear(), LocalDate.now().getMonthValue()));
 
         panelsud.add(calendrierResa);

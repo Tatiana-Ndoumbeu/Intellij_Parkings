@@ -1,5 +1,7 @@
 package edu.ezip.ing1.pds;
 
+import edu.ezip.ing1.pds.business.dto.ReservationLocalParMoisMap;
+import edu.ezip.ing1.pds.usecase.ReservationLocalUseCase;
 import edu.ezip.ing1.pds.usecase.ReservationUseCase;
 
 import javax.swing.*;
@@ -13,20 +15,21 @@ import java.util.Map;
 
 public class CalendrierPanel extends JPanel {
 
-    private ReservationUseCase reservationUseCase;
-    private Map<LocalDate, List<String>> reservations;
+    private ReservationLocalUseCase reservationLocalUseCase;
     private int annee;
     private int mois;
 
+    private Map<LocalDate, List<String>> reservations = Map.of();
 
-    public CalendrierPanel(ReservationUseCase reservationUseCase) {
-        this.reservationUseCase = reservationUseCase;
-        this.reservations = reservations;
+
+    public CalendrierPanel(ReservationLocalUseCase reservationLocalUseCase) {
+        this.reservationLocalUseCase = reservationLocalUseCase;
         this.annee = LocalDate.now().getYear();
         this.mois = LocalDate.now().getMonthValue();
         setLayout(new BorderLayout());
-        afficherCalendrier();
         chargerReservations();
+        afficherCalendrier();
+
     }
 
     public  void afficherCalendrier() {
@@ -60,7 +63,24 @@ public class CalendrierPanel extends JPanel {
                     boutonJour.setToolTipText(null);
                 }
 
-                boutonJour.addActionListener(e -> reserverJour(date));
+
+                // pour l'aff des resas dans le calendriers et le pop up
+                boutonJour.addActionListener(e ->{
+                    if (reservations.containsKey(date)) {
+                        List<String> resasDuJour = reservations.get(date);
+                        String message = String.join("\n", resasDuJour);
+                        JOptionPane.showMessageDialog(this, message, "Réservations pour le " + date, JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        int choix = JOptionPane.showConfirmDialog(this,
+                                "Aucune réservation. Voulez-vous en créer une ?",
+                                "Pas de réservation",
+                                JOptionPane.YES_NO_OPTION);
+
+                        if (choix == JOptionPane.YES_OPTION) {
+                            reserverJour(date);
+                        }
+                    }
+                });
 
                 calendrierPanel.add(boutonJour);
                 jour++;
@@ -74,7 +94,8 @@ public class CalendrierPanel extends JPanel {
         JPanel panelNord = new JPanel();
         JButton boutonPrecedent = new JButton("Mois précédent");
         JButton boutonSuivant = new JButton("Mois suivant");
-        JButton moisactuel = new JButton(""+mois);
+        String nomMois = YearMonth.of(annee, mois).getMonth().name();
+        JButton moisactuel = new JButton(nomMois + " " + annee);
         moisactuel.setBackground(Color.RED);
 
         boutonPrecedent.addActionListener(e -> changerMois(-1));
@@ -99,6 +120,7 @@ public class CalendrierPanel extends JPanel {
         }
 
         removeAll();
+        chargerReservations();
         afficherCalendrier();
         revalidate();
         repaint();
@@ -107,7 +129,6 @@ public class CalendrierPanel extends JPanel {
         Formulaires.FormulaireReservationLocal(null);
 
 
-        // reservations.computeIfAbsent(date, k -> new ArrayList<>()).add("Réservation effectuée");
 
         reservations.computeIfAbsent(date, k -> new ArrayList<>()).add("Réservation ajoutée le " + date.toString());
 
@@ -118,7 +139,15 @@ public class CalendrierPanel extends JPanel {
         repaint();
     }
     private void chargerReservations() {
-       // this.reservations = reservationUseCase.obtenirReservationsPourMois(annee, mois);
+
+            try {
+                ReservationLocalParMoisMap dto = reservationLocalUseCase.getReservationsParMois(annee, mois);
+                this.reservations = dto.getMap();
+            } catch (Exception e) {
+                e.printStackTrace();
+                this.reservations = Map.of();
+            }
+
     }
 
 

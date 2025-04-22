@@ -120,7 +120,7 @@ public class Reservation {
         return heureEntree;
     }
 
-    public void setHeureeEntre(Date heureEntree) {
+    public void setHeureEntree(Date heureEntree) {
         this.heureEntree = heureEntree;
     }
 

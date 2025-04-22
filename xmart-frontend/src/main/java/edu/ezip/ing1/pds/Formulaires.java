@@ -1,6 +1,7 @@
 package edu.ezip.ing1.pds;
 
 import edu.ezip.ing1.pds.MainFrontEndSwing;
+import edu.ezip.ing1.pds.api.ReservationLocalRepository;
 import edu.ezip.ing1.pds.business.dto.*;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
@@ -9,11 +10,15 @@ import edu.ezip.ing1.pds.services.*;
 import com.toedter.calendar.JDateChooser;
 import edu.ezip.ing1.pds.business.dto.Reservation;
 import edu.ezip.ing1.pds.business.dto.Reservations;
+import edu.ezip.ing1.pds.usecase.ReservationLocalUseCase;
 
 
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Random;
 
 
@@ -31,39 +36,94 @@ public class Formulaires {
     private final static String networkConfigFile = "network.yaml";
     final static NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
     final static ReservationService reservationService = new ReservationService(networkConfig);
+    final static LocalLaveriesService localLaveriesService = new LocalLaveriesService(networkConfig);
+    final static LocalTechniqueService localTechniqueService = new LocalTechniqueService(networkConfig);
+
     final static PersonneService personneService = new PersonneService(networkConfig);
+    private static LocalLaveries localLaveries = new LocalLaveries();
+    private static LocalTechniques localTechniques = new LocalTechniques();
 
     final static AbonnementService abonementService = new AbonnementService(networkConfig);
 
-
-    public static void FormulaireReservation(JFrame parent) {
+    public static void FormulaireReservationLocal(JFrame parent) {
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (Exception ignored) {
         }
 
-
-        JDialog dialog = new JDialog(parent, "Reserver une zone spéciale", true);
+        JDialog dialog = new JDialog(parent, "Reserver un Local Service", true);
         dialog.setSize(500, 800);
         dialog.setLocationRelativeTo(parent);
 
         JPanel panel = new JPanel(new GridLayout(12, 2, 5, 5));
 
-        panel.add(new JLabel("Type de place:"));
-        String[] typesDePlace = {"PMR", "VIP", "Electrique", "Livraison"};
-        JComboBox<String> comboBoxTypePlace = new JComboBox<>(typesDePlace);
-        comboBoxTypePlace.setPreferredSize(new Dimension(100, 30));
-        panel.add(comboBoxTypePlace);
+        panel.add(new JLabel("Service souhaité:"));
+        String[] typesDeService = {"Laverie", "Dépannage"};
+        JComboBox<String> comboBoxTypeService = new JComboBox<>(typesDeService);
+        comboBoxTypeService.setPreferredSize(new Dimension(100, 30));
+        panel.add(comboBoxTypeService);
 
-        panel.add(new JLabel("Emplacement:"));
-        String[] emplacement = {"Niveau 1", "Niveau 2", "Niveau 3"};
-        JComboBox<String> comboBoxEmplacement = new JComboBox<>(emplacement);
-        comboBoxEmplacement.setPreferredSize(new Dimension(100, 30));
-        panel.add(comboBoxEmplacement);
 
-        panel.add(new JLabel("Position:"));
-        JTextField champPosition = new JTextField();
-        panel.add(champPosition);
+
+
+        ArrayList<Integer> locauxDisponibles = new ArrayList<>();
+
+        try {
+            localLaveries = localLaveriesService.select();
+            if (localLaveries != null && localLaveries.getLocalLaveries() != null) {
+                for (LocalLaverie place : localLaveries.getLocalLaveries()) {
+                    locauxDisponibles.add(place.getNumLocalL());
+                }
+            }
+        }
+        catch (IOException | InterruptedException ex) {
+            ex.printStackTrace();
+        }
+        Integer[] array = new Integer[locauxDisponibles.size()];
+        for(int i = 0; i < array.length; i++) {
+            array[i] = locauxDisponibles.get(i);
+        }
+
+
+        panel.add(new JLabel("Local Service:"));
+
+        JComboBox<Integer> comboBoxLocal = new JComboBox<>(array);
+
+        comboBoxLocal.setPreferredSize(new Dimension(100, 30));
+        panel.add(comboBoxLocal);
+
+
+
+        comboBoxTypeService.addActionListener(e -> {
+            comboBoxLocal.removeAllItems();
+            String selectedService = (String) comboBoxTypeService.getSelectedItem();
+            locauxDisponibles.clear();
+
+            try {
+                if ("Laverie".equals(selectedService)) {
+                    localLaveries = localLaveriesService.selectDispo();
+                    if (localLaveries != null && localLaveries.getLocalLaveries() != null) {
+                        for (LocalLaverie place : localLaveries.getLocalLaveries()) {
+                            locauxDisponibles.add(place.getNumLocalL());
+                        }
+                    }
+                } else if ("Dépannage".equals(selectedService)) {
+                    localTechniques = localTechniqueService.selectDispo();
+                    if (localTechniques != null && localTechniques.getLocalTechniques() != null) {
+                        for (LocalTechnique local : localTechniques.getLocalTechniques()) {
+                            locauxDisponibles.add(local.getNumLocalT());
+                        }
+                    }
+                }
+
+                for (Integer numLocal : locauxDisponibles) {
+                    comboBoxLocal.addItem((numLocal));
+                }
+            } catch (IOException | InterruptedException ex) {
+                ex.printStackTrace();
+            }
+        });
+        int numeroLocalChoisi = (Integer) comboBoxLocal.getSelectedItem();
 
         panel.add(new JLabel("Date de début:"));
         JDateChooser dateDebutChooser = new JDateChooser();
@@ -115,16 +175,28 @@ public class Formulaires {
         boutonValider.setBackground(Color.GREEN);
         boutonValider.setForeground(Color.WHITE);
 
-        boutonValider.addActionListener(e -> {
 
-            String typePlace = comboBoxTypePlace.getSelectedItem().toString();
-            String Emplacement = comboBoxEmplacement.getSelectedItem().toString();
-            String Position = champPosition.getText();
+
+
+
+
+        boutonValider.addActionListener(e -> {
+            String newId = generateUniqueId();
+            String selectedService = (String) comboBoxTypeService.getSelectedItem();
+
             Date dateDebut = dateDebutChooser.getDate();
             Date heureDebut = (Date) hourSpinner.getValue();
             Date dateFin = dateFinChooser.getDate();
             Date heureFin = (Date) hourSpinnerFin.getValue();
-            //heures
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String DateDebut = dateDebut != null ? dateFormat.format(dateDebut) : null;
+            String DateFin = dateFin != null ? dateFormat.format(dateFin) : null;
+
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+            String HeureDebut = heureDebut != null ? timeFormat.format(heureDebut) : null;
+            String HeureFin = heureFin != null ? timeFormat.format(heureFin) : null;
+
             String Nom = champNom.getText();
             String Prenom = champPrenom.getText();
             String Telephone = champTelephone.getText();
@@ -132,219 +204,376 @@ public class Formulaires {
             String codePostal = champCodeP.getText();
 
 
-            //RAJOUTER DES REGLES METIERS PLUS TARD
+            ReservationLocal reservationLocal = new ReservationLocal();
+            /*
+            if (dateDebut.after(dateFin)) {
+                JOptionPane.showMessageDialog(dialog, "La date de début ne peut pas être après la date de fin.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-            if (champPosition.getText().isEmpty() || champNom.getText().isEmpty() || champTelephone.getText().isEmpty() || champCodeP.getText().isEmpty() || dateDebut == null || dateFin == null) {
+            if ( champNom.getText().isEmpty() || champTelephone.getText().isEmpty() || champCodeP.getText().isEmpty() || dateDebut == null || dateFin == null) {
                 JOptionPane.showMessageDialog(dialog, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            } else {
-                ReservationRequest reservation = new ReservationRequest();
-                reservation.setIdReservation(generateUniqueId());
-                reservation.setDateReservation(LocalDate.now().toString());
-                reservation.setHeure(LocalTime.now().toString());
-                reservation.setDateEntree(dateDebut.toString());
-                reservation.setDateSortie(dateFin.toString());
-                reservation.setHeureEntree(heureDebut.toString());
-                reservation.setHeureSortie(heureFin.toString());
+            } else {*/
+            reservationLocal.setNumLocal(numeroLocalChoisi);
+            reservationLocal.setDateDebut(DateDebut);
+            reservationLocal.setDateFin(DateFin);
+            reservationLocal.setHeureEntree(HeureDebut);
+            reservationLocal.setHeureSortie(HeureFin);
+            reservationLocal.setTypeLocal(selectedService);
+            reservationLocal.setIdPersonne(newId);
 
                 Personne personne = new Personne();
+                personne.setIdPersonne(newId);
                 personne.setNom(Nom);
                 personne.setPrenom(Prenom);
                 personne.setTelephone(Telephone);
                 personne.setMail(Mail);
                 personne.setCodePostal(codePostal);
 
-                // ajouter les positions aussi (update placedeparking)
 
 
                 try {
-                    System.out.println(reservation);
-                    reservationService.insertReservation(reservation);
-                    System.out.println(personne);
                     personneService.insertPersonnes(personne);
+
+                    ReservationLocalRepository reservationLocalRepository = new ReservationLocalService(networkConfig);
+                    ReservationLocalUseCase reservationLocalUseCase = new ReservationLocalUseCase(reservationLocalRepository);
+                    boolean isReservationCreated = reservationLocalUseCase.createReservationLocal(reservationLocal);
+
+
+                } catch (IOException | InterruptedException u) {
+
+
+                    // LocalDate reservationDate = LocalDate.ofInstant(dateDebut.toInstant(), ZoneId.systemDefault());
+                    //   reservations.computeIfAbsent(reservationDate, k -> new ArrayList<>()).add("Réservation ajoutée le " + reservationDate.toString());
+
+                    JOptionPane.showMessageDialog(dialog, "Prenom: " + Prenom + "\nNom: " + Nom + "\nTelephone: " + Telephone + "\nE-Mail: " + Mail + "\nCode Postal: " + codePostal + " \ndate de debut: " + dateDebut + "\ndate de fin: " + dateFin);
+                    dialog.dispose();
+
                 }
-                 catch (IOException | InterruptedException u) {
+                ;
 
-                    JOptionPane.showMessageDialog(parent, "Erreur insertion reservation.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-
-                // LocalDate reservationDate = LocalDate.ofInstant(dateDebut.toInstant(), ZoneId.systemDefault());
-                //   reservations.computeIfAbsent(reservationDate, k -> new ArrayList<>()).add("Réservation ajoutée le " + reservationDate.toString());
-
-                JOptionPane.showMessageDialog(dialog, "Prenom: " + Prenom + "\nNom: " + Nom + "\nTelephone: " + Telephone + "\nE-Mail: " + Mail + "\nCode Postal: " + codePostal + "\nPosition: " + Position + "\nEmplacement: " + Emplacement + "\nType de place: " + typePlace + "\ndate de debut: " + dateDebut + "\ndate de fin: " + dateFin);
-                dialog.dispose();
-            }
-        });
-
+            });
         panelBouton.add(boutonValider);
 
         dialog.setLayout(new BorderLayout());
         dialog.add(panel, BorderLayout.CENTER);
         dialog.add(panelBouton, BorderLayout.SOUTH);
 
-        dialog.setVisible(true);
+        dialog.setVisible(true);}
+
+
+
+
+    public static void FormulaireReservation(JFrame parent) {
+    try {
+        UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+    } catch (Exception ignored) {
     }
 
-    public static void FormulaireAbonnements(JFrame parent) {
-        try {
-            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-        } catch (Exception ignored) {
-        }
 
-        JDialog dialog = new JDialog(parent, "Ajouter un abonnement", true);
-        dialog.setSize(500, 800);
-        dialog.setLocationRelativeTo(parent);
+    JDialog dialog = new JDialog(parent, "Reserver une zone spéciale", true);
+    dialog.setSize(500, 800);
+    dialog.setLocationRelativeTo(parent);
 
-        JPanel panel = new JPanel(new GridLayout(12, 2, 5, 5));
+    JPanel panel = new JPanel(new GridLayout(12, 2, 5, 5));
 
-        panel.add(new JLabel("Type d'abonnement (Standard ou Premium):"));
-        String[] typesAbonnements = {"Standard", "Premium"};
-        JComboBox<String> comboBoxTypeAbonnement = new JComboBox<>(typesAbonnements);
-        comboBoxTypeAbonnement.setPreferredSize(new Dimension(100, 30));
-        panel.add(comboBoxTypeAbonnement);
+    panel.add(new JLabel("Type de place:"));
+    String[] typesDePlace = {"PMR", "VIP", "Electrique", "Livraison"};
+    JComboBox<String> comboBoxTypePlace = new JComboBox<>(typesDePlace);
+    comboBoxTypePlace.setPreferredSize(new Dimension(100, 30));
+    panel.add(comboBoxTypePlace);
 
-        panel.add(new JLabel("Prix de l'abonnement:"));
-        JTextField champPrix = new JTextField();
-        panel.add(champPrix);
+    panel.add(new JLabel("Emplacement:"));
+    String[] emplacement = {"Niveau 1", "Niveau 2", "Niveau 3"};
+    JComboBox<String> comboBoxEmplacement = new JComboBox<>(emplacement);
+    comboBoxEmplacement.setPreferredSize(new Dimension(100, 30));
+    panel.add(comboBoxEmplacement);
 
-        panel.add(new JLabel("Statut de l'abonnement (Actif, Inactif, Suspendu):"));
-        String[] statutAbonnement = {"Actif", "Inactif", "Suspendu"};
-        JComboBox<String> comboBoxStatut = new JComboBox<>(statutAbonnement);
-        comboBoxStatut.setPreferredSize(new Dimension(100, 30));
-        panel.add(comboBoxStatut);
+    panel.add(new JLabel("Position:"));
+    JTextField champPosition = new JTextField();
+    panel.add(champPosition);
 
-        panel.add(new JLabel("Nom:"));
-        JTextField champNom = new JTextField();
-        panel.add(champNom);
+    panel.add(new JLabel("Date de début:"));
+    JDateChooser dateDebutChooser = new JDateChooser();
+    dateDebutChooser.setPreferredSize(new Dimension(150, 30));
+    panel.add(dateDebutChooser);
 
-        panel.add(new JLabel("Prénom:"));
-        JTextField champPrenom = new JTextField();
-        panel.add(champPrenom);
+    SpinnerDateModel model = new SpinnerDateModel();
+    JSpinner hourSpinner = new JSpinner(model);
+    hourSpinner.setEditor(new JSpinner.DateEditor(hourSpinner, "HH:mm"));
+    panel.add(new JLabel("Heure de début:"));
+    panel.add(hourSpinner);
 
-        panel.add(new JLabel("Téléphone:"));
-        JTextField champTelephone = new JTextField();
-        panel.add(champTelephone);
+    panel.add(new JLabel("Date de fin:"));
+    JDateChooser dateFinChooser = new JDateChooser();
+    dateFinChooser.setPreferredSize(new Dimension(150, 30));
+    panel.add(dateFinChooser);
 
-        panel.add(new JLabel("e-Mail:"));
-        JTextField champMail = new JTextField();
-        panel.add(champMail);
+    SpinnerDateModel modelFin = new SpinnerDateModel();
+    JSpinner hourSpinnerFin = new JSpinner(modelFin);
+    hourSpinnerFin.setEditor(new JSpinner.DateEditor(hourSpinnerFin, "HH:mm"));
+    panel.add(new JLabel("Heure de fin:"));
+    panel.add(hourSpinnerFin);
 
-        panel.add(new JLabel("code Postal:"));
-        JTextField champCodeP = new JTextField();
-        panel.add(champCodeP);
 
-        JPanel panelBouton = new JPanel();
-        JButton boutonValider = new JButton("Valider l'ajout de l'abonnement", chargerIcone("/icons/ajouter.png", 30, 30));
-        boutonValider.setPreferredSize(new Dimension(150, 40));
-        boutonValider.setBackground(Color.GREEN);
-        boutonValider.setForeground(Color.WHITE);
+    panel.add(new JLabel("Nom:"));
+    JTextField champNom = new JTextField();
+    panel.add(champNom);
 
-        boutonValider.addActionListener(e -> {
-            String typeAbonnement = comboBoxTypeAbonnement.getSelectedItem().toString();
-            String prix = champPrix.getText();
-            String statut = comboBoxStatut.getSelectedItem().toString();
+    panel.add(new JLabel("Prénom:"));
+    JTextField champPrenom = new JTextField();
+    panel.add(champPrenom);
 
-            String Nom = champNom.getText();
-            String Prenom = champPrenom.getText();
-            String Telephone = champTelephone.getText();
-            String Mail = champMail.getText();
-            String codePostal = champCodeP.getText();
+    panel.add(new JLabel("Téléphone:"));
+    JTextField champTelephone = new JTextField();
+    panel.add(champTelephone);
 
-            if (champPrix.getText().isEmpty() || champNom.getText().isEmpty() || champPrenom.getText().isEmpty() || champTelephone.getText().isEmpty() || champMail.getText().isEmpty() || champCodeP.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            } else {
+    panel.add(new JLabel("e-Mail:"));
+    JTextField champMail = new JTextField();
+    panel.add(champMail);
 
-                Abonnement abonnement = new Abonnement();
-                abonnement.setIdAbonnement(UUID.randomUUID().toString().substring(0, 8));
-                abonnement.setTypeAbonnement(typeAbonnement);
-                abonnement.setPrix(Double.parseDouble(prix));
-                abonnement.setStatutAbonnement(statut);
-                abonnement.setDateDebut( new java.sql.Date(2025,12,12));
-                abonnement.setDateFin( new java.sql.Date(2025,12,23));
+    panel.add(new JLabel("code Postal:"));
+    JTextField champCodeP = new JTextField();
+    panel.add(champCodeP);
 
-                Personne personne = new Personne();
-                personne.setIdPersonne(generateUniqueId());
-                personne.setNom(Nom);
-                personne.setPrenom(Prenom);
-                personne.setTelephone(Telephone);
-                personne.setMail(Mail);
-                personne.setCodePostal(codePostal);
+    // Panel pour le bouton
+    JPanel panelBouton = new JPanel();
+    JButton boutonValider = new JButton("Valider", chargerIcone("/icons/ajouter.png", 30, 30));
+    boutonValider.setPreferredSize(new Dimension(150, 40));
+    boutonValider.setBackground(Color.GREEN);
+    boutonValider.setForeground(Color.WHITE);
 
-                try{
-                    System.out.println(abonnement);
-                    abonementService.save(abonnement);
-                    System.out.println(personne);
-                    personneService.insertPersonnes(personne);
-                }catch (IOException | InterruptedException u) {
-                    JOptionPane.showMessageDialog(parent, "Erreur insertion abonnement.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+    boutonValider.addActionListener(e -> {
 
-                JOptionPane.showMessageDialog(dialog, "Type Abonnement: " + typeAbonnement + "\nPrix: " + prix + "\nStatut Abonnement: " + statut + "\nNom: " + Nom + "\nPrénom: " + Prenom + "\nTéléphone: " + Telephone + "\nEmail: " + Mail + "\nCode postal: " + codePostal + "\nAbonnement: " + abonnement);
-                dialog.dispose();
+        String typePlace = comboBoxTypePlace.getSelectedItem().toString();
+        String Emplacement = comboBoxEmplacement.getSelectedItem().toString();
+        String Position = champPosition.getText();
+        Date dateDebut = dateDebutChooser.getDate();
+        Date heureDebut = (Date) hourSpinner.getValue();
+        Date dateFin = dateFinChooser.getDate();
+        Date heureFin = (Date) hourSpinnerFin.getValue();
+        //heures
+        String Nom = champNom.getText();
+        String Prenom = champPrenom.getText();
+        String Telephone = champTelephone.getText();
+        String Mail = champMail.getText();
+        String codePostal = champCodeP.getText();
+
+
+        //RAJOUTER DES REGLES METIERS PLUS TARD
+
+        if (champPosition.getText().isEmpty() || champNom.getText().isEmpty() || champTelephone.getText().isEmpty() || champCodeP.getText().isEmpty() || dateDebut == null || dateFin == null) {
+            JOptionPane.showMessageDialog(dialog, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        } else {
+            ReservationRequest reservation = new ReservationRequest();
+            reservation.setIdReservation(generateUniqueId());
+            reservation.setDateReservation(LocalDate.now().toString());
+            reservation.setHeure(LocalTime.now().toString());
+            reservation.setDateEntree(dateDebut.toString());
+            reservation.setDateSortie(dateFin.toString());
+            reservation.setHeureEntree(heureDebut.toString());
+            reservation.setHeureSortie(heureFin.toString());
+
+            Personne personne = new Personne();
+            personne.setNom(Nom);
+            personne.setPrenom(Prenom);
+            personne.setTelephone(Telephone);
+            personne.setMail(Mail);
+            personne.setCodePostal(codePostal);
+
+            // ajouter les positions aussi (update placedeparking)
+
+
+            try {
+                System.out.println(reservation);
+                reservationService.insertReservation(reservation);
+                System.out.println(personne);
+                personneService.insertPersonnes(personne);
+            }
+            catch (IOException | InterruptedException u) {
+
+                JOptionPane.showMessageDialog(parent, "Erreur insertion reservation.", "Error", JOptionPane.ERROR_MESSAGE);
             }
 
-        });
+            // LocalDate reservationDate = LocalDate.ofInstant(dateDebut.toInstant(), ZoneId.systemDefault());
+            //   reservations.computeIfAbsent(reservationDate, k -> new ArrayList<>()).add("Réservation ajoutée le " + reservationDate.toString());
 
-        panelBouton.add(boutonValider);
+            JOptionPane.showMessageDialog(dialog, "Prenom: " + Prenom + "\nNom: " + Nom + "\nTelephone: " + Telephone + "\nE-Mail: " + Mail + "\nCode Postal: " + codePostal + "\nPosition: " + Position + "\nEmplacement: " + Emplacement + "\nType de place: " + typePlace + "\ndate de debut: " + dateDebut + "\ndate de fin: " + dateFin);
+            dialog.dispose();
+        }
+    });
 
-        dialog.setLayout(new BorderLayout());
-        dialog.add(panel, BorderLayout.CENTER);
-        dialog.add(panelBouton, BorderLayout.SOUTH);
+    panelBouton.add(boutonValider);
 
-        dialog.setVisible(true);
+    dialog.setLayout(new BorderLayout());
+    dialog.add(panel, BorderLayout.CENTER);
+    dialog.add(panelBouton, BorderLayout.SOUTH);
+
+    dialog.setVisible(true);
+}
 
 
+public static void FormulaireAbonnements(JFrame parent) {
+    try {
+        UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+    } catch (Exception ignored) {
     }
 
-    public static void FormulaireUpdateAbonnement(JFrame parent, Abonnement abonnement) {
-        try {
-            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-        } catch (Exception ignored) {
+    JDialog dialog = new JDialog(parent, "Ajouter un abonnement", true);
+    dialog.setSize(500, 800);
+    dialog.setLocationRelativeTo(parent);
+
+    JPanel panel = new JPanel(new GridLayout(12, 2, 5, 5));
+
+    panel.add(new JLabel("Type d'abonnement (Standard ou Premium):"));
+    String[] typesAbonnements = {"Standard", "Premium"};
+    JComboBox<String> comboBoxTypeAbonnement = new JComboBox<>(typesAbonnements);
+    comboBoxTypeAbonnement.setPreferredSize(new Dimension(100, 30));
+    panel.add(comboBoxTypeAbonnement);
+
+    panel.add(new JLabel("Prix de l'abonnement:"));
+    JTextField champPrix = new JTextField();
+    panel.add(champPrix);
+
+    panel.add(new JLabel("Statut de l'abonnement (Actif, Inactif, Suspendu):"));
+    String[] statutAbonnement = {"Actif", "Inactif", "Suspendu"};
+    JComboBox<String> comboBoxStatut = new JComboBox<>(statutAbonnement);
+    comboBoxStatut.setPreferredSize(new Dimension(100, 30));
+    panel.add(comboBoxStatut);
+
+    panel.add(new JLabel("Nom:"));
+    JTextField champNom = new JTextField();
+    panel.add(champNom);
+
+    panel.add(new JLabel("Prénom:"));
+    JTextField champPrenom = new JTextField();
+    panel.add(champPrenom);
+
+    panel.add(new JLabel("Téléphone:"));
+    JTextField champTelephone = new JTextField();
+    panel.add(champTelephone);
+
+    panel.add(new JLabel("e-Mail:"));
+    JTextField champMail = new JTextField();
+    panel.add(champMail);
+
+    panel.add(new JLabel("code Postal:"));
+    JTextField champCodeP = new JTextField();
+    panel.add(champCodeP);
+
+    JPanel panelBouton = new JPanel();
+    JButton boutonValider = new JButton("Valider l'ajout de l'abonnement", chargerIcone("/icons/ajouter.png", 30, 30));
+    boutonValider.setPreferredSize(new Dimension(150, 40));
+    boutonValider.setBackground(Color.GREEN);
+    boutonValider.setForeground(Color.WHITE);
+
+    boutonValider.addActionListener(e -> {
+        String typeAbonnement = comboBoxTypeAbonnement.getSelectedItem().toString();
+        String prix = champPrix.getText();
+        String statut = comboBoxStatut.getSelectedItem().toString();
+
+        String Nom = champNom.getText();
+        String Prenom = champPrenom.getText();
+        String Telephone = champTelephone.getText();
+        String Mail = champMail.getText();
+        String codePostal = champCodeP.getText();
+
+        if (champPrix.getText().isEmpty() || champNom.getText().isEmpty() || champPrenom.getText().isEmpty() || champTelephone.getText().isEmpty() || champMail.getText().isEmpty() || champCodeP.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(dialog, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        } else {
+
+            Abonnement abonnement = new Abonnement();
+            abonnement.setIdAbonnement(UUID.randomUUID().toString().substring(0, 8));
+            abonnement.setTypeAbonnement(typeAbonnement);
+            abonnement.setPrix(Double.parseDouble(prix));
+            abonnement.setStatutAbonnement(statut);
+            abonnement.setDateDebut( new java.sql.Date(2025,12,12));
+            abonnement.setDateFin( new java.sql.Date(2025,12,23));
+
+            Personne personne = new Personne();
+            personne.setIdPersonne(generateUniqueId());
+            personne.setNom(Nom);
+            personne.setPrenom(Prenom);
+            personne.setTelephone(Telephone);
+            personne.setMail(Mail);
+            personne.setCodePostal(codePostal);
+
+            try{
+                System.out.println(abonnement);
+                abonementService.save(abonnement);
+                System.out.println(personne);
+                personneService.insertPersonnes(personne);
+            }catch (IOException | InterruptedException u) {
+                JOptionPane.showMessageDialog(parent, "Erreur insertion abonnement.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+            JOptionPane.showMessageDialog(dialog, "Type Abonnement: " + typeAbonnement + "\nPrix: " + prix + "\nStatut Abonnement: " + statut + "\nNom: " + Nom + "\nPrénom: " + Prenom + "\nTéléphone: " + Telephone + "\nEmail: " + Mail + "\nCode postal: " + codePostal + "\nAbonnement: " + abonnement);
+            dialog.dispose();
         }
 
-        JDialog dialog = new JDialog(parent, "Modifier un abonnement", true);
-        dialog.setSize(500, 800);
-        dialog.setLocationRelativeTo(parent);
+    });
 
-        JPanel panel = new JPanel(new GridLayout(4, 2, 5, 5));
+    panelBouton.add(boutonValider);
 
-        JTextField champType = new JTextField(abonnement.getTypeAbonnement());
-        JTextField champPrix = new JTextField(String.valueOf(abonnement.getPrix()));
-        JTextField champStatut = new JTextField(abonnement.getStatutAbonnement());
+    dialog.setLayout(new BorderLayout());
+    dialog.add(panel, BorderLayout.CENTER);
+    dialog.add(panelBouton, BorderLayout.SOUTH);
 
-        panel.add(new JLabel("Type :")); panel.add(champType);
-        panel.add(new JLabel("Prix :")); panel.add(champPrix);
-        panel.add(new JLabel("Statut :")); panel.add(champStatut);
-
-        JButton boutonValider = new JButton("Valider les modifications", chargerIcone("/icons/modifier.png", 30, 30));
-        JButton boutonAnnuler = new JButton("Annuler", chargerIcone("/icons/quitter.png", 30, 30));
-        boutonValider.setBackground(Color.GREEN);
-        boutonValider.setForeground(Color.WHITE);
-        boutonAnnuler.setBackground(Color.RED);
-        boutonAnnuler.setForeground(Color.WHITE);
-
-        JPanel panelBoutons = new JPanel(new BorderLayout());
-        panelBoutons.add(boutonValider, BorderLayout.WEST);
-        panelBoutons.add(boutonAnnuler, BorderLayout.EAST);
+    dialog.setVisible(true);
 
 
-        dialog.setLayout(new BorderLayout());
-        dialog.add(panel, BorderLayout.CENTER);
-        dialog.add(panelBoutons, BorderLayout.SOUTH);
+}
 
-        dialog.setVisible(true);
+public static void FormulaireUpdateAbonnement(JFrame parent, Abonnement abonnement) {
+    try {
+        UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+    } catch (Exception ignored) {
     }
 
-    public static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
+    JDialog dialog = new JDialog(parent, "Modifier un abonnement", true);
+    dialog.setSize(500, 800);
+    dialog.setLocationRelativeTo(parent);
 
-        ImageIcon icon = new ImageIcon(Formulaires.class.getResource(chemin));
-        Image image = icon.getImage().getScaledInstance(largeur, hauteur, Image.SCALE_SMOOTH);
-        return new ImageIcon(image);
-    }
+    JPanel panel = new JPanel(new GridLayout(4, 2, 5, 5));
+
+    JTextField champType = new JTextField(abonnement.getTypeAbonnement());
+    JTextField champPrix = new JTextField(String.valueOf(abonnement.getPrix()));
+    JTextField champStatut = new JTextField(abonnement.getStatutAbonnement());
+
+    panel.add(new JLabel("Type :")); panel.add(champType);
+    panel.add(new JLabel("Prix :")); panel.add(champPrix);
+    panel.add(new JLabel("Statut :")); panel.add(champStatut);
+
+    JButton boutonValider = new JButton("Valider les modifications", chargerIcone("/icons/modifier.png", 30, 30));
+    JButton boutonAnnuler = new JButton("Annuler", chargerIcone("/icons/quitter.png", 30, 30));
+    boutonValider.setBackground(Color.GREEN);
+    boutonValider.setForeground(Color.WHITE);
+    boutonAnnuler.setBackground(Color.RED);
+    boutonAnnuler.setForeground(Color.WHITE);
+
+    JPanel panelBoutons = new JPanel(new BorderLayout());
+    panelBoutons.add(boutonValider, BorderLayout.WEST);
+    panelBoutons.add(boutonAnnuler, BorderLayout.EAST);
 
 
-    public static String generateUniqueId() {
-        return String.format("%04d", RANDOM.nextInt(10000));
-    }
+    dialog.setLayout(new BorderLayout());
+    dialog.add(panel, BorderLayout.CENTER);
+    dialog.add(panelBoutons, BorderLayout.SOUTH);
+
+    dialog.setVisible(true);
+}
+
+public static ImageIcon chargerIcone(String chemin, int largeur, int hauteur) {
+
+    ImageIcon icon = new ImageIcon(Formulaires.class.getResource(chemin));
+    Image image = icon.getImage().getScaledInstance(largeur, hauteur, Image.SCALE_SMOOTH);
+    return new ImageIcon(image);
+}
+
+
+public static String generateUniqueId() {
+    return String.format("%04d", RANDOM.nextInt(10000));
+}
 
 
 
