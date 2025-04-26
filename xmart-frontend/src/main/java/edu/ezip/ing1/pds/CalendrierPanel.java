@@ -1,6 +1,7 @@
 package edu.ezip.ing1.pds;
 
 import edu.ezip.ing1.pds.business.dto.ReservationLocalParMoisMap;
+import edu.ezip.ing1.pds.business.dto.ReservationLocaux;
 import edu.ezip.ing1.pds.usecase.ReservationLocalUseCase;
 import edu.ezip.ing1.pds.usecase.ReservationUseCase;
 
@@ -19,7 +20,8 @@ public class CalendrierPanel extends JPanel {
     private int annee;
     private int mois;
 
-    private Map<LocalDate, List<String>> reservations = Map.of();
+    //private Map<LocalDate, List<String>> reservations = Map.of();
+    private ReservationLocalParMoisMap reservationLocalParMoisMap = new ReservationLocalParMoisMap();
 
 
     public CalendrierPanel(ReservationLocalUseCase reservationLocalUseCase) {
@@ -48,6 +50,7 @@ public class CalendrierPanel extends JPanel {
         int joursDansMois = yearMonth.lengthOfMonth();
 
 
+
         int jour = 1;
         for (int i = 0; i < 42; i++) { // 42 cases c'est 6 lignes x 7 colonnes
             if (i >= (premierJourSemaine - 1) % 7 && jour <= joursDansMois) {
@@ -55,9 +58,9 @@ public class CalendrierPanel extends JPanel {
                 LocalDate date = LocalDate.of(annee, mois, jour);
 
 
-                if (reservations.containsKey(date)) {
+                if (reservationLocalParMoisMap.getMap().containsKey(date)) {
                     boutonJour.setBackground(Color.RED);
-                    boutonJour.setToolTipText("Réservations: " + String.join(", ", reservations.get(date)));
+                    boutonJour.setToolTipText("Réservations: " + String.join(", ", reservationLocalParMoisMap.getMap().get(date)));
                 } else {
                     //boutonJour.setBackground(Color.WHITE);
                     boutonJour.setToolTipText(null);
@@ -66,8 +69,8 @@ public class CalendrierPanel extends JPanel {
 
                 // pour l'aff des resas dans le calendriers et le pop up
                 boutonJour.addActionListener(e ->{
-                    if (reservations.containsKey(date)) {
-                        List<String> resasDuJour = reservations.get(date);
+                    if (reservationLocalParMoisMap.getMap().containsKey(date)) {
+                        List<String> resasDuJour = reservationLocalParMoisMap.getMap().get(date);
                         String message = String.join("\n", resasDuJour);
                         JOptionPane.showMessageDialog(this, message, "Réservations pour le " + date, JOptionPane.INFORMATION_MESSAGE);
                     } else {
@@ -89,7 +92,7 @@ public class CalendrierPanel extends JPanel {
             }
         }
 
-        add(calendrierPanel, BorderLayout.CENTER);
+
 
         JPanel panelNord = new JPanel();
         JButton boutonPrecedent = new JButton("Mois précédent");
@@ -130,7 +133,7 @@ public class CalendrierPanel extends JPanel {
 
 
 
-        reservations.computeIfAbsent(date, k -> new ArrayList<>()).add("Réservation ajoutée le " + date.toString());
+        reservationLocalParMoisMap.getMap().computeIfAbsent(date, k -> new ArrayList<>()).add("Réservation ajoutée le " + date.toString());
 
 
         removeAll();
@@ -141,11 +144,16 @@ public class CalendrierPanel extends JPanel {
     private void chargerReservations() {
 
             try {
+
                 ReservationLocalParMoisMap dto = reservationLocalUseCase.getReservationsParMois(annee, mois);
-                this.reservations = dto.getMap();
+                if (dto != null) {
+                    this.reservationLocalParMoisMap = dto;
+                } else {
+                    this.reservationLocalParMoisMap = new ReservationLocalParMoisMap();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
-                this.reservations = Map.of();
+                this.reservationLocalParMoisMap = new ReservationLocalParMoisMap();
             }
 
     }

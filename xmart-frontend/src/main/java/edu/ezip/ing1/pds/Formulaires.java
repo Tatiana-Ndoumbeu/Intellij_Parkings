@@ -10,6 +10,8 @@ import edu.ezip.ing1.pds.services.*;
 import com.toedter.calendar.JDateChooser;
 import edu.ezip.ing1.pds.business.dto.Reservation;
 import edu.ezip.ing1.pds.business.dto.Reservations;
+import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
+import edu.ezip.ing1.pds.usecase.MecanicienUseCase;
 import edu.ezip.ing1.pds.usecase.ReservationLocalUseCase;
 
 
@@ -18,6 +20,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -42,8 +45,9 @@ public class Formulaires {
     final static PersonneService personneService = new PersonneService(networkConfig);
     private static LocalLaveries localLaveries = new LocalLaveries();
     private static LocalTechniques localTechniques = new LocalTechniques();
-
+    private static Mecaniciens mecaniciens = new Mecaniciens();
     final static AbonnementService abonementService = new AbonnementService(networkConfig);
+
 
     public static void FormulaireReservationLocal(JFrame parent) {
         try {
@@ -263,6 +267,269 @@ public class Formulaires {
 
 
 
+                               /// / FORMULAIRE LAVERIE///////
+
+
+
+    public static void FormulaireLaver(JFrame parent) {
+        JDialog dialog = new JDialog(parent, "Formulaire Lavage", true);
+        dialog.setSize(500, 600);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel panelChoix = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelChoix.add(new JLabel("Type d'utilisateur :"));
+        String[] choixAbonnement = {"Abonné", "Visiteur"};
+        JComboBox<String> comboType = new JComboBox<>(choixAbonnement);
+        panelChoix.add(comboType);
+        dialog.add(panelChoix, BorderLayout.NORTH);
+
+        JPanel panelCardLayout = new JPanel(new CardLayout());
+
+        JPanel panelAbonne = new JPanel(new GridLayout(2, 2, 5, 5));
+        panelAbonne.setBorder(BorderFactory.createTitledBorder("Informations Abonné"));
+        JTextField champMailAbonne = new JTextField();
+        panelAbonne.add(new JLabel("Email :"));
+        panelAbonne.add(champMailAbonne);
+
+
+        JPanel panelVisiteur = new JPanel(new GridLayout(8, 2, 5, 5));
+        panelVisiteur.setBorder(BorderFactory.createTitledBorder("Informations Visiteur"));
+        JTextField champNom = new JTextField();
+        JTextField champPrenom = new JTextField();
+        JTextField champMailVisiteur = new JTextField();
+        JTextField champTelephoneVisiteur = new JTextField();
+        JComboBox<String> comboVehicule = new JComboBox<>(new String[]{"Cycle", "Monospace", "4X4", "Van", "Truck et autres"});
+        JComboBox<String> comboTypeLavage = new JComboBox<>(new String[]{"Lavage au rouleau", "Lavage haute pression", "Lavage à la main"});
+        JComboBox<String> comboOption = new JComboBox<>(new String[]{"Aucune", "Nettoyage intérieur", "Pression pneus"});
+
+        panelVisiteur.add(new JLabel("Nom :"));
+        panelVisiteur.add(champNom);
+        panelVisiteur.add(new JLabel("Prénom :"));
+        panelVisiteur.add(champPrenom);
+        panelVisiteur.add(new JLabel("Email :"));
+        panelVisiteur.add(champMailVisiteur);
+        panelVisiteur.add(new JLabel("Telephone :"));
+        panelVisiteur.add(champTelephoneVisiteur);
+        panelVisiteur.add(new JLabel("Type de véhicule :"));
+        panelVisiteur.add(comboVehicule);
+        panelVisiteur.add(new JLabel("Type de lavage :"));
+        panelVisiteur.add(comboTypeLavage);
+
+        panelVisiteur.add(new JLabel("Options supplémentaires :"));
+        JPanel panelOptions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JCheckBox OptInterieur = new JCheckBox("Nettoyage Intérieur");
+        JCheckBox OptPneus = new JCheckBox("Pression des pneus");
+        panelOptions.add(OptInterieur);
+        panelOptions.add(OptPneus);
+        panelVisiteur.add(panelOptions);
+
+        panelCardLayout.add(panelAbonne, "Abonné");
+        panelCardLayout.add(panelVisiteur, "Visiteur");
+        dialog.add(panelCardLayout, BorderLayout.CENTER);
+
+        comboType.addActionListener(e -> {
+            CardLayout cl = (CardLayout) (panelCardLayout.getLayout());
+            cl.show(panelCardLayout, (String) comboType.getSelectedItem());
+        });
+
+        JButton boutonValider = new JButton("Valider");
+        boutonValider.addActionListener(e -> {
+            String typeVehicule = (String) comboVehicule.getSelectedItem();
+            String typeLavage = (String) comboTypeLavage.getSelectedItem();
+            String option = (String) comboOption.getSelectedItem();
+            String type = (String) comboType.getSelectedItem();
+            String nom = (String) champNom.getText().trim();
+            String prenom = (String) champPrenom.getText().trim();
+            String telephone = (String) champTelephoneVisiteur.getText().trim();
+            String email = (String) champMailAbonne.getText().trim();
+
+            int supplementOption = 0;
+            if (OptInterieur.isSelected()) supplementOption += 5;
+            if (OptPneus.isSelected()) supplementOption += 5;
+
+
+
+            if (type.equals("Abonné")) {
+                if (email.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Veuillez entrer votre email.");
+                    return;
+                }
+
+                // TODO
+                //  Vérifie l'email dans la personne liée à abonnement
+                //  verifie quel type de place de son abonnement
+                //  verifie si c'est VOITURE Ou moto
+                //  et définis le prix
+                //en attendant maryline
+                int prix = 20; //exemple
+
+            } else {
+                if (nom.isEmpty() || prenom.isEmpty()|| telephone.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Champs manquants.");
+                    return;
+                }
+                int prixBase = switch (typeLavage) {
+                    case "Lavage à la main" -> 50;
+                    case "Lavage haute pression" -> 40;
+                    default -> 30;
+                };
+                int TypeVehicule = switch (typeVehicule) {
+                    case "Cycle" -> 0;
+                    case "Monospace" -> 10;
+                    case "4X4" -> 20;
+                    case "Van" -> 30;
+                    case "Truck et autres" -> 40;
+                    default -> 0;
+                };
+
+                int prix = prixBase + TypeVehicule + supplementOption;
+
+                int choix = JOptionPane.showOptionDialog(dialog,
+                        "Type d'utilisateur : " + type + "\n"
+                                + "Nom : " + nom + "\n"
+                                +"Prénom : " + prenom + "\n"
+                                + "Telephone : " + telephone + "\n"
+                                + "Email : " + email + "\n"
+                                + "Type de véhicule : " + comboVehicule.getSelectedItem() + "\n"
+                                + "Type de lavage : " + comboTypeLavage.getSelectedItem() + "\n"
+                                + "Option : " + comboOption.getSelectedItem() + "\n"
+                                + "Prix : " + prix + " €\n\n"
+                                + "Souhaitez-vous continuer ?",
+                        "Confirmation de paiement",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        null,
+                        new String[]{"Payer "+prix+" €", "Annuler"},
+                        "Payer");
+                //je dois aussi inscrire le paiement dans la bd
+
+                if (choix == JOptionPane.YES_OPTION) {
+                    JOptionPane.showMessageDialog(dialog, "Paiement effectué. Merci !");
+                    dialog.dispose();
+                }
+
+            }
+
+
+        });
+
+        JPanel panelSud = new JPanel();
+        panelSud.add(boutonValider);
+        dialog.add(panelSud, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
+    }
+
+
+    private static int getPrix(JComboBox<String> comboAbonne, JTextField champMail) {
+        if (comboAbonne.getSelectedItem().equals("Oui")) {
+            String email = champMail.getText().trim();
+            String type = getTypeAbonnement(email);
+            return switch (type) {
+                case "Premium" -> 0;
+                case "Standard" -> 20;
+                default -> 50;
+            };
+        } else {
+            return 50;
+        }
+    }
+
+    private static void mettreAJourPrix(JComboBox<String> comboAbonne, JTextField champMail, JLabel labelPrix) {
+        int prix = getPrix(comboAbonne, champMail);
+        labelPrix.setText("Prix : " + prix + " €");
+    }
+
+    private static String getTypeAbonnement(String email) {
+        return switch (email.toLowerCase()) {
+            case "alice@exemple.com" -> "Premium";
+            case "bob@exemple.com" -> "Standard";
+            default -> null;
+        };
+    }
+
+    public static void FormulairePaiementTechnique(JFrame parent, MecanicienUseCase mecanicienUseCase) {
+        JDialog dialog = new JDialog(parent, "Paiement Service Technique", true);
+        dialog.setSize(500, 600);
+        dialog.setLocationRelativeTo(parent);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+
+        JPanel panel = new JPanel(new GridLayout(9, 2, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+
+        JTextField nomField = new JTextField();
+        JTextField prenomField = new JTextField();
+        JTextField telField = new JTextField();
+        JTextField mailField = new JTextField();
+        JTextField cpField = new JTextField();
+        JTextField dateServiceField = new JTextField();
+
+        JComboBox<String> comboMecanicien = new JComboBox<>();
+        comboMecanicien.addItem("Sélectionner un mécanicien");
+        ArrayList<String> techniciens = new ArrayList<>();
+
+        // je vais ajouter les mecanos recupérés dans la bd
+
+        JTextField prixField = new JTextField();
+        JLabel dateJourLabel = new JLabel("Date du paiement : " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+        panel.add(new JLabel("Nom client :"));
+        panel.add(nomField);
+        panel.add(new JLabel("Prénom client :"));
+        panel.add(prenomField);
+        panel.add(new JLabel("Téléphone :"));
+        panel.add(telField);
+        panel.add(new JLabel("Email :"));
+        panel.add(mailField);
+        panel.add(new JLabel("Code Postal :"));
+        panel.add(cpField);
+        panel.add(new JLabel("Date du service :"));
+        panel.add(dateServiceField);
+        panel.add(new JLabel("Mécanicien :"));
+        panel.add(comboMecanicien);
+        panel.add(new JLabel("Prix du service (€) :"));
+        panel.add(prixField);
+        panel.add(dateJourLabel);
+        panel.add(new JLabel(""));
+
+        dialog.add(panel, BorderLayout.CENTER);
+
+        JButton btnPayer = new JButton("Payer");
+        btnPayer.setBackground(Color.GREEN);
+        btnPayer.setForeground(Color.WHITE);
+        btnPayer.setFont(new Font("SansSerif", Font.BOLD, 16));
+        btnPayer.addActionListener(e -> {
+
+            if (nomField.getText().trim().isEmpty() || prenomField.getText().trim().isEmpty() || prixField.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Merci de remplir tous les champs obligatoires (nom, prénom, prix).");
+                return;
+            }
+
+            String resume = String.format(
+                    "Client : %s %s\nTéléphone : %s\nMail : %s\nCode Postal : %s\nDate service : %s\nMécanicien : %s\nPrix : %s €",
+                    nomField.getText(), prenomField.getText(), telField.getText(), mailField.getText(), cpField.getText(),
+                    dateServiceField.getText(), comboMecanicien.getSelectedItem(), prixField.getText());
+
+            int choix = JOptionPane.showOptionDialog(dialog, resume + "\n\nConfirmer le paiement ?",
+                    "Confirmation", JOptionPane.YES_NO_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE, null, new Object[]{"Payer", "Annuler"}, "Payer");
+
+            if (choix == JOptionPane.YES_OPTION) {
+                JOptionPane.showMessageDialog(dialog, "Paiement effectué avec succès !");
+                dialog.dispose();
+            }
+        });
+
+        JPanel panelBtn = new JPanel();
+        panelBtn.add(btnPayer);
+        dialog.add(panelBtn, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
+    }
+
+    /// /////FORMULAIRE RESERVATION ///////////
 
     public static void FormulaireReservation(JFrame parent) {
     try {
@@ -411,6 +678,8 @@ public class Formulaires {
 
     dialog.setVisible(true);
 }
+
+
 
 
 public static void FormulaireAbonnements(JFrame parent) {

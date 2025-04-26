@@ -37,6 +37,7 @@ public class IntelijjParkingService {
         DELETE_ABONNEMENT("DELETE FROM Abonnement t WHERE t.id_abonnement = ?"),
         UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=?, WHERE id_abonnement=?"),
 
+
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.nom, t.prenom, t.tel, t.mail, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel, mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
 
@@ -912,6 +913,8 @@ private Response UpdateLocalT(final Request request, final Connection connection
             reservationLocal.setNumLocal(res.getInt("numero_local"));
             reservationLocal.setDateDebut(res.getString("date_debut"));
             reservationLocal.setDateFin(res.getString("date_fin"));
+            reservationLocal.setHeureEntree(res.getString("heure_entree"));
+            reservationLocal.setHeureSortie(res.getString("heure_sortie"));
             reservationLocal.setTypeLocal(res.getString("type_local"));
 
             reservationLocaux.add(reservationLocal);

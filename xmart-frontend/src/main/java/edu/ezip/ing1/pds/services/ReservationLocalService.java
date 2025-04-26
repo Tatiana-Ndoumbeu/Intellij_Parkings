@@ -123,7 +123,7 @@ public class ReservationLocalService implements ReservationLocalRepository {
         final String requestId = UUID.randomUUID().toString();
         final Request request = new Request();
         request.setRequestId(requestId);
-        request.setRequestOrder(selectRequestOrder);
+        request.setRequestOrder(SelectMoisRequestOrder);
         request.setRequestBody(requestBody);
 
 

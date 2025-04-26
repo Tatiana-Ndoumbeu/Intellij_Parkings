@@ -4,11 +4,13 @@ package edu.ezip.ing1.pds.Interface.Mecanicien;
 
 
 import edu.ezip.ing1.pds.Interface.abonnement.AjouterAbonnementFrame;
+import edu.ezip.ing1.pds.Interface.Mecanicien.DetailMecanicienJDialog;
 import edu.ezip.ing1.pds.business.dto.Mecanicien;
 import edu.ezip.ing1.pds.business.dto.Mecaniciens;
 import edu.ezip.ing1.pds.uiUtils.LocalTechniqueViewModel;
 import edu.ezip.ing1.pds.uiUtils.MecanicienViewModel;
 import edu.ezip.ing1.pds.usecase.MecanicienUseCase;
+import edu.ezip.ing1.pds.usecase.ReservationLocalUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +29,7 @@ public class MecanicienPanel extends JPanel {
     private DefaultTableModel tableModel;
     private List<Mecanicien> mecaniciens;
     private final static Logger logger = LoggerFactory.getLogger("mecanicien");
+    private MecanicienUseCase mecanicienUseCase;
 
     public MecanicienPanel(MecanicienUseCase mecanicienUseCase) throws IOException, InterruptedException {
         setLayout(new BorderLayout());
@@ -55,7 +58,6 @@ public class MecanicienPanel extends JPanel {
         insertButton.setBackground(Color.GREEN);
         insertButton.addActionListener(e -> {
             new AjouterMecanicienForm(this, mecanicienUseCase);
-            //MecanicienViewModel.insertMecanicien(tableModel, this, logger);
         });
         panelSud.add(insertButton);
 
@@ -71,6 +73,50 @@ public class MecanicienPanel extends JPanel {
 
 
         refreshTable(mecanicienUseCase.afficherMecaniciens().getMecaniciens().stream().toList());
+
+        JPopupMenu contextMenu = new JPopupMenu();
+        JMenuItem PlusItem = new JMenuItem("Plus");
+
+        contextMenu.add(PlusItem);
+        table.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+
+            private void showPopup(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                if (row >= 0 && row < table.getRowCount()) {
+                    table.setRowSelectionInterval(row, row);
+                    contextMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
+        PlusItem.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow != -1) {
+                String nom = (String) tableModel.getValueAt(selectedRow, 0);
+                String prenom = (String) tableModel.getValueAt(selectedRow, 1);
+                String specialite = (String) tableModel.getValueAt(selectedRow, 2);
+                Mecanicien mec = mecaniciens.stream().filter(m -> m.getNom().equals(nom) && m.getPrenom().equals(prenom)).findFirst().orElse(null); //je filtre pour recuperer le mecanicien courant
+
+                if (mec != null) {
+                    String tel = mec.getTelephone();
+                    String mail = mec.getMail();
+                    Boolean dispo = mec.getDisponibilite();
+
+                DetailMecanicienJDialog dialog = new DetailMecanicienJDialog((Frame) SwingUtilities.getWindowAncestor(this), nom, prenom, tel, specialite, dispo, mail);
+                dialog.setVisible(true);
+                }
+            }
+        });
 
     }
 

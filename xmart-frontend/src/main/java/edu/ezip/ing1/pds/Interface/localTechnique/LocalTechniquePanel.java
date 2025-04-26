@@ -3,8 +3,10 @@ package edu.ezip.ing1.pds.Interface.localTechnique;
 
 import edu.ezip.ing1.pds.business.dto.LocalTechnique;
 import edu.ezip.ing1.pds.business.dto.LocalTechniques;
+import edu.ezip.ing1.pds.business.dto.Mecaniciens;
 import edu.ezip.ing1.pds.uiUtils.LocalTechniqueViewModel;
 import edu.ezip.ing1.pds.usecase.LocalTechniqueUseCase;
+import edu.ezip.ing1.pds.usecase.MecanicienUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +17,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.util.List;
 
+import static edu.ezip.ing1.pds.Formulaires.FormulairePaiementTechnique;
 import static edu.ezip.ing1.pds.Formulaires.chargerIcone;
 
 public class LocalTechniquePanel extends JPanel {
@@ -23,14 +26,16 @@ public class LocalTechniquePanel extends JPanel {
     private List<LocalTechnique> localTechniques;
     private LocalTechniques localTechniques2 = new LocalTechniques();
     private final static Logger logger = LoggerFactory.getLogger("local laverie");
+    private Mecaniciens mecaniciens = new Mecaniciens();
 
-    public LocalTechniquePanel(LocalTechniqueUseCase localTechniqueUseCase) throws IOException, InterruptedException {
+    public LocalTechniquePanel(LocalTechniqueUseCase localTechniqueUseCase, MecanicienUseCase mecanicienUseCase) throws IOException, InterruptedException {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
 
         this.localTechniques =  localTechniqueUseCase.afficherLocaux().getLocalTechniques().stream().toList();
         this.localTechniques2 = localTechniqueUseCase.afficherLocaux();
+        this.mecaniciens = mecanicienUseCase.afficherMecaniciens();
 
         String[] columns = { "numero Local", "disponibilite"};
         tableModel = new DefaultTableModel(columns, 0) {
@@ -65,6 +70,11 @@ public class LocalTechniquePanel extends JPanel {
             LocalTechniqueViewModel.deleteLocalT(tableModel, this, localTechniques2, logger);
         });
         panelSud.add(supprimebouton);
+        JButton PaiementTech = new JButton("Regler une facture technique");
+        PaiementTech.addActionListener(e -> { new FormulairePaiementTechnique(null, mecanicienUseCase);
+
+        });
+        panelSud.add(PaiementTech);
         add(panelSud, BorderLayout.SOUTH);
 
         // addBtn.addActionListener(e ->   /* new AjouterAbonnementFrame(this, abonnementUseCase)*/);

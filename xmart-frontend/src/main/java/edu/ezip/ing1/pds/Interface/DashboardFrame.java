@@ -17,6 +17,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class DashboardFrame extends JFrame {
     private JPanel sideMenu;
@@ -42,7 +45,6 @@ public class DashboardFrame extends JFrame {
         this.localLaverieUseCase = LLUsecase;
         this.localTechniqueUseCase = LLUseCase;
         this.mecanicienUseCase = MecaUseCase;
-
         initSideMenu();
         initMainContent();
 
@@ -213,7 +215,7 @@ public class DashboardFrame extends JFrame {
     }
     private void showLocalTechnique() throws IOException, InterruptedException {
         mainContent.removeAll();
-        mainContent.add(new LocalTechniquePanel(localTechniqueUseCase), BorderLayout.CENTER);
+        mainContent.add(new LocalTechniquePanel(localTechniqueUseCase, mecanicienUseCase), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }
