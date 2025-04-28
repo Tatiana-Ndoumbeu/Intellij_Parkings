@@ -24,7 +24,7 @@ public class ReservationPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
-        // Set up the table
+
         String[] columns = {"ID", "Nom", "Date début", "Date fin", "ID Place"};
         tableModel = new DefaultTableModel(columns, 0) {
             public boolean isCellEditable(int row, int column) {
@@ -38,7 +38,7 @@ public class ReservationPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Add Button
+
         JButton addBtn = new JButton("Ajouter une réservation");
         styleButton(addBtn, new Color(33, 150, 243));
   /*      addBtn.addActionListener(e -> {
@@ -50,13 +50,13 @@ public class ReservationPanel extends JPanel {
             );
         });*/
 
-        // Bottom Panel for the button
+
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(new Color(245, 245, 245));
         bottomPanel.add(addBtn);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // Context Menu
+
         JPopupMenu contextMenu = new JPopupMenu();
         JMenuItem supprimerItem = new JMenuItem("Supprimer");
         contextMenu.add(supprimerItem);
@@ -74,7 +74,7 @@ public class ReservationPanel extends JPanel {
                             int res = JOptionPane.showConfirmDialog(
                                     table, "Supprimer cette réservation ?", "Confirmation", JOptionPane.YES_NO_OPTION);
                             if (res == JOptionPane.YES_OPTION) {
-                                // Implement deletion logic here
+
                                 JOptionPane.showMessageDialog(table, "Suppression non encore implémentée.");
                             }
                         });
@@ -83,7 +83,7 @@ public class ReservationPanel extends JPanel {
             }
         });
 
-        refreshTable(); // Initial table population
+        refreshTable();
     }
 
     private void styleButton(JButton button, Color bg) {

@@ -69,11 +69,11 @@ public class AjouterPlaceFrame extends JFrame {
             boolean isAdded = placeDeParkingUseCase.addPlaceDeParking(newPlace);
 
             if (isAdded) {
-                // Refresh the table by reloading data from the backend
+
                 List<PlaceDeParking> updatedPlaces = placeDeParkingUseCase.getAllPlacesDeParking();
                 parent.refreshTable(updatedPlaces); // Update the list in the parent frame
                 JOptionPane.showMessageDialog(this, "Place ajoutée avec succès!");
-                dispose();  // Close the add place window
+                dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Erreur lors de l'ajout de la place.");
             }

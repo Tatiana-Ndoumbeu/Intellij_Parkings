@@ -68,8 +68,8 @@ public class DashboardFrame extends JFrame {
 
         sideMenu.add(title);
 
-        // Menu items
-        addMenuButton("Accueil", e -> showContent("Accueil"));
+
+       // addMenuButton("Accueil", e -> showContent("Accueil"));
         addMenuButton("Places de parking", e -> showPlacesDeParking());
 
         JButton ReservationButton = boutonderoulant("Réservations");
@@ -177,7 +177,7 @@ public class DashboardFrame extends JFrame {
     private void initMainContent() {
         mainContent = new JPanel();
         mainContent.setLayout(new BorderLayout());
-        showContent("Accueil");
+        showPlacesDeParking();
     }
 
     private void showPlacesDeParking() {
@@ -238,7 +238,6 @@ public class DashboardFrame extends JFrame {
     }
 
     private void showEntityManagement() {
-        // Add your entity management logic here
         mainContent.removeAll();
         JLabel label = new JLabel("Gestion des entités", SwingConstants.CENTER);
         label.setFont(new Font("SansSerif", Font.BOLD, 24));
@@ -260,6 +259,10 @@ public class DashboardFrame extends JFrame {
 
 
     public static void main(String[] args) {
+        showDasbord();
+    }
+
+    private static void showDasbord() {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, "network.yaml");
         PlaceDeParkingRepository repository = new PlaceDeParkingService(networkConfig);
         ReservationRepository reservationRepository = new ReservationService(networkConfig);

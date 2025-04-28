@@ -1,9 +1,19 @@
 package edu.ezip.ing1.pds.Interface;
 
+import edu.ezip.ing1.pds.api.AbonnementRepository;
+import edu.ezip.ing1.pds.api.PlaceDeParkingRepository;
+import edu.ezip.ing1.pds.api.ReservationRepository;
+import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
+import edu.ezip.ing1.pds.services.AbonnementService;
 import edu.ezip.ing1.pds.services.AdminService;
+import edu.ezip.ing1.pds.services.PlaceDeParkingService;
+import edu.ezip.ing1.pds.services.ReservationService;
 import edu.ezip.ing1.pds.uiUtils.LoginAdminUseCase;
 import edu.ezip.ing1.pds.uiUtils.RegisterAdminUseCase;
+import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
+import edu.ezip.ing1.pds.usecase.PlaceDeParkingUseCase;
+import edu.ezip.ing1.pds.usecase.ReservationUseCase;
 
 import javax.swing.*;
 import java.awt.*;
@@ -62,7 +72,8 @@ public class LoginFrame extends JFrame {
                         if (get()) {
                             JOptionPane.showMessageDialog(LoginFrame.this, "Connexion réussie !");
                             dispose();
-                            SwingUtilities.invokeLater(() -> new edu.ezip.ing1.pds.MainFrontEndSwing().setVisible(true));
+                         //   SwingUtilities.invokeLater(() -> new edu.ezip.ing1.pds.MainFrontEndSwing().setVisible(true));
+                            showDasbord();
                         } else {
                             JOptionPane.showMessageDialog(LoginFrame.this, "Échec de la connexion.");
                         }
@@ -122,5 +133,19 @@ public class LoginFrame extends JFrame {
         loader.setSize(200, 100);
         loader.setLocationRelativeTo(this);
         return loader;
+    }
+
+
+    private static void showDasbord() {
+        final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, "network.yaml");
+        PlaceDeParkingRepository repository = new PlaceDeParkingService(networkConfig);
+        ReservationRepository reservationRepository = new ReservationService(networkConfig);
+        AbonnementRepository abonnementRepository = new AbonnementService(networkConfig);
+
+        PlaceDeParkingUseCase placeUseCase = new PlaceDeParkingUseCase(repository);
+        ReservationUseCase reservUseCase = new ReservationUseCase(reservationRepository);
+        AbonnementUseCase abonUseCase = new AbonnementUseCase(abonnementRepository);
+
+     //   SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase));
     }
 }
