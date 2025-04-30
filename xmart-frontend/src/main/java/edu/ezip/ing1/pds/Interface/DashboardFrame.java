@@ -68,7 +68,8 @@ public class DashboardFrame extends JFrame {
 
         sideMenu.add(title);
 
-
+        // Menu items
+        addMenuButton("Accueil", e ->showAccueuil());
        // addMenuButton("Accueil", e -> showContent("Accueil"));
         addMenuButton("Places de parking", e -> showPlacesDeParking());
 
@@ -177,7 +178,7 @@ public class DashboardFrame extends JFrame {
     private void initMainContent() {
         mainContent = new JPanel();
         mainContent.setLayout(new BorderLayout());
-        showPlacesDeParking();
+        showAccueuil();
     }
 
     private void showPlacesDeParking() {
@@ -233,6 +234,14 @@ public class DashboardFrame extends JFrame {
         label.setFont(new Font("SansSerif", Font.BOLD, 24));
 
         mainContent.add(label, BorderLayout.CENTER);
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+
+    private void showAccueuil() {
+        mainContent.removeAll();
+
+       mainContent.add(new PanelAccueuil(), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }
