@@ -8,6 +8,7 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class AjouterAbonnementFrame extends JFrame {
 
@@ -26,7 +27,7 @@ public class AjouterAbonnementFrame extends JFrame {
         panel.setBackground(new Color(245, 245, 245));
         panel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-        JTextField idField = new JTextField();
+        //JTextField idField = new JTextField();
         JTextField typeField = new JTextField();
         JTextField prixField = new JTextField();
         JTextField statutField = new JTextField();
@@ -34,15 +35,15 @@ public class AjouterAbonnementFrame extends JFrame {
         JTextField dateFinField = new JTextField();
         JButton addBtn = new JButton("Ajouter");
 
-        styleField(idField, "ID Abonnement");
+        //styleField(idField, "ID Abonnement");
         styleField(typeField, "Type Abonnement");
         styleField(prixField, "Prix");
-        styleField(statutField, "Statut");
+        styleField(statutField, "Statut (Actif, Inactif, Suspendu");
         styleField(dateDebutField, "Date Début (dd/MM/yyyy)");
         styleField(dateFinField, "Date Fin (dd/MM/yyyy)");
         styleButton(addBtn, new Color(255, 152, 0));
 
-        panel.add(idField);
+        //panel.add(idField);
         panel.add(Box.createVerticalStrut(10));
         panel.add(typeField);
         panel.add(Box.createVerticalStrut(10));
@@ -60,14 +61,14 @@ public class AjouterAbonnementFrame extends JFrame {
         setVisible(true);
 
         addBtn.addActionListener(e -> {
-            String id = idField.getText().trim();
+            //String id = idField.getText().trim();
             String type = typeField.getText().trim();
             String prixStr = prixField.getText().trim();
             String statut = statutField.getText().trim();
             String dateDebutStr = dateDebutField.getText().trim();
             String dateFinStr = dateFinField.getText().trim();
 
-            if (id.isEmpty() || type.isEmpty() || prixStr.isEmpty() || statut.isEmpty()
+            if (type.isEmpty() || prixStr.isEmpty() || statut.isEmpty()
                     || dateDebutStr.isEmpty() || dateFinStr.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.");
                 return;
@@ -78,6 +79,8 @@ public class AjouterAbonnementFrame extends JFrame {
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
                 Date dateDebut = sdf.parse(dateDebutStr);
                 Date dateFin = sdf.parse(dateFinStr);
+
+                String id = UUID.randomUUID().toString();
 
                 Abonnement newAbonnement = new Abonnement(
                         id,

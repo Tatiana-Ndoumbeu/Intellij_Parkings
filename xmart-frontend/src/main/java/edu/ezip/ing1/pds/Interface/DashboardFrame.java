@@ -7,6 +7,7 @@ import edu.ezip.ing1.pds.Interface.locallaverie.LocalLaveriePanel;
 import edu.ezip.ing1.pds.Interface.placesdeparking.PlaceDeParkingPanel;
 import edu.ezip.ing1.pds.Interface.reservations.ReservationLocauxPanel;
 import edu.ezip.ing1.pds.Interface.reservations.ReservationPanel;
+import edu.ezip.ing1.pds.Interface.personne.PersonnePanel;
 import edu.ezip.ing1.pds.api.*;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
@@ -27,12 +28,14 @@ public class DashboardFrame extends JFrame {
     private PlaceDeParkingUseCase placeDeParkingUseCase;
     private ReservationUseCase reservationUseCase;
     private AbonnementUseCase abonnementUseCase;
+    private PersonneUseCase personneUseCase;
     private LocalLaverieUseCase localLaverieUseCase;
     private LocalTechniqueUseCase localTechniqueUseCase;
     private MecanicienUseCase mecanicienUseCase;
     private ReservationLocalUseCase reservationLocalUseCase;
 
-    public DashboardFrame(PlaceDeParkingUseCase placeUseCase, ReservationUseCase reservUseCase, AbonnementUseCase abonUseCase, LocalLaverieUseCase LLUsecase, LocalTechniqueUseCase LLUseCase, MecanicienUseCase MecaUseCase, ReservationLocalUseCase reservationLocalUseCase) {
+
+    public DashboardFrame(PlaceDeParkingUseCase placeUseCase, ReservationUseCase reservUseCase, AbonnementUseCase abonUseCase, PersonneUseCase persoUseCase, LocalLaverieUseCase LLUsecase, LocalTechniqueUseCase LLUseCase, MecanicienUseCase MecaUseCase, ReservationLocalUseCase reservationLocalUseCase) {
         setTitle("Tableau de bord - Gestion Parking");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
@@ -42,6 +45,7 @@ public class DashboardFrame extends JFrame {
         this.reservationUseCase = reservUseCase;
         this.reservationLocalUseCase = reservationLocalUseCase;
         this.abonnementUseCase = abonUseCase;
+        this.personneUseCase = persoUseCase;
         this.localLaverieUseCase = LLUsecase;
         this.localTechniqueUseCase = LLUseCase;
         this.mecanicienUseCase = MecaUseCase;
@@ -107,6 +111,16 @@ public class DashboardFrame extends JFrame {
                 throw new RuntimeException(ex);
             }
         });  // New button for abonnements
+
+        addMenuButton("Personnes", e -> {
+            try{
+                showPersonnes();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
 
         JButton servicesButton = boutonderoulant("Services");
@@ -208,6 +222,13 @@ public class DashboardFrame extends JFrame {
         mainContent.repaint();
     }
 
+    private void showPersonnes() throws IOException, InterruptedException {
+        mainContent.removeAll();
+        mainContent.add(new PersonnePanel(personneUseCase), BorderLayout.CENTER);
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+
     private void showLocalLaverie() throws IOException, InterruptedException {
         mainContent.removeAll();
         mainContent.add(new LocalLaveriePanel(localLaverieUseCase), BorderLayout.CENTER);
@@ -276,6 +297,7 @@ public class DashboardFrame extends JFrame {
         PlaceDeParkingRepository repository = new PlaceDeParkingService(networkConfig);
         ReservationRepository reservationRepository = new ReservationService(networkConfig);
         AbonnementRepository abonnementRepository = new AbonnementService(networkConfig);
+        PersonneRepository personneRepository = new PersonneService(networkConfig);
         LocalLaverieRepository localLaverieRepository = new LocalLaveriesService(networkConfig);
         LocalTechniqueRepository localTechniqueRepository = new LocalTechniqueService(networkConfig);
         MecanicienRepository mecanicienRepository = new MecanicienService(networkConfig);
@@ -284,11 +306,12 @@ public class DashboardFrame extends JFrame {
         PlaceDeParkingUseCase placeUseCase = new PlaceDeParkingUseCase(repository);
         ReservationUseCase reservUseCase = new ReservationUseCase(reservationRepository);
         AbonnementUseCase abonUseCase = new AbonnementUseCase(abonnementRepository);
+        PersonneUseCase persoUseCase = new PersonneUseCase(personneRepository);
         LocalLaverieUseCase LLUsecase = new LocalLaverieUseCase(localLaverieRepository);
         LocalTechniqueUseCase LTUsecase = new LocalTechniqueUseCase(localTechniqueRepository);
         MecanicienUseCase MecaUseCase = new MecanicienUseCase(mecanicienRepository);
         ReservationLocalUseCase ResaLocalUseCase = new ReservationLocalUseCase(reservationLocalRepository);
 
-        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase, LLUsecase, LTUsecase, MecaUseCase, ResaLocalUseCase));
+        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase, persoUseCase, LLUsecase, LTUsecase, MecaUseCase, ResaLocalUseCase));
     }
 }

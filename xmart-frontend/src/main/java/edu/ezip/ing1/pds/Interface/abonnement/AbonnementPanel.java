@@ -14,6 +14,7 @@ public class AbonnementPanel extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
     private List<Abonnement> abonnements;
+    private Abonnement selectedAbonnement;
 
     public AbonnementPanel(AbonnementUseCase abonnementUseCase) throws IOException, InterruptedException {
         setLayout(new BorderLayout());
@@ -55,6 +56,34 @@ public class AbonnementPanel extends JPanel {
         JMenuItem modifierItem = new JMenuItem("Modifier");
         JMenuItem supprimerItem = new JMenuItem("Supprimer");
 
+        modifierItem.addActionListener(ev -> {
+
+            if (selectedAbonnement != null) {
+                new ModifierAbonnementFrame(selectedAbonnement, updatedList -> {
+                    abonnements = updatedList;
+                    refreshTable(abonnements);
+                }, abonnementUseCase);
+            }
+
+        });
+
+        // Action to delete the selected abonnement
+        supprimerItem.addActionListener(ev -> {
+            if (selectedAbonnement != null) {
+                int res = JOptionPane.showConfirmDialog(table, "Supprimer cet abonnement ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+                if (res == JOptionPane.YES_OPTION) {
+                    try {
+                        abonnementUseCase.deleteAbonnementById(selectedAbonnement.getIdAbonnement());
+                        abonnements.remove(selectedAbonnement);
+                        refreshTable(abonnements);
+                    } catch (IOException | InterruptedException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(table, "Erreur lors de la suppression.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
+
         contextMenu.add(modifierItem);
         contextMenu.add(supprimerItem);
 
@@ -65,34 +94,12 @@ public class AbonnementPanel extends JPanel {
                     int row = table.rowAtPoint(e.getPoint());
                     if (row >= 0 && row < table.getRowCount()) {
                         table.setRowSelectionInterval(row, row);
+                        selectedAbonnement = abonnements.get(row);
                         contextMenu.show(table, e.getX(), e.getY());
 
-                        Abonnement selected = abonnements.get(row);
 
                         // Action to modify the selected abonnement
-                        modifierItem.addActionListener(ev -> {
 
-                                new ModifierAbonnementFrame(selected, updatedList -> {
-                                    abonnements = updatedList;  // Update the abonnements list
-                                    refreshTable(abonnements);  // Refresh the table with the updated list
-                                },abonnementUseCase);
-
-                        });
-
-                        // Action to delete the selected abonnement
-                        supprimerItem.addActionListener(ev -> {
-                            int res = JOptionPane.showConfirmDialog(table, "Supprimer cet abonnement ?", "Confirmation", JOptionPane.YES_NO_OPTION);
-                            if (res == JOptionPane.YES_OPTION) {
-                                try {
-                                    abonnementUseCase.deleteAbonnementById(selected.getIdAbonnement());
-                                    abonnements.remove(selected);  // Remove from the list
-                                    refreshTable(abonnements);  // Refresh the table after deletion
-                                } catch (IOException | InterruptedException ex) {
-                                    ex.printStackTrace();
-                                    JOptionPane.showMessageDialog(table, "Erreur lors de la suppression.", "Erreur", JOptionPane.ERROR_MESSAGE);
-                                }
-                            }
-                        });
                     }
                 }
             }

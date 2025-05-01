@@ -3,6 +3,7 @@ package edu.ezip.ing1.pds.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import edu.ezip.commons.LoggingUtils;
+import edu.ezip.ing1.pds.api.PersonneRepository;
 import edu.ezip.ing1.pds.business.dto.Mecanicien;
 import edu.ezip.ing1.pds.business.dto.Personne;
 import edu.ezip.ing1.pds.business.dto.Personnes;
@@ -21,7 +22,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.UUID;
 
-public class PersonneService {
+public class PersonneService implements PersonneRepository {
     private final static String LoggingLabel = "FrontEnd - PersonneService";
     private final static Logger logger = LoggerFactory.getLogger(LoggingLabel);
     private final static String PersonnesToBeInserted = "people-to-be-inserted.yaml";

@@ -35,7 +35,7 @@ public class IntelijjParkingService {
         SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin FROM Abonnement t"),
         INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin ) VALUES (?, ?, ?, ?, ?, ?)"),
         DELETE_ABONNEMENT("DELETE FROM Abonnement t WHERE t.id_abonnement = ?"),
-        UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=?, WHERE id_abonnement=?"),
+        UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=? WHERE id_abonnement=?"),
 
 
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.nom, t.prenom, t.tel, t.mail, t.code_postal FROM Personne t"),
@@ -260,7 +260,7 @@ public class IntelijjParkingService {
             Personne personne = new Personne();
             personne.setIdPersonne(res.getString(1));
             personne.setNom(res.getString(2));
-            personne.setNom(res.getString(3));
+            personne.setPrenom(res.getString(3));
             personne.setTelephone(res.getString(4));
             personne.setMail(res.getString(5));
             personne.setCodePostal(res.getString(6));
@@ -349,12 +349,12 @@ public class IntelijjParkingService {
 
 
         try (PreparedStatement stmt = connection.prepareStatement(Queries.UPDATE_ABONNEMENT.getQuery())) {
-            stmt.setString(1, abonnement.getIdAbonnement());
-            stmt.setString(2, abonnement.getTypeAbonnement());
-            stmt.setDouble(3, abonnement.getPrix());
-            stmt.setString(4, abonnement.getStatutAbonnement());
-            stmt.setDate(5, abonnement.getDateDebut() );
-            stmt.setDate(6, abonnement.getDateFin() );
+            stmt.setString(1, abonnement.getTypeAbonnement());
+            stmt.setDouble(2, abonnement.getPrix());
+            stmt.setString(3, abonnement.getStatutAbonnement());
+            stmt.setDate(4, abonnement.getDateDebut() );
+            stmt.setDate(5, abonnement.getDateFin() );
+            stmt.setString(6, abonnement.getIdAbonnement());
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows > 0) {
