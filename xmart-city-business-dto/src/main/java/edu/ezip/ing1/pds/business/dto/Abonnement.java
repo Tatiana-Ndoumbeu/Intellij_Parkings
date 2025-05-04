@@ -12,14 +12,16 @@ public class Abonnement {
     private Date dateDebut;
     private Date dateFin;
     private String statutAbonnement;
+    private String idPersonne;
 
-    public Abonnement(String idAbonnement, String typeAbonnement, double prix, Date dateDebut, Date dateFin, String statutAbonnement) {
+    public Abonnement(String idAbonnement, String typeAbonnement, double prix, Date dateDebut, Date dateFin, String statutAbonnement, String idPersonne) {
         this.idAbonnement = idAbonnement;
         this.typeAbonnement = typeAbonnement;
         this.prix = prix;
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.statutAbonnement = statutAbonnement;
+        this.idPersonne = idPersonne;
     }
 
     public Abonnement() {}
@@ -72,6 +74,14 @@ public class Abonnement {
         this.statutAbonnement = statutAbonnement;
     }
 
+    public String getIdPersonne() {
+        return idPersonne;
+    }
+
+    public void setIdPersonne(String idPersonne) {
+        this.idPersonne = idPersonne;
+    }
+
     @Override
     public String toString() {
         return "Abonnement{" +
@@ -81,6 +91,7 @@ public class Abonnement {
                 ", dateDebut=" + dateDebut +
                 ", dateFin=" + dateFin +
                 ", statutAbonnement='" + statutAbonnement + '\'' +
+                ", idPersonne='" + idPersonne + '\'' +
                 '}';
     }
 }

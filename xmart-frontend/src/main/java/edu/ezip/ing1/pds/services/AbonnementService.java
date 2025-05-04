@@ -28,6 +28,7 @@ public class AbonnementService implements AbonnementRepository {
     final String selectRequestOrder = "SELECT_ALL_ABONNEMENTS";
     final String suppRequestOrder = "DELETE_ABONNEMENT";
     final String updateRequestOrder = "UPDATE_ABONNEMENT";
+    final String SelectAboXRequestOrder = "SELECT_TYPE_ABONNEMENT";
 
     private final NetworkConfig networkConfig;
 
@@ -80,6 +81,41 @@ public class AbonnementService implements AbonnementRepository {
         final Request request = new Request();
         request.setRequestId(requestId);
         request.setRequestOrder(selectRequestOrder);
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+        LoggingUtils.logDataMultiLine(logger, Level.TRACE, requestBytes);
+        birthdate++;
+        final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
+                networkConfig,
+                birthdate, request, null, requestBytes, Abonnements.class);
+        clientRequests.push(clientRequest);
+
+        if (!clientRequests.isEmpty()) {
+            final ClientRequest joinedClientRequest = clientRequests.pop();
+            joinedClientRequest.join();
+            logger.debug("Thread {} complete.", joinedClientRequest.getThreadName());
+            return (Abonnements) joinedClientRequest.getResult();
+        } else {
+            logger.error("No Abonnements found");
+            return null;
+        }
+    }
+
+    public Abonnements findAbonnementX(String id_personne) throws InterruptedException, IOException {
+        int birthdate = 0;
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        Abonnement abonnement = new Abonnement();
+        abonnement.setIdPersonne(id_personne);
+
+        final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(abonnement);
+        logger.debug("Abonnement with its JSON face : {}", jsonifiedGuy);
+
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(SelectAboXRequestOrder);
         objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
         final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
         LoggingUtils.logDataMultiLine(logger, Level.TRACE, requestBytes);

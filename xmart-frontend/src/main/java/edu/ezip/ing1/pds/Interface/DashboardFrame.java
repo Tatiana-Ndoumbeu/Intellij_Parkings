@@ -231,7 +231,7 @@ public class DashboardFrame extends JFrame {
 
     private void showLocalLaverie() throws IOException, InterruptedException {
         mainContent.removeAll();
-        mainContent.add(new LocalLaveriePanel(localLaverieUseCase), BorderLayout.CENTER);
+        mainContent.add(new LocalLaveriePanel(localLaverieUseCase, personneUseCase, abonnementUseCase), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }

@@ -3,7 +3,9 @@ package edu.ezip.ing1.pds.Interface.locallaverie;
 import edu.ezip.ing1.pds.business.dto.LocalLaverie;
 import edu.ezip.ing1.pds.business.dto.LocalLaveries;
 import edu.ezip.ing1.pds.uiUtils.LocalViewModel;
+import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
 import edu.ezip.ing1.pds.usecase.LocalLaverieUseCase;
+import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +30,7 @@ public class LocalLaveriePanel extends JPanel {
     private List<String> clientsEnAttente = new ArrayList<>(Arrays.asList("", "", "", ""));
      //je dois declarer ça dans le dashboard
 
-    public LocalLaveriePanel(LocalLaverieUseCase localLaverieUseCase) throws IOException, InterruptedException {
+    public LocalLaveriePanel(LocalLaverieUseCase localLaverieUseCase, PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase) throws IOException, InterruptedException {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
@@ -85,11 +87,12 @@ public class LocalLaveriePanel extends JPanel {
                     dialog.setVisible(true);
                 }
             } else {
-                FormulaireLaver(null);
+                //FormulaireLaver(null);
+                new FormulaireLaverMaintenant(null, personneUseCase, abonnementUseCase);
             }
         });
         panelSud.add(LaverButton);
-        
+
         JButton insertButton = new JButton("Ajouter un Local" , chargerIcone("/icons/ajouter.png", 30, 30));
         insertButton.setBackground(Color.GREEN);
         insertButton.addActionListener(e->{

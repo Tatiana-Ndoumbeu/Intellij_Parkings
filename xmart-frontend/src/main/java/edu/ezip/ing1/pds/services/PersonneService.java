@@ -29,6 +29,7 @@ public class PersonneService implements PersonneRepository {
 
     final String insertRequestOrder = "INSERT_PERSONNE";
     final String selectRequestOrder = "SELECT_ALL_PERSONNES";
+    final String SelectTypeAboRequestOrder = "SELECT_TYPE_ABONNEMENT";
 
     private final NetworkConfig networkConfig;
 
@@ -36,39 +37,6 @@ public class PersonneService implements PersonneRepository {
         this.networkConfig = networkConfig;
     }
 
-    /*public void insertPersonnes() throws InterruptedException, IOException {
-        final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();
-        final Personnes guys = ConfigLoader.loadConfig(Personnes.class, PersonnesToBeInserted);
-
-        int birthdate = 0;
-        for(final Personne guy : guys.getPersonnes()) {
-            final ObjectMapper objectMapper = new ObjectMapper();
-            final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(guy);
-            logger.trace("Personne with its JSON face : {}", jsonifiedGuy);
-            final String requestId = UUID.randomUUID().toString();
-            final Request request = new Request();
-            request.setRequestId(requestId);
-            request.setRequestOrder(insertRequestOrder);
-            request.setRequestContent(jsonifiedGuy);
-            objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
-            final byte []  requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
-
-            final InsertClientRequest clientRequest = new InsertClientRequest(
-                    networkConfig,
-                    birthdate++, request, guy, requestBytes);
-            clientRequests.push(clientRequest);
-        }
-
-        while (!clientRequests.isEmpty()) {
-            final ClientRequest clientRequest = clientRequests.pop();
-            clientRequest.join();
-            final Personne guy = (Personne)clientRequest.getInfo();
-            logger.debug("Thread {} complete : {} {} {} --> {}",
-                    clientRequest.getThreadName(),
-                    guy.getIdPersonne(), guy.getNom(), guy.getNom(),
-                    clientRequest.getResult());
-        }
-    }*/
 
     public void insertPersonnes(Personne personne) throws InterruptedException, IOException {
         final Deque<ClientRequest> clientRequests = new ArrayDeque<ClientRequest>();

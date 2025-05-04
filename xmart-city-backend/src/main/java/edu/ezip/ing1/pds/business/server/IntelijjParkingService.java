@@ -37,6 +37,7 @@ public class IntelijjParkingService {
         DELETE_ABONNEMENT("DELETE FROM Abonnement t WHERE t.id_abonnement = ?"),
         UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=? WHERE id_abonnement=?"),
 
+        SELECT_TYPE_ABONNEMENT("SELECT A.*  FROM Abonnement A JOIN Personne P ON A.id_personne = P.id_personne WHERE P.id_personne = ?"),
 
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.nom, t.prenom, t.tel, t.mail, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel, mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
@@ -114,6 +115,9 @@ public class IntelijjParkingService {
                 break;
             case SELECT_ALL_ABONNEMENTS:
                 response = SelectAllAbonnements(request, connection);
+                break;
+            case SELECT_TYPE_ABONNEMENT:
+                response = SelectXAbonnement(request, connection);
                 break;
             case INSERT_ABONNEMENT:
                 response = InsertAbonnement(request, connection);
@@ -269,6 +273,27 @@ public class IntelijjParkingService {
         }
 
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(personnes));
+    }
+
+    private Response SelectXAbonnement(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_TYPE_ABONNEMENT.getQuery());
+
+        Abonnements abonnements = new Abonnements();
+        while (res.next()) {
+            Abonnement abonnement = new Abonnement();
+            abonnement.setIdAbonnement(res.getString(1));
+            abonnement.setTypeAbonnement(res.getString(2));
+            abonnement.setPrix(res.getDouble(3));
+            abonnement.setDateDebut(res.getDate(4));
+            abonnement.setDateFin(res.getDate(5));
+            abonnement.setStatutAbonnement(res.getString(6));
+            abonnement.setIdPersonne(res.getString(7));
+            abonnements.add(abonnement);
+        }
+
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(abonnements));
     }
 
     private Response SelectAllPlaceDeParking(final Request request, final Connection connection) throws SQLException, JsonProcessingException {

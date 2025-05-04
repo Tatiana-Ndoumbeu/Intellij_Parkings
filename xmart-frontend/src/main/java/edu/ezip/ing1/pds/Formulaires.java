@@ -12,6 +12,7 @@ import edu.ezip.ing1.pds.business.dto.Reservation;
 import edu.ezip.ing1.pds.business.dto.Reservations;
 import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
 import edu.ezip.ing1.pds.usecase.MecanicienUseCase;
+import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 import edu.ezip.ing1.pds.usecase.ReservationLocalUseCase;
 
 
@@ -356,6 +357,7 @@ public class Formulaires {
                     return;
                 }
 
+
                 // TODO
                 //  Vérifie l'email dans la personne liée à abonnement
                 //  verifie quel type de place de son abonnement
@@ -449,85 +451,7 @@ public class Formulaires {
         };
     }
 
-    public static void FormulairePaiementTechnique(JFrame parent, MecanicienUseCase mecanicienUseCase) {
-        JDialog dialog = new JDialog(parent, "Paiement Service Technique", true);
-        dialog.setSize(500, 600);
-        dialog.setLocationRelativeTo(parent);
-        dialog.setLayout(new BorderLayout(10, 10));
 
-
-        JPanel panel = new JPanel(new GridLayout(9, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
-
-        JTextField nomField = new JTextField();
-        JTextField prenomField = new JTextField();
-        JTextField telField = new JTextField();
-        JTextField mailField = new JTextField();
-        JTextField cpField = new JTextField();
-        JTextField dateServiceField = new JTextField();
-
-        JComboBox<String> comboMecanicien = new JComboBox<>();
-        comboMecanicien.addItem("Sélectionner un mécanicien");
-        ArrayList<String> techniciens = new ArrayList<>();
-
-        // je vais ajouter les mecanos recupérés dans la bd
-
-        JTextField prixField = new JTextField();
-        JLabel dateJourLabel = new JLabel("Date du paiement : " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-
-        panel.add(new JLabel("Nom client :"));
-        panel.add(nomField);
-        panel.add(new JLabel("Prénom client :"));
-        panel.add(prenomField);
-        panel.add(new JLabel("Téléphone :"));
-        panel.add(telField);
-        panel.add(new JLabel("Email :"));
-        panel.add(mailField);
-        panel.add(new JLabel("Code Postal :"));
-        panel.add(cpField);
-        panel.add(new JLabel("Date du service :"));
-        panel.add(dateServiceField);
-        panel.add(new JLabel("Mécanicien :"));
-        panel.add(comboMecanicien);
-        panel.add(new JLabel("Prix du service (€) :"));
-        panel.add(prixField);
-        panel.add(dateJourLabel);
-        panel.add(new JLabel(""));
-
-        dialog.add(panel, BorderLayout.CENTER);
-
-        JButton btnPayer = new JButton("Payer");
-        btnPayer.setBackground(Color.GREEN);
-        btnPayer.setForeground(Color.WHITE);
-        btnPayer.setFont(new Font("SansSerif", Font.BOLD, 16));
-        btnPayer.addActionListener(e -> {
-
-            if (nomField.getText().trim().isEmpty() || prenomField.getText().trim().isEmpty() || prixField.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Merci de remplir tous les champs obligatoires (nom, prénom, prix).");
-                return;
-            }
-
-            String resume = String.format(
-                    "Client : %s %s\nTéléphone : %s\nMail : %s\nCode Postal : %s\nDate service : %s\nMécanicien : %s\nPrix : %s €",
-                    nomField.getText(), prenomField.getText(), telField.getText(), mailField.getText(), cpField.getText(),
-                    dateServiceField.getText(), comboMecanicien.getSelectedItem(), prixField.getText());
-
-            int choix = JOptionPane.showOptionDialog(dialog, resume + "\n\nConfirmer le paiement ?",
-                    "Confirmation", JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE, null, new Object[]{"Payer", "Annuler"}, "Payer");
-
-            if (choix == JOptionPane.YES_OPTION) {
-                JOptionPane.showMessageDialog(dialog, "Paiement effectué avec succès !");
-                dialog.dispose();
-            }
-        });
-
-        JPanel panelBtn = new JPanel();
-        panelBtn.add(btnPayer);
-        dialog.add(panelBtn, BorderLayout.SOUTH);
-
-        dialog.setVisible(true);
-    }
 
     /// /////FORMULAIRE RESERVATION ///////////
 

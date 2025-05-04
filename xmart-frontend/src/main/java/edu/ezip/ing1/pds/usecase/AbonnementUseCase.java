@@ -30,4 +30,8 @@ public class AbonnementUseCase {
     public boolean updateAbonnement(Abonnement abonnement) throws InterruptedException, IOException {
       return   abonnementRepository.update(abonnement);
     }
+
+    public Abonnements findAbonnementX(String id_personne) throws InterruptedException, IOException {
+        return abonnementRepository.findAbonnementX(id_personne);
+    }
 }
