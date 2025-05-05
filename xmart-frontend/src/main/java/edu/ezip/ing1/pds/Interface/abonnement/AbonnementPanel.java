@@ -2,6 +2,8 @@ package edu.ezip.ing1.pds.Interface.abonnement;
 
 import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
+import edu.ezip.ing1.pds.business.dto.Personne;
+
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -15,6 +17,7 @@ public class AbonnementPanel extends JPanel {
     private DefaultTableModel tableModel;
     private List<Abonnement> abonnements;
     private Abonnement selectedAbonnement;
+    private Personne selectedPersonne;
 
     public AbonnementPanel(AbonnementUseCase abonnementUseCase) throws IOException, InterruptedException {
         setLayout(new BorderLayout());
@@ -38,14 +41,14 @@ public class AbonnementPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
         // Add button for adding new abonnement
-        JButton addBtn = new JButton("Ajouter un abonnement");
-        styleButton(addBtn, new Color(255, 152, 0));
-        addBtn.addActionListener(e ->    new AjouterAbonnementFrame(this, abonnementUseCase));
+        //JButton addBtn = new JButton("Ajouter un abonnement");
+        //styleButton(addBtn, new Color(255, 152, 0));
+        //addBtn.addActionListener(e ->    new AjouterAbonnementFrame(this, abonnementUseCase, selectedPersonne.getIdPersonne()));
 
         // Bottom panel with the add button
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(new Color(245, 245, 245));
-        bottomPanel.add(addBtn);
+        //bottomPanel.add(addBtn);
         add(bottomPanel, BorderLayout.SOUTH);
 
         // Refresh table to show abonnements

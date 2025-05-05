@@ -77,7 +77,6 @@ public class Abonnement {
     public String getIdPersonne() {
         return idPersonne;
     }
-
     public void setIdPersonne(String idPersonne) {
         this.idPersonne = idPersonne;
     }
@@ -92,6 +91,8 @@ public class Abonnement {
                 ", dateFin=" + dateFin +
                 ", statutAbonnement='" + statutAbonnement + '\'' +
                 ", idPersonne='" + idPersonne + '\'' +
+
+
                 '}';
     }
 }

@@ -2,6 +2,9 @@ package edu.ezip.ing1.pds.Interface.abonnement;
 
 import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
+import edu.ezip.ing1.pds.business.dto.Personne;
+import edu.ezip.ing1.pds.usecase.PersonneUseCase;
+
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,9 +16,11 @@ import java.util.UUID;
 public class AjouterAbonnementFrame extends JFrame {
 
     private final AbonnementUseCase abonnementUseCase;
+    private final String idPersonne;
 
-    public AjouterAbonnementFrame(AbonnementPanel parent, AbonnementUseCase abonnementUseCase) {
+    public AjouterAbonnementFrame(AbonnementPanel parent, AbonnementUseCase abonnementUseCase, Personne personne) {
         this.abonnementUseCase = abonnementUseCase;
+        this.idPersonne = personne.getIdPersonne();
 
         setTitle("Ajouter un abonnement");
         setSize(500, 600);
@@ -26,6 +31,10 @@ public class AjouterAbonnementFrame extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(new Color(245, 245, 245));
         panel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
+
+        JLabel infoLabel = new JLabel("Création d’un abonnement pour : " + personne.getPrenom() + " " + personne.getNom() + " (" + personne.getMail() + ")");
+        infoLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        infoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         //JTextField idField = new JTextField();
         JTextField typeField = new JTextField();
@@ -44,6 +53,7 @@ public class AjouterAbonnementFrame extends JFrame {
         styleButton(addBtn, new Color(255, 152, 0));
 
         //panel.add(idField);
+        panel.add(infoLabel);
         panel.add(Box.createVerticalStrut(10));
         panel.add(typeField);
         panel.add(Box.createVerticalStrut(10));
@@ -88,7 +98,8 @@ public class AjouterAbonnementFrame extends JFrame {
                         prix,
                         new java.sql.Date(dateDebut.getTime()),
                         new java.sql.Date(dateFin.getTime()),
-                        statut
+                        statut,
+                        idPersonne
                 );
 
                 boolean isAdded = abonnementUseCase.createAbonnement(newAbonnement);

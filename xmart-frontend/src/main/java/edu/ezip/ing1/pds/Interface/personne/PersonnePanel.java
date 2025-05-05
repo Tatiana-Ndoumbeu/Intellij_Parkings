@@ -1,7 +1,11 @@
 package edu.ezip.ing1.pds.Interface.personne;
 
 import edu.ezip.ing1.pds.Interface.abonnement.AjouterAbonnementFrame;
+import edu.ezip.ing1.pds.api.AbonnementRepository;
 import edu.ezip.ing1.pds.business.dto.Abonnement;
+import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
+
+
 import edu.ezip.ing1.pds.business.dto.Personne;
 import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 
@@ -18,12 +22,14 @@ public class PersonnePanel extends JPanel {
     private DefaultTableModel tableModel;
     private List<Personne> personnes;
     private Personne selectedPersonne;
+    private AbonnementUseCase abonnementUseCase;
 
-    public PersonnePanel(PersonneUseCase personneUseCase) throws IOException, InterruptedException  {
+    public PersonnePanel(PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase) throws IOException, InterruptedException  {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
         this.personnes = personneUseCase.afficherPersonnes().getPersonnes().stream().toList();
+        this.abonnementUseCase = abonnementUseCase;
 
         String[] columns = {"ID", "Nom", "Prenom", "Tél", "Mail", "Code Postal"};
         tableModel = new DefaultTableModel(columns, 0) {
@@ -52,10 +58,24 @@ public class PersonnePanel extends JPanel {
         refreshTable(personneUseCase.afficherPersonnes().getPersonnes().stream().toList());
 
         JPopupMenu contextMenu = new JPopupMenu();
+        JMenuItem creerAboItem = new JMenuItem("Creer un abonnement pour cette personne");
+        JMenuItem voirAboItem = new JMenuItem("Voir son abonnement");
         JMenuItem modifierItem = new JMenuItem("Modifier");
         JMenuItem supprimerItem = new JMenuItem("Supprimer");
 
+        creerAboItem.addActionListener(e ->{
+            if(selectedPersonne != null) {
+                try{
+                    new AjouterAbonnementFrame(null, abonnementUseCase, selectedPersonne);
+                } catch (Exception ex){
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, ex.getMessage());
+                }
+            }
+        });
 
+        contextMenu.add(creerAboItem);
+        contextMenu.add(voirAboItem);
         contextMenu.add(modifierItem);
         contextMenu.add(supprimerItem);
 

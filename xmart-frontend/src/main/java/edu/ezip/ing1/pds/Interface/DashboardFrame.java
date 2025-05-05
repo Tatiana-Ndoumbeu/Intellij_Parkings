@@ -224,7 +224,7 @@ public class DashboardFrame extends JFrame {
 
     private void showPersonnes() throws IOException, InterruptedException {
         mainContent.removeAll();
-        mainContent.add(new PersonnePanel(personneUseCase), BorderLayout.CENTER);
+        mainContent.add(new PersonnePanel(personneUseCase, abonnementUseCase), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }

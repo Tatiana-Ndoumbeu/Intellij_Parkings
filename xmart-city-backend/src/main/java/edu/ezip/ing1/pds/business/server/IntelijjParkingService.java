@@ -33,7 +33,7 @@ public class IntelijjParkingService {
         INSERT_VEHICULE("INSERT INTO Vehicule (num_plaque, type, marque) VALUES (?, ?, ?)"),
 
         SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin FROM Abonnement t"),
-        INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin ) VALUES (?, ?, ?, ?, ?, ?)"),
+        INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin, id_personne ) VALUES (?, ?, ?, ?, ?, ?, ?)"),
         DELETE_ABONNEMENT("DELETE FROM Abonnement t WHERE t.id_abonnement = ?"),
         UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=? WHERE id_abonnement=?"),
 
@@ -339,6 +339,8 @@ public class IntelijjParkingService {
             pstmt.setString(4, abonnement.getStatutAbonnement());
             pstmt.setDate(5, abonnement.getDateDebut());
             pstmt.setDate(6, abonnement.getDateFin());
+            pstmt.setString(7, abonnement.getIdPersonne());
+
 
             int affectedRows = pstmt.executeUpdate();
             return new Response(request.getRequestId(), affectedRows > 0 ? "abonnement inséré avec succès" : "Échec de l'insertion");
