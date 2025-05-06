@@ -120,6 +120,7 @@ public class AbonnementPanel extends JPanel {
 
     // Method to refresh the table when the abonnements list changes
     void refreshTable(List<Abonnement> updatedList) {
+        this.abonnements= updatedList;
         tableModel.setRowCount(0);  // Clear existing rows
         for (Abonnement abonnement : updatedList) {
             tableModel.addRow(new Object[]{

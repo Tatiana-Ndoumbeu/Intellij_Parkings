@@ -74,6 +74,17 @@ public class PersonnePanel extends JPanel {
             }
         });
 
+        modifierItem.addActionListener(e ->{
+            if (selectedPersonne != null) {
+                try{
+                    new ModifierPersonneFrame(selectedPersonne, personneUseCase);
+                } catch (Exception ex){
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, ex.getMessage());
+                }
+            }
+        });
+
         contextMenu.add(creerAboItem);
         contextMenu.add(voirAboItem);
         contextMenu.add(modifierItem);
@@ -110,6 +121,7 @@ public class PersonnePanel extends JPanel {
     }
 
     void refreshTable(List<Personne> updatedList) {
+        this.personnes = updatedList;
         tableModel.setRowCount(0);
         for (Personne personne : updatedList) {
             tableModel.addRow(new Object[]{

@@ -37,7 +37,8 @@ public class AjouterAbonnementFrame extends JFrame {
         infoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         //JTextField idField = new JTextField();
-        JTextField typeField = new JTextField();
+        //JTextField typeField = new JTextField();
+        JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"Standard", "Premium"});
         JTextField prixField = new JTextField();
         JTextField statutField = new JTextField();
         JTextField dateDebutField = new JTextField();
@@ -45,7 +46,8 @@ public class AjouterAbonnementFrame extends JFrame {
         JButton addBtn = new JButton("Ajouter");
 
         //styleField(idField, "ID Abonnement");
-        styleField(typeField, "Type Abonnement");
+        //styleField(typeField, "Type Abonnement");
+        styleComboBox(typeComboBox, "Type d'abonnement");
         styleField(prixField, "Prix");
         styleField(statutField, "Statut (Actif, Inactif, Suspendu");
         styleField(dateDebutField, "Date Début (dd/MM/yyyy)");
@@ -55,7 +57,8 @@ public class AjouterAbonnementFrame extends JFrame {
         //panel.add(idField);
         panel.add(infoLabel);
         panel.add(Box.createVerticalStrut(10));
-        panel.add(typeField);
+        //panel.add(typeField);
+        panel.add(typeComboBox);
         panel.add(Box.createVerticalStrut(10));
         panel.add(prixField);
         panel.add(Box.createVerticalStrut(10));
@@ -72,13 +75,13 @@ public class AjouterAbonnementFrame extends JFrame {
 
         addBtn.addActionListener(e -> {
             //String id = idField.getText().trim();
-            String type = typeField.getText().trim();
+            String selectedType = (String) typeComboBox.getSelectedItem();
             String prixStr = prixField.getText().trim();
             String statut = statutField.getText().trim();
             String dateDebutStr = dateDebutField.getText().trim();
             String dateFinStr = dateFinField.getText().trim();
 
-            if (type.isEmpty() || prixStr.isEmpty() || statut.isEmpty()
+            if ( prixStr.isEmpty() || statut.isEmpty()
                     || dateDebutStr.isEmpty() || dateFinStr.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.");
                 return;
@@ -94,7 +97,7 @@ public class AjouterAbonnementFrame extends JFrame {
 
                 Abonnement newAbonnement = new Abonnement(
                         id,
-                        type,
+                        selectedType,
                         prix,
                         new java.sql.Date(dateDebut.getTime()),
                         new java.sql.Date(dateFin.getTime()),
@@ -122,6 +125,11 @@ public class AjouterAbonnementFrame extends JFrame {
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         field.setFont(new Font("SansSerif", Font.PLAIN, 16));
         field.setBorder(BorderFactory.createTitledBorder(placeholder));
+    }
+
+    private void styleComboBox(JComboBox<String> comboBox, String placeholder) {
+        comboBox.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        comboBox.setBorder(BorderFactory.createTitledBorder(placeholder));
     }
 
     private void styleButton(JButton button, Color bg) {
