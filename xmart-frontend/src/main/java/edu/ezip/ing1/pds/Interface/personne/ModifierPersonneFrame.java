@@ -5,11 +5,12 @@ import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 public class ModifierPersonneFrame extends JFrame {
 
-    public ModifierPersonneFrame(Personne personne, PersonneUseCase personneUseCase) {
+    public ModifierPersonneFrame(Personne personne, Consumer<Set<Personne>> onUpdate, PersonneUseCase personneUseCase) {
         setTitle("Modifier Personne");
         setSize(500, 600);
         setLocationRelativeTo(null);
@@ -59,7 +60,15 @@ public class ModifierPersonneFrame extends JFrame {
                 personne.setTelephone(telephoneField.getText().trim());
                 personne.setCodePostal(codepostalField.getText().trim());
 
-
+                boolean success = personneUseCase.updatePersonne(personne);
+                if (success) {
+                    Set<Personne> updatedList = personneUseCase.getALLPersonnes();
+                    onUpdate.accept(updatedList);
+                    JOptionPane.showMessageDialog(this, "Personne mise à jour avec succès !");
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour.");
+                }
 
             }catch (Exception ex){
                 JOptionPane.showMessageDialog(this, "Erreur lors de la saisie des données.", "Erreur", JOptionPane.ERROR_MESSAGE);

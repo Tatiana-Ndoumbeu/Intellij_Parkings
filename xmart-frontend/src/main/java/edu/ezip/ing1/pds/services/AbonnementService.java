@@ -29,6 +29,7 @@ public class AbonnementService implements AbonnementRepository {
     final String suppRequestOrder = "DELETE_ABONNEMENT";
     final String updateRequestOrder = "UPDATE_ABONNEMENT";
     final String SelectAboXRequestOrder = "SELECT_TYPE_ABONNEMENT";
+    final String SelectOneAboRequestOrder = "SELECT_ONE_ABONNEMENT";
 
     private final NetworkConfig networkConfig;
 
@@ -134,6 +135,39 @@ public class AbonnementService implements AbonnementRepository {
             logger.error("No Abonnements found");
             return null;
         }
+    }
+
+    public Abonnement findOneAbonnement(String id_personne) throws InterruptedException, IOException {
+        int birthdate = 0;
+        final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        Abonnement abonnement = new Abonnement();
+        abonnement.setIdPersonne(id_personne);
+
+        final String requestId = UUID.randomUUID().toString();
+        final Request request = new Request();
+        request.setRequestId(requestId);
+        request.setRequestOrder(SelectOneAboRequestOrder);
+        objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+        LoggingUtils.logDataMultiLine(logger, Level.TRACE, requestBytes);
+        birthdate++;
+        final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
+                networkConfig,
+                birthdate, request, null, requestBytes, Abonnements.class);
+        clientRequests.push(clientRequest);
+
+        if (!clientRequests.isEmpty()) {
+            final ClientRequest joinedClientRequest = clientRequests.pop();
+            joinedClientRequest.join();
+            logger.debug("Thread {} complete.", joinedClientRequest.getThreadName());
+            return (Abonnement) joinedClientRequest.getResult();
+        } else {
+            logger.error("No Abonnements found");
+            return null;
+        }
+
     }
 
     @Override

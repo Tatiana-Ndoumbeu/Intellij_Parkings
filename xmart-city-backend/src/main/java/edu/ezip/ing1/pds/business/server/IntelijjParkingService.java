@@ -36,11 +36,14 @@ public class IntelijjParkingService {
         INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin, id_personne ) VALUES (?, ?, ?, ?, ?, ?, ?)"),
         DELETE_ABONNEMENT("DELETE FROM Abonnement t WHERE t.id_abonnement = ?"),
         UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=? WHERE id_abonnement=?"),
+        SELECT_ONE_ABONNEMENT("SELECT * FROM Abonnement  WHERE id_personne= ?"),
 
         SELECT_TYPE_ABONNEMENT("SELECT A.*  FROM Abonnement A JOIN Personne P ON A.id_personne = P.id_personne WHERE P.id_personne = ?"),
 
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.nom, t.prenom, t.tel, t.mail, t.code_postal FROM Personne t"),
         INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel, mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
+        DELETE_PERSONNE("DELETE FROM Personne t WHERE t.id_personne = ?"),
+        UPDATE_PERSONNE("UPDATE Personne SET nom= ?, prenom= ?, tel= ?, mail= ?, code_postal = ? WHERE id_personne= ? "),
 
         SELECT_ALL_MECANICIEN("SELECT m.nom, m.prenom, m.telephone, m.disponibilite, m.specialite,m.mail FROM Mecanicien m"),
         INSERT_MECANICIEN("INSERT INTO Mecanicien (nom, prenom, telephone, disponibilite, specialite, mail) VALUES (?, ?, ?,?, ?, ?)"),
@@ -116,6 +119,9 @@ public class IntelijjParkingService {
             case SELECT_ALL_ABONNEMENTS:
                 response = SelectAllAbonnements(request, connection);
                 break;
+            case SELECT_ONE_ABONNEMENT:
+                response = SelectOneAbonnement(request, connection);
+                break;
             case SELECT_TYPE_ABONNEMENT:
                 response = SelectXAbonnement(request, connection);
                 break;
@@ -140,6 +146,15 @@ public class IntelijjParkingService {
                 break;
             case SELECT_ALL_PERSONNES:
                 response = SelectAllPersonnes(request, connection);
+                break;
+            case INSERT_PERSONNE:
+                response = InsertPersonne(request, connection);
+                break;
+            case DELETE_PERSONNE:
+                response = DeletePersonne(request, connection);
+                break;
+            case UPDATE_PERSONNE:
+                response = UpdatePersonne(request, connection);
                 break;
             case INSERT_LOCAL:
                 response = InsertLocalL(request, connection);
@@ -179,9 +194,6 @@ public class IntelijjParkingService {
                 break;
             case INSERT_RESERVATION_LOCAL:
                 response = insertReservationLocal(request, connection);
-                break;
-            case INSERT_PERSONNE:
-                response = InsertPersonne(request, connection);
                 break;
             case SELECT_ALL_PLACE_DE_PARKING:
                 response = SelectAllPlaceDeParking(request, connection);
@@ -254,6 +266,25 @@ public class IntelijjParkingService {
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(abonnements));
     }
 
+    private Response SelectOneAbonnement(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_ONE_ABONNEMENT.getQuery());
+
+        Abonnements abonnements = new Abonnements();
+        while (res.next()) {
+            Abonnement abonnement = new Abonnement();
+            abonnement.setIdAbonnement(res.getString(1));
+            abonnement.setPrix(res.getDouble(3));
+            abonnement.setTypeAbonnement(res.getString(2));
+            abonnement.setDateDebut(res.getDate(5));
+            abonnement.setDateFin(res.getDate(6));
+            abonnement.setStatutAbonnement(res.getString(4));
+            abonnements.add(abonnement);
+        }
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(abonnements));
+    }
+
     private Response SelectAllPersonnes(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
         final ObjectMapper objectMapper = new ObjectMapper();
         final Statement stmt = connection.createStatement();
@@ -273,6 +304,57 @@ public class IntelijjParkingService {
         }
 
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(personnes));
+    }
+
+    private Response UpdatePersonne(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Personne personne = new Personne();
+        try {
+            personne= objectMapper.readValue(request.getRequestBody(), Personne.class);
+        } catch (IOException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données invalides");
+        }
+
+
+        if (personne.getNom() == null || personne.getPrenom() == null || personne.getMail() == null || personne.getTelephone() == null) {
+            return new Response(request.getRequestId(), "Champs manquants");
+        }
+
+
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.UPDATE_PERSONNE.getQuery())) {
+            stmt.setString(1, personne.getNom());
+            stmt.setString(2, personne.getPrenom());
+            stmt.setString(3, personne.getTelephone());
+            stmt.setString(4, personne.getMail());
+            stmt.setString(5, personne.getCodePostal());
+            stmt.setString(6, personne.getIdPersonne());
+
+            int affectedRows = stmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                return new Response(request.getRequestId(), "Personne mise à jour avec succès");
+            } else {
+                return new Response(request.getRequestId(), "Aucune personne trouvée avec cet ID");
+            }
+
+        } catch (SQLException e) {
+            logger.error("Erreur SQL lors de la mise à jour de la personne", e);
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+        }
+    }
+
+    private Response DeletePersonne(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        Personne personne = objectMapper.readValue(request.getRequestBody(), Personne.class);
+
+
+        try (PreparedStatement pstmt = connection.prepareStatement(Queries.DELETE_PERSONNE.getQuery())) {
+            pstmt.setString(1, personne.getIdPersonne());
+
+            int affectedRows = pstmt.executeUpdate();
+            return new Response(request.getRequestId(), affectedRows > 0 ? "Personne supprimée avec succès" : "Échec de la suppression");
+        }
     }
 
     private Response SelectXAbonnement(final Request request, final Connection connection) throws SQLException, JsonProcessingException {

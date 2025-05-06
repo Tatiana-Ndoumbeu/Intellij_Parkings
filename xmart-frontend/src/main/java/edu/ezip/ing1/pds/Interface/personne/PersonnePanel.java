@@ -1,8 +1,10 @@
 package edu.ezip.ing1.pds.Interface.personne;
 
 import edu.ezip.ing1.pds.Interface.abonnement.AjouterAbonnementFrame;
+import edu.ezip.ing1.pds.Interface.abonnement.ModifierAbonnementFrame;
 import edu.ezip.ing1.pds.api.AbonnementRepository;
 import edu.ezip.ing1.pds.business.dto.Abonnement;
+import edu.ezip.ing1.pds.business.dto.Abonnements;
 import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
 
 
@@ -59,7 +61,36 @@ public class PersonnePanel extends JPanel {
 
         JPopupMenu contextMenu = new JPopupMenu();
         JMenuItem creerAboItem = new JMenuItem("Creer un abonnement pour cette personne");
+
         JMenuItem voirAboItem = new JMenuItem("Voir son abonnement");
+        voirAboItem.addActionListener(e -> {
+            if (selectedPersonne != null) {
+                try{
+                    Abonnement abonnement = abonnementUseCase.findOneAbonnement(selectedPersonne.getIdPersonne());
+
+                    if (abonnement != null) {
+                        String message = "Abonnement ID : " + abonnement.getIdAbonnement() + "\n"
+                                + "Type : " + abonnement.getTypeAbonnement() + "\n"
+                                + "Prix : " + abonnement.getPrix() + " €\n"
+                                + "Statut : " + abonnement.getStatutAbonnement() + "\n"
+                                + "Début : " + abonnement.getDateDebut() + "\n"
+                                + "Fin : " + abonnement.getDateFin();
+
+                        JOptionPane.showMessageDialog(null, message, "Abonnement de " + selectedPersonne.getPrenom(), JOptionPane.INFORMATION_MESSAGE);
+                    }else{
+                        JOptionPane.showMessageDialog(null, "Pas d'abonnement pour cette personne");
+                    }
+
+                }catch (Exception ex){
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, ex.getMessage());
+
+                }
+            }
+        });
+
+
+
         JMenuItem modifierItem = new JMenuItem("Modifier");
         JMenuItem supprimerItem = new JMenuItem("Supprimer");
 
@@ -76,11 +107,25 @@ public class PersonnePanel extends JPanel {
 
         modifierItem.addActionListener(e ->{
             if (selectedPersonne != null) {
-                try{
-                    new ModifierPersonneFrame(selectedPersonne, personneUseCase);
-                } catch (Exception ex){
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(null, ex.getMessage());
+                new ModifierPersonneFrame(selectedPersonne, updatedList -> {
+                    personnes = (List<Personne>) updatedList;
+                    refreshTable(personnes);
+                }, personneUseCase);
+            }
+        });
+
+        supprimerItem.addActionListener(e ->{
+            if (selectedPersonne != null) {
+                int res = JOptionPane.showConfirmDialog(table, "Supprimer cette place ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+                if (res == JOptionPane.YES_OPTION) {
+                    try {
+                        personneUseCase.deletePersonne(selectedPersonne);
+                        personnes.remove(selectedPersonne);
+                        refreshTable(personnes);
+                    } catch (IOException | InterruptedException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(table, "Erreur lors de la suppression.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         });

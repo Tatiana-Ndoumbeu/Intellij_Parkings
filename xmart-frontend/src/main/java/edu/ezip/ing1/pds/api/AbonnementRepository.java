@@ -12,4 +12,5 @@ public interface AbonnementRepository {
     boolean deleteById(String idAbonnement) throws InterruptedException, IOException;
     boolean update(Abonnement abonnement) throws InterruptedException, IOException;
     Abonnements findAbonnementX(String id_personne) throws InterruptedException, IOException;
+    Abonnement findOneAbonnement(String id_personne) throws InterruptedException, IOException;
 }

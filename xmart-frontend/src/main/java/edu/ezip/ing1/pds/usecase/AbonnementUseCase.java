@@ -34,4 +34,8 @@ public class AbonnementUseCase {
     public Abonnements findAbonnementX(String id_personne) throws InterruptedException, IOException {
         return abonnementRepository.findAbonnementX(id_personne);
     }
+
+    public Abonnement findOneAbonnement(String id_personne) throws InterruptedException, IOException{
+        return abonnementRepository.findOneAbonnement(id_personne);
+    }
 }
