@@ -6,6 +6,7 @@ import edu.ezip.commons.LoggingUtils;
 import edu.ezip.ing1.pds.api.AbonnementRepository;
 import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.business.dto.Abonnements;
+import edu.ezip.ing1.pds.business.dto.Personne;
 import edu.ezip.ing1.pds.client.commons.ClientRequest;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.commons.Request;
@@ -102,37 +103,37 @@ public class AbonnementService implements AbonnementRepository {
         }
     }
 
-    public Abonnements findAbonnementX(String id_personne) throws InterruptedException, IOException {
+    public Abonnement findAbonnementX(Personne personne) throws InterruptedException, IOException {
         int birthdate = 0;
         final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
         final ObjectMapper objectMapper = new ObjectMapper();
 
-        Abonnement abonnement = new Abonnement();
-        abonnement.setIdPersonne(id_personne);
 
-        final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(abonnement);
+
+        final String jsonifiedGuy = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(personne);
         logger.debug("Abonnement with its JSON face : {}", jsonifiedGuy);
 
         final String requestId = UUID.randomUUID().toString();
         final Request request = new Request();
         request.setRequestId(requestId);
         request.setRequestOrder(SelectAboXRequestOrder);
+        request.setRequestContent(jsonifiedGuy);
         objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
         final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
         LoggingUtils.logDataMultiLine(logger, Level.TRACE, requestBytes);
         birthdate++;
         final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
                 networkConfig,
-                birthdate, request, null, requestBytes, Abonnements.class);
+                birthdate, request, null, requestBytes, Abonnement.class);
         clientRequests.push(clientRequest);
 
         if (!clientRequests.isEmpty()) {
             final ClientRequest joinedClientRequest = clientRequests.pop();
             joinedClientRequest.join();
             logger.debug("Thread {} complete.", joinedClientRequest.getThreadName());
-            return (Abonnements) joinedClientRequest.getResult();
+            return (Abonnement) joinedClientRequest.getResult();
         } else {
-            logger.error("No Abonnements found");
+            logger.error("No Abonnement found");
             return null;
         }
     }

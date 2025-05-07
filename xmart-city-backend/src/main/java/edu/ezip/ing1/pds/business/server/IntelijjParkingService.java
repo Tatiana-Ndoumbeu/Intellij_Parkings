@@ -52,7 +52,7 @@ public class IntelijjParkingService {
         INSERT_LOCAL("INSERT into LocalLaverie (NumLocalL, disponibilite) VALUES (? , ?)"),
         UPDATE_LOCAL("UPDATE LocalLaverie SET disponibilite = ? WHERE NumLocalL = ?"),
         DELETE_LOCAL("DELETE FROM LocalLaverie WHERE NumLocalL = ?"),
-        SELECT_DISPO_LOCAUX("SELECT l.NumLocalL FROM LocalLaverie l WHERE disponibilite = true"),
+        SELECT_DISPO_LOCAUX("SELECT l.NumLocalL,l.disponibilite FROM LocalLaverie l WHERE disponibilite = true"),
 
         SELECT_ALL_RESERVATION_LOCAL("SELECT * FROM Reservation_local"),
         SELECT_ALL_RESERVATION_LOCAL_MOIS("SELECT * FROM Reservation_local WHERE (YEAR(date_debut) = ? AND MONTH(date_debut) = ?) OR (YEAR(date_fin) = ? AND MONTH(date_fin) = ?)"),
@@ -357,27 +357,46 @@ public class IntelijjParkingService {
         }
     }
 
-    private Response SelectXAbonnement(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+    private Response SelectXAbonnement(final Request request, final Connection connection) throws SQLException, IOException, JsonProcessingException {
         final ObjectMapper objectMapper = new ObjectMapper();
-        final Statement stmt = connection.createStatement();
-        final ResultSet res = stmt.executeQuery(Queries.SELECT_TYPE_ABONNEMENT.getQuery());
 
-        Abonnements abonnements = new Abonnements();
-        while (res.next()) {
-            Abonnement abonnement = new Abonnement();
-            abonnement.setIdAbonnement(res.getString(1));
-            abonnement.setTypeAbonnement(res.getString(2));
-            abonnement.setPrix(res.getDouble(3));
-            abonnement.setDateDebut(res.getDate(4));
-            abonnement.setDateFin(res.getDate(5));
-            abonnement.setStatutAbonnement(res.getString(6));
-            abonnement.setIdPersonne(res.getString(7));
-            abonnements.add(abonnement);
+        try {
+            final String body = request.getRequestBody();
+            final Personne personne = objectMapper.readValue(body, Personne.class);
+
+            if (personne.getIdPersonne() == null || personne.getIdPersonne().isEmpty()) {
+                return new Response(request.getRequestId(), "ID de personne invalide");
+            }
+
+            try (PreparedStatement stmt = connection.prepareStatement(Queries.SELECT_TYPE_ABONNEMENT.getQuery())) {
+                stmt.setString(1, personne.getIdPersonne());
+
+                try (ResultSet res = stmt.executeQuery()) {
+
+                    if (res.next()) {
+                        Abonnement abonnement = new Abonnement();
+                        abonnement.setIdAbonnement(res.getString(1));
+                        abonnement.setTypeAbonnement(res.getString(2));
+                        abonnement.setPrix(res.getDouble(3));
+                        abonnement.setDateDebut(res.getDate(4));
+                        abonnement.setDateFin(res.getDate(5));
+                        abonnement.setStatutAbonnement(res.getString(6));
+                        abonnement.setIdPersonne(res.getString(7));
+
+                        return new Response(request.getRequestId(), objectMapper.writeValueAsString(abonnement));
+                    }
+                    else {
+                        return new Response(request.getRequestId(), "Aucun abonnement trouvé pour cette personne.");
+                    }
+
+                }
+            }
+
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing JSON de la requête", e);
+            return new Response(request.getRequestId(), "Données de requête invalides");
         }
-
-        return new Response(request.getRequestId(), objectMapper.writeValueAsString(abonnements));
     }
-
     private Response SelectAllPlaceDeParking(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
         final ObjectMapper objectMapper = new ObjectMapper();
         final Statement stmt = connection.createStatement();

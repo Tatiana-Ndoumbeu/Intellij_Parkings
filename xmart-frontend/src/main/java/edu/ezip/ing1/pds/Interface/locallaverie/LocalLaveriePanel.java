@@ -27,10 +27,9 @@ public class LocalLaveriePanel extends JPanel {
     private List<LocalLaverie> localLaveries;
     private LocalLaveries localLaveries2 = new LocalLaveries();
     private final static Logger logger = LoggerFactory.getLogger("local laverie");
-    private List<String> clientsEnAttente = new ArrayList<>(Arrays.asList("", "", "", ""));
-     //je dois declarer ça dans le dashboard
 
-    public LocalLaveriePanel(LocalLaverieUseCase localLaverieUseCase, PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase) throws IOException, InterruptedException {
+
+    public LocalLaveriePanel(LocalLaverieUseCase localLaverieUseCase, PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase, List<String> clientenattente) throws IOException, InterruptedException {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
@@ -83,12 +82,12 @@ public class LocalLaveriePanel extends JPanel {
                     dialog.setSize(400, 400);
                     dialog.setLocationRelativeTo(null);
                     dialog.setModal(true);
-                    dialog.add(new PanelListeAttenteLaverie(clientsEnAttente));
+                    dialog.add(new PanelListeAttenteLaverie(clientenattente, personneUseCase, abonnementUseCase, localLaverieUseCase));
                     dialog.setVisible(true);
                 }
             } else {
                 //FormulaireLaver(null);
-                new FormulaireLaverMaintenant(null, personneUseCase, abonnementUseCase);
+                new FormulaireLaverMaintenant(null, personneUseCase, abonnementUseCase, localLaverieUseCase);
             }
         });
         panelSud.add(LaverButton);
@@ -119,7 +118,7 @@ public class LocalLaveriePanel extends JPanel {
             dialog.setSize(400, 400);
             dialog.setLocationRelativeTo(null);
             dialog.setModal(true);
-            dialog.add(new PanelListeAttenteLaverie(clientsEnAttente));
+            dialog.add(new PanelListeAttenteLaverie(clientenattente, personneUseCase, abonnementUseCase, localLaverieUseCase));
             dialog.setVisible(true);
         });
         panelSud.add(Attentebouton);

@@ -3,6 +3,7 @@ package edu.ezip.ing1.pds.usecase;
 import edu.ezip.ing1.pds.api.AbonnementRepository;
 import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.business.dto.Abonnements;
+import edu.ezip.ing1.pds.business.dto.Personne;
 
 
 import java.io.IOException;
@@ -31,8 +32,8 @@ public class AbonnementUseCase {
       return   abonnementRepository.update(abonnement);
     }
 
-    public Abonnements findAbonnementX(String id_personne) throws InterruptedException, IOException {
-        return abonnementRepository.findAbonnementX(id_personne);
+    public Abonnement findAbonnementX(Personne personne) throws InterruptedException, IOException {
+        return abonnementRepository.findAbonnementX(personne);
     }
 
     public Abonnement findOneAbonnement(String id_personne) throws InterruptedException, IOException{

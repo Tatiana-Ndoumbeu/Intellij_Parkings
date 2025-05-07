@@ -33,9 +33,9 @@ public class DashboardFrame extends JFrame {
     private LocalTechniqueUseCase localTechniqueUseCase;
     private MecanicienUseCase mecanicienUseCase;
     private ReservationLocalUseCase reservationLocalUseCase;
+    private List<String> ClientsEnAttente;
 
-
-    public DashboardFrame(PlaceDeParkingUseCase placeUseCase, ReservationUseCase reservUseCase, AbonnementUseCase abonUseCase, PersonneUseCase persoUseCase, LocalLaverieUseCase LLUsecase, LocalTechniqueUseCase LLUseCase, MecanicienUseCase MecaUseCase, ReservationLocalUseCase reservationLocalUseCase) {
+    public DashboardFrame(PlaceDeParkingUseCase placeUseCase, ReservationUseCase reservUseCase, AbonnementUseCase abonUseCase, PersonneUseCase persoUseCase, LocalLaverieUseCase LLUsecase, LocalTechniqueUseCase LLUseCase, MecanicienUseCase MecaUseCase, ReservationLocalUseCase reservationLocalUseCase, List<String> clients) {
         setTitle("Tableau de bord - Gestion Parking");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
@@ -49,6 +49,7 @@ public class DashboardFrame extends JFrame {
         this.localLaverieUseCase = LLUsecase;
         this.localTechniqueUseCase = LLUseCase;
         this.mecanicienUseCase = MecaUseCase;
+        this.ClientsEnAttente = clients;
         initSideMenu();
         initMainContent();
 
@@ -231,7 +232,7 @@ public class DashboardFrame extends JFrame {
 
     private void showLocalLaverie() throws IOException, InterruptedException {
         mainContent.removeAll();
-        mainContent.add(new LocalLaveriePanel(localLaverieUseCase, personneUseCase, abonnementUseCase), BorderLayout.CENTER);
+        mainContent.add(new LocalLaveriePanel(localLaverieUseCase, personneUseCase, abonnementUseCase,ClientsEnAttente), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }
@@ -312,6 +313,8 @@ public class DashboardFrame extends JFrame {
         MecanicienUseCase MecaUseCase = new MecanicienUseCase(mecanicienRepository);
         ReservationLocalUseCase ResaLocalUseCase = new ReservationLocalUseCase(reservationLocalRepository);
 
-        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase, persoUseCase, LLUsecase, LTUsecase, MecaUseCase, ResaLocalUseCase));
+         List<String> clientsEnAttente = new ArrayList<>(Arrays.asList("", "", "", ""));
+
+        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase, persoUseCase, LLUsecase, LTUsecase, MecaUseCase, ResaLocalUseCase, clientsEnAttente));
     }
 }
