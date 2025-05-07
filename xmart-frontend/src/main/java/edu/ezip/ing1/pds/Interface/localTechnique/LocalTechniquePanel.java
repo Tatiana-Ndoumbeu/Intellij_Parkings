@@ -17,7 +17,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.util.List;
 
-import static edu.ezip.ing1.pds.Formulaires.FormulairePaiementTechnique;
+
 import static edu.ezip.ing1.pds.Formulaires.chargerIcone;
 
 public class LocalTechniquePanel extends JPanel {
