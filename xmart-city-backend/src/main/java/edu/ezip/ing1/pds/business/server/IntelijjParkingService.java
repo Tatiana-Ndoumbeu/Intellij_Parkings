@@ -41,12 +41,12 @@ public class IntelijjParkingService {
         SELECT_TYPE_ABONNEMENT("SELECT A.*  FROM Abonnement A JOIN Personne P ON A.id_personne = P.id_personne WHERE P.id_personne = ?"),
 
         SELECT_ALL_PERSONNES("SELECT t.id_personne, t.nom, t.prenom, t.tel, t.mail, t.code_postal FROM Personne t"),
-        INSERT_PERSONNE("INSERT INTO Personne (id_personne, nom, prenom, tel, mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
+        INSERT_PERSONNE("INSERT IGNORE INTO Personne (id_personne, nom, prenom, tel, mail, code_postal) VALUES (?, ?, ?,?, ?, ?)"),
         DELETE_PERSONNE("DELETE FROM Personne t WHERE t.id_personne = ?"),
         UPDATE_PERSONNE("UPDATE Personne SET nom= ?, prenom= ?, tel= ?, mail= ?, code_postal = ? WHERE id_personne= ? "),
 
         SELECT_ALL_MECANICIEN("SELECT m.nom, m.prenom, m.telephone, m.disponibilite, m.specialite,m.mail FROM Mecanicien m"),
-        INSERT_MECANICIEN("INSERT INTO Mecanicien (nom, prenom, telephone, disponibilite, specialite, mail) VALUES (?, ?, ?,?, ?, ?)"),
+        INSERT_MECANICIEN("INSERT IGNORE INTO Mecanicien (nom, prenom, telephone, disponibilite, specialite, mail) VALUES (?, ?, ?,?, ?, ?)"),
 
         SELECT_ALL_LOCAL("SELECT l.NumLocalL, l.disponibilite FROM LocalLaverie l"),
         INSERT_LOCAL("INSERT into LocalLaverie (NumLocalL, disponibilite) VALUES (? , ?)"),
@@ -55,8 +55,9 @@ public class IntelijjParkingService {
         SELECT_DISPO_LOCAUX("SELECT l.NumLocalL,l.disponibilite FROM LocalLaverie l WHERE disponibilite = true"),
 
         SELECT_ALL_RESERVATION_LOCAL("SELECT * FROM Reservation_local"),
+        DELETE_RESERVATION_LOCAL("DELETE FROM Reservation_local WHERE reservationLocalId = ?"),
         SELECT_ALL_RESERVATION_LOCAL_MOIS("SELECT * FROM Reservation_local WHERE (YEAR(date_debut) = ? AND MONTH(date_debut) = ?) OR (YEAR(date_fin) = ? AND MONTH(date_fin) = ?)"),
-        INSERT_RESERVATION_LOCAL("INSERT INTO Reservation_local (numero_local, date_debut, date_fin, heure_entree, heure_sortie, type_local, id_personne) VALUES (?, ?, ?, ?, ?, ?, ?)"),
+        INSERT_RESERVATION_LOCAL("INSERT INTO Reservation_local (numero_local, date_debut, date_fin, heure_entree, heure_sortie, type_local, id_personne, reservationLocalId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"),
 
         SELECT_ALL_LOCAL_T("SELECT l.numLocalT, l.disponibilite FROM LocalTechnique l"),
         INSERT_LOCAL_T("INSERT into LocalTechnique (numLocalT, disponibilite) VALUES (? , ?)"),
@@ -194,6 +195,9 @@ public class IntelijjParkingService {
                 break;
             case INSERT_RESERVATION_LOCAL:
                 response = insertReservationLocal(request, connection);
+                break;
+            case DELETE_RESERVATION_LOCAL:
+                response = deleteReservationLocal(request, connection);
                 break;
             case SELECT_ALL_PLACE_DE_PARKING:
                 response = SelectAllPlaceDeParking(request, connection);
@@ -1012,11 +1016,25 @@ private Response UpdateLocalT(final Request request, final Connection connection
             reservationLocal.setHeureSortie(heureSortie != null ? heureSortie.toLocalTime().format(timeFormatter) : null);
 
             reservationLocal.setTypeLocal(res.getString("type_local"));
+            reservationLocal.setIdPersonne(res.getString("id_personne"));
+            reservationLocal.setReservationLocalId(res.getString("reservationLocalId"));
 
             reservationLocaux.add(reservationLocal);
         }
 
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservationLocaux));
+    }
+    private Response deleteReservationLocal(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        ReservationLocal reservationLocal = objectMapper.readValue(request.getRequestBody(), ReservationLocal.class);
+
+        try (PreparedStatement pstmt = connection.prepareStatement(Queries.DELETE_RESERVATION_LOCAL.getQuery())) {
+            pstmt.setString(1, reservationLocal.getReservationLocalId());
+
+            int affectedRows = pstmt.executeUpdate();
+            return new Response(request.getRequestId(), affectedRows > 0 ? "Reservation supprimée avec succès" : "Échec de la suppression");
+
+        }
     }
 
     private Response selectReservationLocalParMois(final Request request, final Connection connection)
@@ -1044,6 +1062,8 @@ private Response UpdateLocalT(final Request request, final Connection connection
             reservationLocal.setHeureEntree(res.getString("heure_entree"));
             reservationLocal.setHeureSortie(res.getString("heure_sortie"));
             reservationLocal.setTypeLocal(res.getString("type_local"));
+            reservationLocal.setIdPersonne(res.getString("id_personne"));
+            reservationLocal.setReservationLocalId(res.getString("reservationLocalId"));
 
             reservationLocaux.add(reservationLocal);
         }
@@ -1069,6 +1089,7 @@ private Response UpdateLocalT(final Request request, final Connection connection
             stmt.setTime(5, java.sql.Time.valueOf(reservationLocal.getHeureSortie() + ":00"));
             stmt.setString(6, reservationLocal.getTypeLocal());
             stmt.setString(7, reservationLocal.getIdPersonne());
+            stmt.setString(8, reservationLocal.getReservationLocalId());
 
 
             stmt.executeUpdate();
