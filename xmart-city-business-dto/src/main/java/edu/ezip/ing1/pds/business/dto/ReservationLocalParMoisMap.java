@@ -3,13 +3,14 @@ package edu.ezip.ing1.pds.business.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ReservationLocalParMoisMap {
 
     @JsonProperty("map")
-    private Map<LocalDate, List<String>> map;
+    private Map<LocalDate, List<String>> map = new HashMap<>();;
 
     public Map<LocalDate, List<String>> getMap() {
         return map;

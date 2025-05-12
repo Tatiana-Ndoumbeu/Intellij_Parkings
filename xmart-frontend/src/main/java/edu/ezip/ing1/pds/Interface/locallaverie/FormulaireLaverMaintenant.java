@@ -2,27 +2,26 @@ package edu.ezip.ing1.pds.Interface.locallaverie;
 
 import com.sun.jdi.IntegerValue;
 import edu.ezip.ing1.pds.business.dto.*;
-import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
-import edu.ezip.ing1.pds.usecase.LocalLaverieUseCase;
-import edu.ezip.ing1.pds.usecase.MecanicienUseCase;
-import edu.ezip.ing1.pds.usecase.PersonneUseCase;
+import edu.ezip.ing1.pds.usecase.*;
 import org.apache.commons.lang3.ObjectUtils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class FormulaireLaverMaintenant {
     private final PersonneUseCase personneUseCase;
     private final AbonnementUseCase abonnementUseCase;
     private final LocalLaverieUseCase localLaverieUseCase;
+    private final ArchivesUseCase archivesUseCase;
     private static Personnes personnes = new Personnes();
     private static LocalLaveries localLaveries = new LocalLaveries();
     private static Abonnements abonnements = new Abonnements();
 
 
-    public  FormulaireLaverMaintenant(JFrame parent, PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase, LocalLaverieUseCase localLaverieUseCase) {
+    public  FormulaireLaverMaintenant(JFrame parent, PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase, LocalLaverieUseCase localLaverieUseCase, ArchivesUseCase archivesUseCase) {
         JDialog dialog = new JDialog(parent, "Formulaire Lavage", true);
         dialog.setSize(600, 600);
         dialog.setLocationRelativeTo(parent);
@@ -30,6 +29,8 @@ public class FormulaireLaverMaintenant {
         this.personneUseCase = personneUseCase;
         this.abonnementUseCase = abonnementUseCase;
         this.localLaverieUseCase = localLaverieUseCase;
+        this.archivesUseCase = archivesUseCase;
+
 
         ArrayList<Integer> numLocaux = new ArrayList<>();
         try {
@@ -65,8 +66,8 @@ public class FormulaireLaverMaintenant {
         dialog.add(panelChoix, BorderLayout.NORTH);
 
         JPanel panelCardLayout = new JPanel(new CardLayout());
-        JPanel panelPremium = creerPanelPremium("Premium", (int) comboLocaux.getSelectedItem());
-        JPanel panelStandard = creerPanelPremium("Standard", (int) comboLocaux.getSelectedItem());
+        JPanel panelPremium = creerPanelPremium("Premium", (int) comboLocaux.getSelectedItem(), "Abonne", "Premium");
+        JPanel panelStandard = creerPanelPremium("Standard", (int) comboLocaux.getSelectedItem(),"Abonne", "Standard");
 
 
         JPanel panelAbonne = new JPanel(new GridLayout(2, 2, 5, 5));
@@ -214,19 +215,12 @@ public class FormulaireLaverMaintenant {
                         null,
                         new String[]{"Payer "+prix+" €", "Annuler"},
                         "Payer");
-                //je dois aussi inscrire le paiement dans la bd
+
 
                 if (choix == JOptionPane.YES_OPTION) {
-                    try {
-                        LocalLaverie localSolicite = new LocalLaverie();
-                        localSolicite.setDisponibilite(false);
-                        localSolicite.setNumLocalL(LocalInt);
-                        localLaverieUseCase.modifierDisponibilite(localSolicite);
 
-                    } catch (IOException | InterruptedException ie) {
-                        ie.printStackTrace();
-                        JOptionPane.showMessageDialog(null, "Erreur lors de la récupération des locaux.");
-                    }
+                    archiverPaiement(nom, prenom, prix, "Laverie", LocalInt);
+
                     JOptionPane.showMessageDialog(dialog, "Paiement effectué. Merci !");
                     dialog.dispose();
                 }
@@ -242,7 +236,7 @@ public class FormulaireLaverMaintenant {
 
         dialog.setVisible(true);
     }
-    private JPanel creerPanelPremium(String TypeClient, int local) {
+    private JPanel creerPanelPremium(String TypeClient, int local, String nom, String prenom ) {
         JPanel panelPremium = new JPanel(new GridLayout(4, 2, 10, 10));
         panelPremium.setBorder(BorderFactory.createTitledBorder("Formulaire Client " +TypeClient));
 
@@ -280,10 +274,10 @@ public class FormulaireLaverMaintenant {
                         + "Senteur : " + senteur + "\n"
                         + "Prix : " + prix + " €";
 
+                archiverPaiement(nom, prenom, prix, "Laverie", local);
                 JOptionPane.showMessageDialog(panelPremium, recap);
 
-                // TODO : stocker dans base de données/ archives que je vais creer
-                JOptionPane.showMessageDialog(panelPremium, "[ARCHIVE PREMIUM] " + recap);// je dois remplacer
+
             });
         }
         else {
@@ -324,18 +318,8 @@ public class FormulaireLaverMaintenant {
                         "Payer");
 
                 if (choix == JOptionPane.YES_OPTION) {
-                    try {
-                        LocalLaverie localSolicite = new LocalLaverie();
-                        localSolicite.setDisponibilite(false);
-                        localSolicite.setNumLocalL(local);
-                        localLaverieUseCase.modifierDisponibilite(localSolicite);
 
-                    } catch (IOException | InterruptedException ie) {
-                        ie.printStackTrace();
-                        JOptionPane.showMessageDialog(null, "Erreur lors de la récupération des locaux.");
-                    }
-
-                    // TODO : stocker dans base de données/ archives que je vais creer
+                   archiverPaiement(nom, prenom, prixTotal, "Laverie", local);
 
                     JOptionPane.showMessageDialog(panelPremium, "[ARCHIVE PREMIUM] " + recap);
                 }
@@ -345,6 +329,26 @@ public class FormulaireLaverMaintenant {
 
 
         return panelPremium;
+    }
+    private void archiverPaiement(String nom, String prenom, int montant, String service, int local) {
+        ArchivesPaiement paiement = new ArchivesPaiement();
+        paiement.setNom(nom);
+        paiement.setPrenom(prenom);
+        paiement.setMontant(montant);
+        paiement.setService(service);
+        paiement.setDate(LocalDate.now().toString());
+
+        try {
+            archivesUseCase.createArchive(paiement);
+
+            LocalLaverie localSolicite = new LocalLaverie();
+            localSolicite.setDisponibilite(false);
+            localSolicite.setNumLocalL(local);
+            localLaverieUseCase.modifierDisponibilite(localSolicite);
+        } catch (IOException | InterruptedException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Erreur lors de l'enregistrement ou la mise à jour.");
+        }
     }
 
 }

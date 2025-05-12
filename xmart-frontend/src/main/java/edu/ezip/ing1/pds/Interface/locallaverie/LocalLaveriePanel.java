@@ -4,6 +4,7 @@ import edu.ezip.ing1.pds.business.dto.LocalLaverie;
 import edu.ezip.ing1.pds.business.dto.LocalLaveries;
 import edu.ezip.ing1.pds.uiUtils.LocalViewModel;
 import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
+import edu.ezip.ing1.pds.usecase.ArchivesUseCase;
 import edu.ezip.ing1.pds.usecase.LocalLaverieUseCase;
 import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class LocalLaveriePanel extends JPanel {
     private final static Logger logger = LoggerFactory.getLogger("local laverie");
 
 
-    public LocalLaveriePanel(LocalLaverieUseCase localLaverieUseCase, PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase, List<String> clientenattente) throws IOException, InterruptedException {
+    public LocalLaveriePanel(LocalLaverieUseCase localLaverieUseCase, PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase, ArchivesUseCase archivesUseCase, List<String> clientenattente) throws IOException, InterruptedException {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
@@ -82,12 +83,12 @@ public class LocalLaveriePanel extends JPanel {
                     dialog.setSize(400, 400);
                     dialog.setLocationRelativeTo(null);
                     dialog.setModal(true);
-                    dialog.add(new PanelListeAttenteLaverie(clientenattente, personneUseCase, abonnementUseCase, localLaverieUseCase));
+                    dialog.add(new PanelListeAttenteLaverie(clientenattente, personneUseCase, abonnementUseCase, localLaverieUseCase, archivesUseCase));
                     dialog.setVisible(true);
                 }
             } else {
                 //FormulaireLaver(null);
-                new FormulaireLaverMaintenant(null, personneUseCase, abonnementUseCase, localLaverieUseCase);
+                new FormulaireLaverMaintenant(null, personneUseCase, abonnementUseCase, localLaverieUseCase, archivesUseCase);
             }
         });
         panelSud.add(LaverButton);
@@ -118,7 +119,7 @@ public class LocalLaveriePanel extends JPanel {
             dialog.setSize(400, 400);
             dialog.setLocationRelativeTo(null);
             dialog.setModal(true);
-            dialog.add(new PanelListeAttenteLaverie(clientenattente, personneUseCase, abonnementUseCase, localLaverieUseCase));
+            dialog.add(new PanelListeAttenteLaverie(clientenattente, personneUseCase, abonnementUseCase, localLaverieUseCase, archivesUseCase));
             dialog.setVisible(true);
         });
         panelSud.add(Attentebouton);

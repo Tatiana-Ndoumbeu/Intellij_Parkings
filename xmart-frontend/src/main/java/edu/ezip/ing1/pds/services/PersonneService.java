@@ -170,7 +170,7 @@ public class PersonneService implements PersonneRepository {
     @Override
     public Set<Personne> findAll() {
         try {
-            logger.debug("Retrieving all PlaceDeParking objects");
+            logger.debug("Retrieving all personnes objects");
             final ObjectMapper objectMapper = new ObjectMapper();
             final String requestId = UUID.randomUUID().toString();
             final Request request = new Request();
@@ -181,7 +181,7 @@ public class PersonneService implements PersonneRepository {
             final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
             final SelectAllClientRequest clientRequest = new SelectAllClientRequest(
                     networkConfig,
-                    requestId.hashCode(), request, null, requestBytes, PlacesDeParkings.class);
+                    requestId.hashCode(), request, null, requestBytes, Personnes.class);
             clientRequest.join();
 
 

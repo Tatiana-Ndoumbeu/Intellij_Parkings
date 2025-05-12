@@ -5,13 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import edu.ezip.commons.LoggingUtils;
 import edu.ezip.ing1.pds.api.ReservationLocalRepository;
-import edu.ezip.ing1.pds.business.dto.ReservationLocal;
-import edu.ezip.ing1.pds.business.dto.ReservationLocalParMois;
-import edu.ezip.ing1.pds.business.dto.ReservationLocalParMoisMap;
-import edu.ezip.ing1.pds.business.dto.ReservationLocaux;
+import edu.ezip.ing1.pds.business.dto.*;
 import edu.ezip.ing1.pds.client.commons.ClientRequest;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
 import edu.ezip.ing1.pds.commons.Request;
+import edu.ezip.ing1.pds.requests.apiRequest.DeleteClientRequest;
 import edu.ezip.ing1.pds.requests.apiRequest.InsertClientRequest;
 import edu.ezip.ing1.pds.requests.apiRequest.SelectAllClientRequest;
 //import edu.ezip.ing1.pds.requests.apiRequest.DeleteClientRequest;
@@ -29,6 +27,7 @@ public class ReservationLocalService implements ReservationLocalRepository {
 
     final String insertRequestOrder = "INSERT_RESERVATION_LOCAL";
     final String selectRequestOrder = "SELECT_ALL_RESERVATION_LOCAL";
+    final String deleteRequestOrder = "DELETE_RESERVATION_LOCAL";
     final String SelectMoisRequestOrder = "SELECT_ALL_RESERVATION_LOCAL_MOIS";
 
     private final NetworkConfig networkConfig;
@@ -107,7 +106,7 @@ public class ReservationLocalService implements ReservationLocalRepository {
     }
 
 
-    public ReservationLocalParMoisMap selectParMois(int annee, int mois) throws InterruptedException, IOException {
+    public ReservationLocaux selectParMois(int annee, int mois) throws InterruptedException, IOException {
         int birthdate = 0;
         final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
         final ObjectMapper objectMapper = new ObjectMapper();
@@ -131,14 +130,14 @@ public class ReservationLocalService implements ReservationLocalRepository {
         final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
 
 
-        final SelectAllClientRequest<ReservationLocalParMoisMap> clientRequest =
+        final SelectAllClientRequest<ReservationLocaux> clientRequest =
                 new SelectAllClientRequest<>(
                         networkConfig,
                         birthdate++,
                         request,
                         null,
                         requestBytes,
-                        ReservationLocalParMoisMap.class
+                        ReservationLocaux.class
                 );
 
         clientRequests.push(clientRequest);
@@ -147,10 +146,41 @@ public class ReservationLocalService implements ReservationLocalRepository {
             final ClientRequest joinedClientRequest = clientRequests.pop();
             joinedClientRequest.join();
             logger.debug("Thread {} terminé.", joinedClientRequest.getThreadName());
-            return (ReservationLocalParMoisMap) joinedClientRequest.getResult();
+            return (ReservationLocaux) joinedClientRequest.getResult();
         } else {
             logger.error("Aucune réservation récupérée.");
             return null;
+        }
+    }
+    public Boolean delete(ReservationLocal reservationLocal) throws InterruptedException, IOException {
+        try {
+            final Deque<ClientRequest> clientRequests = new ArrayDeque<>();
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final String requestId = UUID.randomUUID().toString();
+            final Request request = new Request();
+
+            request.setRequestId(requestId);
+            request.setRequestOrder(deleteRequestOrder);
+            final String jsonifiedLocal = objectMapper.writeValueAsString(reservationLocal);
+            request.setRequestContent(jsonifiedLocal);
+
+            objectMapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+            final byte[] requestBytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(request);
+            final DeleteClientRequest<ReservationLocal> clientRequest = new DeleteClientRequest<>(
+                    networkConfig, 0, request, reservationLocal, requestBytes);
+
+            clientRequests.push(clientRequest);
+
+            while (!clientRequests.isEmpty()) {
+                final ClientRequest clientResponse = clientRequests.pop();
+                clientResponse.join();
+                logger.debug("Suppression terminée pour reservationlocal {} du {}: {}",
+                        reservationLocal.getTypeLocal(), reservationLocal.getDateDebut(), clientResponse.getResult());
+            }
+            return true;
+        } catch (Exception e) {
+            logger.error("Error suppression", e);
+            return false;
         }
     }
 

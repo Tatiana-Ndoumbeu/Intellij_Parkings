@@ -47,6 +47,7 @@ public class IntelijjParkingService {
 
         SELECT_ALL_MECANICIEN("SELECT m.nom, m.prenom, m.telephone, m.disponibilite, m.specialite,m.mail FROM Mecanicien m"),
         INSERT_MECANICIEN("INSERT IGNORE INTO Mecanicien (nom, prenom, telephone, disponibilite, specialite, mail) VALUES (?, ?, ?,?, ?, ?)"),
+        DELETE_MECANICIEN("DELETE FROM Mecanicien WHERE telephone = ?"),
 
         SELECT_ALL_LOCAL("SELECT l.NumLocalL, l.disponibilite FROM LocalLaverie l"),
         INSERT_LOCAL("INSERT into LocalLaverie (NumLocalL, disponibilite) VALUES (? , ?)"),
@@ -63,7 +64,7 @@ public class IntelijjParkingService {
         INSERT_LOCAL_T("INSERT into LocalTechnique (numLocalT, disponibilite) VALUES (? , ?)"),
         UPDATE_LOCAL_T("UPDATE LocalTechnique SET disponibilite = ? WHERE numLocalT = ?"),
         DELETE_LOCAL_T("DELETE FROM LocalTechnique WHERE numLocalT = ?"),
-        SELECT_DISPO_LOCAUX_T("SELECT l.numLocalT FROM LocalTechnique l WHERE disponibilite = true"),
+        SELECT_DISPO_LOCAUX_T("SELECT l.numLocalT, l.disponibilite FROM LocalTechnique l WHERE disponibilite = true"),
 
         INSERT_UTILISATEUR("INSERT INTO Admin (id_admin, nom, email, mot_de_passe) VALUES (?, ?, ?, ?)"),
         LOGIN_UTILISATEUR("SELECT COUNT(*) FROM Admin WHERE email = ? AND mot_de_passe = ?"),
@@ -74,6 +75,11 @@ public class IntelijjParkingService {
                 "FROM Reservation r \n" +
                 "INNER JOIN PlaceDeParking t ON t.id_place = r.id_place;\n"),
         INSERT_RESERVATION("INSERT into Reservation (idReservation, dateReservation, heure, dateEntree, dateSortie, heureEntree, heureSortie, id_Personne, id_place) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "),
+
+        SELECT_ALL_ARCHIVES("SELECT t.nom, t.prenom, t.service, t.date_paiement, t.montant FROM ArchivePaiement t"),
+        INSERT_ARCHIVES("INSERT INTO ArchivePaiement (nom, prenom, service, date_paiement, montant) VALUES (?, ?, ?,?, ?)"),
+        //DELETE_ARCHIVES("DELETE FROM Personne t WHERE t.id_personne = ?"),
+        //UPDATE_ARCHIVES("UPDATE Personne SET nom= ?, prenom= ?, tel= ?, mail= ?, code_postal = ? WHERE id_personne= ? "),
 
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
         INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)"),
@@ -223,6 +229,15 @@ public class IntelijjParkingService {
             case INSERT_MECANICIEN:
                 response = InsertMecanicien(request, connection);
                 break;
+            case DELETE_MECANICIEN:
+                response = DeleteMecanicien(request, connection);
+                break;
+            case INSERT_ARCHIVES:
+                response = InsertArchive(request, connection);
+                break;
+            case SELECT_ALL_ARCHIVES:
+                response = selectAllArchives(request, connection);
+                break;
             case SELECT_ALL_RESERVATIONS:
                 response = SelectAllReservations(request, connection);
                 break;
@@ -357,7 +372,11 @@ public class IntelijjParkingService {
             pstmt.setString(1, personne.getIdPersonne());
 
             int affectedRows = pstmt.executeUpdate();
-            return new Response(request.getRequestId(), affectedRows > 0 ? "Personne supprimée avec succès" : "Échec de la suppression");
+            if (affectedRows > 0) {
+                return new Response(request.getRequestId(), "Personne supprimée avec succès");
+            } else {
+                return new Response(request.getRequestId(), "Échec de la suppression");
+            }
         }
     }
 
@@ -899,6 +918,84 @@ private Response UpdateLocalT(final Request request, final Connection connection
             return new Response(request.getRequestId(), "Erreur de traitement de la requête.");
         }
 
+
+    }
+    private Response DeleteMecanicien(final Request request, final Connection connection) throws SQLException, IOException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            String requestBody = request.getRequestBody();
+            Mecanicien mecanicien = objectMapper.readValue(requestBody, Mecanicien.class);
+
+
+            try (PreparedStatement stmt = connection.prepareStatement(Queries.DELETE_MECANICIEN.getQuery())) {
+                stmt.setString(1, mecanicien.getTelephone());
+                int affectedRows = stmt.executeUpdate();
+
+                if (affectedRows > 0) {
+                    return new Response(request.getRequestId(), "Mecanicien supprimé avec succès");
+                } else {
+                    return new Response(request.getRequestId(), "Aucun Mecanicien trouvé avec cet ID");
+                }
+            }
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données invalides");
+        } catch (SQLException e) {
+            logger.error("Erreur SQL lors de la suppression du Mecano", e);
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+        }
+    }
+    private Response InsertArchive(final Request request, final Connection connection) throws SQLException, IOException {
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        ArchivesPaiement archivesPaiement;
+        try {
+            archivesPaiement = objectMapper.readValue(request.getRequestBody(), ArchivesPaiement.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
+            return new Response(request.getRequestId(), "Données de l'archive invalides");
+        }
+
+        if (archivesPaiement.getNom() == null || archivesPaiement.getService() == null|| archivesPaiement.getDate() == null) {
+            return new Response(request.getRequestId(), "Champs  manquants");
+        }
+
+
+        try (PreparedStatement stmt = connection.prepareStatement(Queries.INSERT_ARCHIVES.query)) {
+            stmt.setString(1, archivesPaiement.getNom());
+            stmt.setString(2, archivesPaiement.getPrenom());
+            stmt.setString(3, archivesPaiement.getService());
+            stmt.setString(4, archivesPaiement.getDate());
+            stmt.setDouble(5, archivesPaiement.getMontant());
+            stmt.executeUpdate();
+            return new Response(request.getRequestId(), objectMapper.writeValueAsString(archivesPaiement));
+
+        } catch (SQLException e) {
+            return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
+        } catch (IOException e) {
+            return new Response(request.getRequestId(), "Erreur de traitement de la requête.");
+        }
+
+
+    }
+
+    private Response selectAllArchives(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final Statement stmt = connection.createStatement();
+        final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_ARCHIVES.query);
+        ArchivesPaiements archivesPaiements = new ArchivesPaiements();
+
+        while (res.next()) {
+            ArchivesPaiement archivesPaiement = new ArchivesPaiement();
+            archivesPaiement.setNom(res.getString(1));
+            archivesPaiement.setPrenom(res.getString(2));
+            archivesPaiement.setService(res.getString(3));
+            archivesPaiement.setDate(res.getString(4));
+            archivesPaiement.setMontant(res.getDouble(5));
+            archivesPaiements.add(archivesPaiement);
+        }
+        return new Response(request.getRequestId(), objectMapper.writeValueAsString(archivesPaiements));
 
     }
     private Response selectZoneSpeciale(final Request request, final Connection connection) throws SQLException, JsonProcessingException {

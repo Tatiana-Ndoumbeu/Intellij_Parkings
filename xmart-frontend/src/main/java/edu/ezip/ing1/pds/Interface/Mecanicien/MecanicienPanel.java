@@ -64,9 +64,48 @@ public class MecanicienPanel extends JPanel {
         JButton supprimebouton = new JButton("supprimer un Mecanicien", chargerIcone("/icons/supprimer.png", 30, 30));
         supprimebouton.setBackground(Color.RED);
         supprimebouton.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
 
-            //ajouter l'action plus tard
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(
+                        MecanicienPanel.this,
+                        "Veuillez sélectionner un mécanicien à supprimer.",
+                        "Aucun mécanicien sélectionné",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
 
+            String nom = (String) tableModel.getValueAt(selectedRow, 0);
+            String prenom = (String) tableModel.getValueAt(selectedRow, 1);
+
+            Mecanicien mecanicienASupprimer = mecaniciens.stream().filter(m -> m.getNom().equals(nom) && m.getPrenom().equals(prenom)).findFirst().orElse(null);
+
+            if (mecanicienASupprimer != null) {
+                int confirmation = JOptionPane.showConfirmDialog(
+                        MecanicienPanel.this,
+                        "Voulez-vous vraiment supprimer : " + nom + " " + prenom + " ?",
+                        "Confirmation de suppression",
+                        JOptionPane.YES_NO_OPTION
+                );
+
+                if (confirmation == JOptionPane.YES_OPTION) {
+                    try {
+                        mecanicienUseCase.supprimerMecanicien(mecanicienASupprimer);
+                        JOptionPane.showMessageDialog(MecanicienPanel.this, "Mécanicien supprimé avec succès.");
+
+                        mecaniciens = mecanicienUseCase.afficherMecaniciens().getMecaniciens().stream().toList();
+                        refreshTable(mecaniciens);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(
+                                MecanicienPanel.this,
+                                "Erreur lors de la suppression : " + ex.getMessage(),
+                                "Erreur",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
+            }
         });
         panelSud.add(supprimebouton);
         add(panelSud, BorderLayout.SOUTH);
@@ -120,14 +159,6 @@ public class MecanicienPanel extends JPanel {
 
     }
 
-
-    private void styleButton(JButton button, Color bg) {
-        button.setFont(new Font("SansSerif", Font.BOLD, 16));
-        button.setBackground(bg);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setPreferredSize(new Dimension(200, 40));
-    }
 
     void refreshTable(List<Mecanicien> updatedList) {
         tableModel.setRowCount(0);

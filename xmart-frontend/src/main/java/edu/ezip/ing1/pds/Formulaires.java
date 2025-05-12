@@ -180,14 +180,10 @@ public class Formulaires {
         boutonValider.setBackground(Color.GREEN);
         boutonValider.setForeground(Color.WHITE);
 
-
-
-
-
-
         boutonValider.addActionListener(e -> {
             String newId = generateUniqueId();
             String selectedService = (String) comboBoxTypeService.getSelectedItem();
+
 
             Date dateDebut = dateDebutChooser.getDate();
             Date heureDebut = (Date) hourSpinner.getValue();
@@ -207,6 +203,7 @@ public class Formulaires {
             String Telephone = champTelephone.getText();
             String Mail = champMail.getText();
             String codePostal = champCodeP.getText();
+            String ReservationLocId = Nom+ "-" +DateDebut;
 
 
             ReservationLocal reservationLocal = new ReservationLocal();
@@ -225,7 +222,9 @@ public class Formulaires {
             reservationLocal.setHeureEntree(HeureDebut);
             reservationLocal.setHeureSortie(HeureFin);
             reservationLocal.setTypeLocal(selectedService);
+            reservationLocal.setReservationLocalId(ReservationLocId);
             reservationLocal.setIdPersonne(newId);
+
 
                 Personne personne = new Personne();
                 personne.setIdPersonne(newId);
@@ -244,14 +243,9 @@ public class Formulaires {
                     ReservationLocalUseCase reservationLocalUseCase = new ReservationLocalUseCase(reservationLocalRepository);
                     boolean isReservationCreated = reservationLocalUseCase.createReservationLocal(reservationLocal);
 
-
                 } catch (IOException | InterruptedException u) {
 
-
-                    // LocalDate reservationDate = LocalDate.ofInstant(dateDebut.toInstant(), ZoneId.systemDefault());
-                    //   reservations.computeIfAbsent(reservationDate, k -> new ArrayList<>()).add("Réservation ajoutée le " + reservationDate.toString());
-
-                    JOptionPane.showMessageDialog(dialog, "Prenom: " + Prenom + "\nNom: " + Nom + "\nTelephone: " + Telephone + "\nE-Mail: " + Mail + "\nCode Postal: " + codePostal + " \ndate de debut: " + dateDebut + "\ndate de fin: " + dateFin);
+                    JOptionPane.showMessageDialog(dialog, "Prenom: " + Prenom + "\nNom: " + Nom + "\nTelephone: " + Telephone + "\nE-Mail: " + Mail + "\nCode Postal: " + codePostal + " \ndate de debut: " + dateDebut + "\ndate de fin: " + dateFin+ "\n\n id de la reservation: "+ReservationLocId);
                     dialog.dispose();
 
                 }

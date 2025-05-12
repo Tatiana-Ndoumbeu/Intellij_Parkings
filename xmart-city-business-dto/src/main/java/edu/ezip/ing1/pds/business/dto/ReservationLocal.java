@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class ReservationLocal {
+    private String reservationLocalId;
     private int numLocal;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -26,7 +27,8 @@ public class ReservationLocal {
     public ReservationLocal() {
     }
 
-    public ReservationLocal(int numLocal, String idPersonne, String typeLocal, String heureSortie, String dateFin, String dateDebut, String heureEntree) {
+    public ReservationLocal(String reservationLocalId, int numLocal, String idPersonne, String typeLocal, String heureSortie, String dateFin, String dateDebut, String heureEntree) {
+        this.reservationLocalId = reservationLocalId;
         this.numLocal = numLocal;
         this.idPersonne = idPersonne;
         this.typeLocal = typeLocal;
@@ -34,6 +36,14 @@ public class ReservationLocal {
         this.dateFin = dateFin;
         this.dateDebut = dateDebut;
         this.heureEntree = heureEntree;
+    }
+
+    public String getReservationLocalId() {
+        return reservationLocalId;
+    }
+
+    public void setReservationLocalId(String reservationLocalId) {
+        this.reservationLocalId = reservationLocalId;
     }
 
     public int getNumLocal() {
@@ -95,11 +105,12 @@ public class ReservationLocal {
     @Override
     public String toString() {
         return "ReservationLocal{" +
-                "numLocal=" + numLocal +
-                ", dateDebut=" + dateDebut +
-                ", dateFin=" + dateFin +
-                ", heureEntree=" + heureEntree +
-                ", heureSortie=" + heureSortie +
+                "reservationLocalId='" + reservationLocalId + '\'' +
+                ", numLocal=" + numLocal +
+                ", dateDebut='" + dateDebut + '\'' +
+                ", dateFin='" + dateFin + '\'' +
+                ", heureEntree='" + heureEntree + '\'' +
+                ", heureSortie='" + heureSortie + '\'' +
                 ", typeLocal='" + typeLocal + '\'' +
                 ", idPersonne='" + idPersonne + '\'' +
                 '}';

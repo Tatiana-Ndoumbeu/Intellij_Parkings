@@ -32,6 +32,7 @@ CREATE TABLE Personne (
                           tel VARCHAR(32),
                           code_postal VARCHAR(16),
                           PRIMARY KEY (id_personne)
+                              ADD CONSTRAINT unique_mail UNIQUE (mail);
 );
 
 CREATE TABLE PlaceDeParking (
@@ -64,6 +65,8 @@ CREATE TABLE Mecanicien (
                             specialite VARCHAR(50),
                             mail VARCHAR(50),
                             PRIMARY KEY (id_mecanicien)
+                            ADD CONSTRAINT unique_tel UNIQUE (telephone);
+
 );
 CREATE TABLE Reservation_local (
                                    id INT AUTO_INCREMENT PRIMARY KEY,
@@ -72,5 +75,27 @@ CREATE TABLE Reservation_local (
                                    date_fin DATE NOT NULL,
                                    heure_entree TIME NOT NULL ,
                                    heure_sortie TIME NOT NULL
-                                   type_local VARCHAR(100) NOT NULL
+                                   type_local VARCHAR(100) NOT NULL,
+                                   reservationLocalId VARCHAR(50) NOT NULL
 );
+
+CREATE TABLE ArchivePaiement (
+                                 id INT PRIMARY KEY AUTO_INCREMENT,
+                                 nom VARCHAR(100),
+                                 prenom VARCHAR(100),
+                                 service VARCHAR(255),
+                                 date_paiement DATE,
+                                 montant DECIMAL(10, 2)
+);
+
+ALTER TABLE Abonnement
+    -> ADD CONSTRAINT drop_abonnement_personne
+    -> FOREIGN KEY (id_personne)
+    -> REFERENCES Personne(id_personne)
+    -> ON DELETE CASCADE;
+
+ALTER TABLE Reservation_local
+    ADD CONSTRAINT drop_resaLocal_personne
+        FOREIGN KEY (id_personne)
+            REFERENCES Personne(id_personne)
+            ON DELETE CASCADE;

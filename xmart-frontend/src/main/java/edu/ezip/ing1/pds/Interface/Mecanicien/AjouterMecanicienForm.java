@@ -10,6 +10,7 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 public class AjouterMecanicienForm extends JFrame {
 
@@ -84,6 +85,7 @@ public class AjouterMecanicienForm extends JFrame {
                         mail
                 );
 
+
                 boolean isAdded = mecanicienUseCase.creerMecanicien(Mecanicien1);
 
                 if (isAdded) {
@@ -94,6 +96,8 @@ public class AjouterMecanicienForm extends JFrame {
                 } else {
                     JOptionPane.showMessageDialog(this, "Erreur lors de l'ajout du Mécanicien.");
                 }
+            } catch (IllegalArgumentException iae) {
+                JOptionPane.showMessageDialog(this, iae.getMessage(), "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Erreur dans le format des données.", "Erreur", JOptionPane.ERROR_MESSAGE);
             }

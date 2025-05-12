@@ -14,6 +14,8 @@ public interface ReservationLocalRepository {
 
     ReservationLocaux selectAll() throws InterruptedException, IOException;
 
-    ReservationLocalParMoisMap selectParMois(int annee, int mois) throws InterruptedException, IOException;
+    ReservationLocaux selectParMois(int annee, int mois) throws InterruptedException, IOException;
+
+    Boolean delete(ReservationLocal reservationLocal) throws InterruptedException, IOException;
 }
 

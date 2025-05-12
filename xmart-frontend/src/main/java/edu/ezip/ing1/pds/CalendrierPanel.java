@@ -1,5 +1,6 @@
 package edu.ezip.ing1.pds;
 
+import edu.ezip.ing1.pds.business.dto.ReservationLocal;
 import edu.ezip.ing1.pds.business.dto.ReservationLocalParMoisMap;
 import edu.ezip.ing1.pds.business.dto.ReservationLocaux;
 import edu.ezip.ing1.pds.usecase.ReservationLocalUseCase;
@@ -8,23 +9,26 @@ import edu.ezip.ing1.pds.usecase.ReservationUseCase;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CalendrierPanel extends JPanel {
+public class CalendrierPanel extends JPanel{
 
     private ReservationLocalUseCase reservationLocalUseCase;
     private int annee;
     private int mois;
 
     //private Map<LocalDate, List<String>> reservations = Map.of();
+
     private ReservationLocalParMoisMap reservationLocalParMoisMap = new ReservationLocalParMoisMap();
 
 
-    public CalendrierPanel(ReservationLocalUseCase reservationLocalUseCase) {
+    public CalendrierPanel(ReservationLocalUseCase reservationLocalUseCase) throws IOException, InterruptedException {
         this.reservationLocalUseCase = reservationLocalUseCase;
         this.annee = LocalDate.now().getYear();
         this.mois = LocalDate.now().getMonthValue();
@@ -32,9 +36,13 @@ public class CalendrierPanel extends JPanel {
         chargerReservations();
         afficherCalendrier();
 
+
+
+
     }
 
-    public  void afficherCalendrier() {
+    public  void afficherCalendrier()  {
+        try {
         JPanel joursPanel = new JPanel(new GridLayout(1, 7));
         String[] joursSemaine = {"Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"};
         for (String jour : joursSemaine) {
@@ -49,6 +57,9 @@ public class CalendrierPanel extends JPanel {
         int premierJourSemaine = premierJour.getDayOfWeek().getValue();
         int joursDansMois = yearMonth.lengthOfMonth();
 
+        ReservationLocaux reservations = reservationLocalUseCase.getAllReservationsLocal();
+        Map<LocalDate, List<String>> reservationsMap = transformerEnMap(reservations);
+
 
 
         int jour = 1;
@@ -58,12 +69,17 @@ public class CalendrierPanel extends JPanel {
                 LocalDate date = LocalDate.of(annee, mois, jour);
 
 
-                if (reservationLocalParMoisMap.getMap().containsKey(date)) {
+                if (reservationsMap.containsKey(date)) {
                     boutonJour.setBackground(Color.RED);
-                    boutonJour.setToolTipText("Réservations: " + String.join(", ", reservationLocalParMoisMap.getMap().get(date)));
+                    List<String> infos = reservationsMap.get(date);
+                    String infoText = infos.size() == 1
+                            ? infos.get(0)
+                            : infos.size() + " réservations ce jour";
+
+                    boutonJour.setToolTipText(infoText);
                 } else {
+                    boutonJour.setToolTipText("Vide");
                     //boutonJour.setBackground(Color.WHITE);
-                    boutonJour.setToolTipText(null);
                 }
 
 
@@ -110,6 +126,11 @@ public class CalendrierPanel extends JPanel {
         add(panelNord, BorderLayout.SOUTH);
         add(joursPanel, BorderLayout.NORTH);
         add(calendrierPanel, BorderLayout.CENTER);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erreur lors de l'affichage du calendrier : " + e.getMessage());
+        }
+
     }
 
     private void changerMois(int delta) {
@@ -141,21 +162,41 @@ public class CalendrierPanel extends JPanel {
         revalidate();
         repaint();
     }
+
     private void chargerReservations() {
-
-            try {
-
-                ReservationLocalParMoisMap dto = reservationLocalUseCase.getReservationsParMois(annee, mois);
-                if (dto != null) {
-                    this.reservationLocalParMoisMap = dto;
-                } else {
-                    this.reservationLocalParMoisMap = new ReservationLocalParMoisMap();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                this.reservationLocalParMoisMap = new ReservationLocalParMoisMap();
+        try {
+            ReservationLocaux reservations = reservationLocalUseCase.getReservationsParMois(annee, mois);
+            if (reservations != null && !reservations.getReservationLocaux().isEmpty()) {
+                Map<LocalDate, List<String>> map = transformerEnMap(reservations);
+                reservationLocalParMoisMap.setMap(map);
+            } else {
+                reservationLocalParMoisMap.setMap(new HashMap<>());
             }
 
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Erreur lors du chargement des réservations : " + e.getMessage(),
+                    "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
+
+            reservationLocalParMoisMap.setMap(new HashMap<>());
+        }
+    }
+    private Map<LocalDate, List<String>> transformerEnMap(ReservationLocaux reservationLocaux) {
+        Map<LocalDate, List<String>> map = new HashMap<>();
+
+        for (ReservationLocal r : reservationLocaux.getReservationLocaux()) {
+            LocalDate debut = LocalDate.parse(r.getDateDebut());
+            LocalDate fin = LocalDate.parse(r.getDateFin());
+
+            for (LocalDate date = debut; !date.isAfter(fin); date = date.plusDays(1)) {
+                String info = "Local " + r.getNumLocal() + " (" + r.getHeureEntree() + "-" + r.getHeureSortie() + ")";
+                map.computeIfAbsent(date, d -> new ArrayList<>()).add(info);
+            }
+        }
+
+        return map;
     }
 
 

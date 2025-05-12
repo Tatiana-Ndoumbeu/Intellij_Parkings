@@ -24,7 +24,10 @@ public class ReservationLocalUseCase {
     public ReservationLocaux getAllReservationsLocal() throws InterruptedException, IOException {
         return reservationLocalRepository.selectAll();
     }
-    public ReservationLocalParMoisMap getReservationsParMois(int annee, int mois) throws InterruptedException, IOException {
+    public  ReservationLocaux getReservationsParMois(int annee, int mois) throws InterruptedException, IOException {
         return reservationLocalRepository.selectParMois(annee, mois);
+    }
+    public Boolean deleteReservationLocal(ReservationLocal reservationLocal) throws InterruptedException, IOException {
+        return reservationLocalRepository.delete(reservationLocal);
     }
 }

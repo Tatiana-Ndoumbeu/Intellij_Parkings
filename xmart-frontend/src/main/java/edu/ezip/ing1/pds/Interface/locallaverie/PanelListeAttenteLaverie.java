@@ -1,6 +1,7 @@
 package edu.ezip.ing1.pds.Interface.locallaverie;
 
 import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
+import edu.ezip.ing1.pds.usecase.ArchivesUseCase;
 import edu.ezip.ing1.pds.usecase.LocalLaverieUseCase;
 import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 
@@ -13,13 +14,15 @@ public class PanelListeAttenteLaverie extends JPanel {
     private AbonnementUseCase abonnementUseCase;
     private PersonneUseCase personneUseCase;
     private LocalLaverieUseCase localLaverieUseCase;
+    private ArchivesUseCase archivesUseCase;
 
-    public PanelListeAttenteLaverie(List<String> clientsEnAttente, PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase, LocalLaverieUseCase localLaverieUseCase) {
+    public PanelListeAttenteLaverie(List<String> clientsEnAttente, PersonneUseCase personneUseCase, AbonnementUseCase abonnementUseCase, LocalLaverieUseCase localLaverieUseCase, ArchivesUseCase archivesUseCase) {
 
 
         this.abonnementUseCase = abonnementUseCase;
         this.personneUseCase = personneUseCase;
         this.localLaverieUseCase = localLaverieUseCase;
+        this.archivesUseCase = archivesUseCase;
 
         setLayout(new GridLayout(2, 2, 30, 30));
         setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
@@ -69,7 +72,7 @@ public class PanelListeAttenteLaverie extends JPanel {
                     if (choix == 0) {
 
                         JOptionPane.showMessageDialog(this, "Procédure de lavage pour " + contenu + " lancée.");
-                        new FormulaireLaverMaintenant(null, personneUseCase, abonnementUseCase, localLaverieUseCase);
+                        new FormulaireLaverMaintenant(null, personneUseCase, abonnementUseCase, localLaverieUseCase, archivesUseCase);
                         clientsEnAttente.set(index, "");
                         bouton.setText("+");
                         bouton.setBackground(Color.WHITE);

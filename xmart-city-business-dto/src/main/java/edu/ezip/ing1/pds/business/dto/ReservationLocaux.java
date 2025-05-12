@@ -13,17 +13,6 @@ public class ReservationLocaux {
     @JsonProperty("ReservationLocaux")
     private Set<ReservationLocal> reservationLocaux = new LinkedHashSet<>();
 
- /*  @JsonProperty("reservationsParJour")
-    private Map<LocalDate, List<String>> reservationsParJour;
-
-    public Map<LocalDate, List<String>> getReservationsParJour() {
-        return reservationsParJour;
-    }
-
-    public void setReservationsParJour(Map<LocalDate, List<String>> reservationsParJour) {
-        this.reservationsParJour = reservationsParJour;
-    }
-*/
     public Set<ReservationLocal> getReservationLocaux() {
         return reservationLocaux;
     }
@@ -46,3 +35,14 @@ public class ReservationLocaux {
                 '}';
     }
 }
+ /*  @JsonProperty("reservationsParJour")
+    private Map<LocalDate, List<String>> reservationsParJour;
+
+    public Map<LocalDate, List<String>> getReservationsParJour() {
+        return reservationsParJour;
+    }
+
+    public void setReservationsParJour(Map<LocalDate, List<String>> reservationsParJour) {
+        this.reservationsParJour = reservationsParJour;
+    }
+*/

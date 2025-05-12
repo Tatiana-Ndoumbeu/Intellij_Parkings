@@ -30,7 +30,7 @@ public class PersonnePanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
-        this.personnes = personneUseCase.afficherPersonnes().getPersonnes().stream().toList();
+        this.personnes = new ArrayList<>(personneUseCase.afficherPersonnes().getPersonnes());
         this.abonnementUseCase = abonnementUseCase;
 
         String[] columns = {"ID", "Nom", "Prenom", "Tél", "Mail", "Code Postal"};
@@ -116,12 +116,20 @@ public class PersonnePanel extends JPanel {
 
         supprimerItem.addActionListener(e ->{
             if (selectedPersonne != null) {
-                int res = JOptionPane.showConfirmDialog(table, "Supprimer cette place ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+                int res = JOptionPane.showConfirmDialog(table, "Supprimer cette personne ?", "Confirmation", JOptionPane.YES_NO_OPTION);
                 if (res == JOptionPane.YES_OPTION) {
                     try {
-                        personneUseCase.deletePersonne(selectedPersonne);
-                        personnes.remove(selectedPersonne);
-                        refreshTable(personnes);
+                        Personne persoASupprimer = new Personne();
+                        persoASupprimer.setIdPersonne(selectedPersonne.getIdPersonne());
+                        persoASupprimer.setNom(selectedPersonne.getNom());
+                        persoASupprimer.setPrenom(selectedPersonne.getPrenom());
+                        persoASupprimer.setMail(selectedPersonne.getMail());
+                        persoASupprimer.setCodePostal(selectedPersonne.getCodePostal());
+                        persoASupprimer.setTelephone(selectedPersonne.getTelephone());
+
+                        personneUseCase.deletePersonne(persoASupprimer);
+
+//                        refreshTable(personnes);
                     } catch (IOException | InterruptedException ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(table, "Erreur lors de la suppression.", "Erreur", JOptionPane.ERROR_MESSAGE);
