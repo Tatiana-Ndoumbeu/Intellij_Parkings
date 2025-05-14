@@ -1,6 +1,5 @@
 package edu.ezip.ing1.pds.Interface.reservations;
 
-import edu.ezip.ing1.pds.Interface.placesdeparking.FormulaireReservation;
 import edu.ezip.ing1.pds.business.dto.ReservationRequest;
 import edu.ezip.ing1.pds.usecase.ReservationUseCase;
 
@@ -24,8 +23,12 @@ public class ReservationPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
+        // Colonnes complètes
+        String[] columns = {
+                "ID", "Nom", "Prénom", "Date Réservation", "Date Début", "Date Fin",
+                "ID Place", "Type", "Emplacement", "Statut"
+        };
 
-        String[] columns = {"ID", "Nom", "Date début", "Date fin", "ID Place"};
         tableModel = new DefaultTableModel(columns, 0) {
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -38,24 +41,13 @@ public class ReservationPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
 
-
         JButton addBtn = new JButton("Ajouter une réservation");
         styleButton(addBtn, new Color(33, 150, 243));
-  /*      addBtn.addActionListener(e -> {
-            FormulaireReservation.showForm(
-                    this,
-                    reservationUseCase,
-                    null,
-                    this::refreshTable
-            );
-        });*/
-
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(new Color(245, 245, 245));
         bottomPanel.add(addBtn);
         add(bottomPanel, BorderLayout.SOUTH);
-
 
         JPopupMenu contextMenu = new JPopupMenu();
         JMenuItem supprimerItem = new JMenuItem("Supprimer");
@@ -74,7 +66,6 @@ public class ReservationPanel extends JPanel {
                             int res = JOptionPane.showConfirmDialog(
                                     table, "Supprimer cette réservation ?", "Confirmation", JOptionPane.YES_NO_OPTION);
                             if (res == JOptionPane.YES_OPTION) {
-
                                 JOptionPane.showMessageDialog(table, "Suppression non encore implémentée.");
                             }
                         });
@@ -98,11 +89,21 @@ public class ReservationPanel extends JPanel {
         try {
             var all = reservationUseCase.getAllReservations();
             reservations = new ArrayList<>();
-            all.getReservationRequests().forEach(r -> { reservations.add(r); });
+            all.getReservationRequests().forEach(reservations::add);
             tableModel.setRowCount(0);
+
             for (ReservationRequest r : reservations) {
                 tableModel.addRow(new Object[]{
-                        r.getIdReservation(), r.getDateReservation(), r.getDateEntree(), r.getDateSortie(), r.getPlaceDeParking().getEmplacement()
+                        r.getIdReservation(),
+                        r.getPersonne() != null ? r.getPersonne().getNom() : "",
+                        r.getPersonne() != null ? r.getPersonne().getPrenom() : "",
+                        r.getDateReservation(),
+                        r.getDateEntree(),
+                        r.getDateSortie(),
+                        r.getPlaceDeParking() != null ? r.getPlaceDeParking().getIdPlace() : "",
+                        r.getPlaceDeParking() != null ? r.getPlaceDeParking().getTypePlace() : "",
+                        r.getPlaceDeParking() != null ? r.getPlaceDeParking().getEmplacement() : "",
+                        r.getPlaceDeParking() != null ? r.getPlaceDeParking().getStatutPlace() : ""
                 });
             }
         } catch (IOException | InterruptedException e) {

@@ -101,6 +101,7 @@ public class FormulaireReservation {
                 reservation.setDateSortie(dateFin.toString());
                 reservation.setHeureEntree(heureDebut.toString());
                 reservation.setHeureSortie(heureFin.toString());
+                reservation.setIdPersonne(mail);
                 reservation.setPlaceDeParking(selectedPlace); // Set the selected place
 
                 // Insert reservation using the use case

@@ -71,10 +71,13 @@ public class IntelijjParkingService {
         SELECT_ALL_UTILISATEUR("SELECT id_admin, nom, email FROM Admin"),
 
         SELECT_ZONE_SPE_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t WHERE t.type_place <> 'simple'"),
-        SELECT_ALL_RESERVATIONS("SELECT r.idReservation, r.dateReservation, r.heure, r.dateEntree, r.dateSortie, t.id_place, t.statut_place, t.emplacement, t.type_place \n" +
-                "FROM Reservation r \n" +
-                "INNER JOIN PlaceDeParking t ON t.id_place = r.id_place;\n"),
-        INSERT_RESERVATION("INSERT into Reservation (idReservation, dateReservation, heure, dateEntree, dateSortie, heureEntree, heureSortie, id_Personne, id_place) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "),
+        SELECT_ALL_RESERVATIONS("SELECT r.idReservation, r.dateReservation, r.heure, r.dateEntree, r.dateSortie, " +
+                "t.id_place, t.statut_place, t.emplacement, t.type_place, " +
+                "p.id_personne, p.nom, p.prenom, p.tel, p.mail, p.code_postal " +
+                "FROM Reservation r " +
+                "INNER JOIN PlaceDeParking t ON t.id_place = r.id_place " +
+                "INNER JOIN Personne p ON p.id_personne = r.id_personne;"),
+        INSERT_RESERVATION("INSERT into Reservation (idReservation, dateReservation, heure, dateEntree, dateSortie, heureEntree, heureSortie, id_personne, id_place) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "),
 
         SELECT_ALL_ARCHIVES("SELECT t.nom, t.prenom, t.service, t.date_paiement, t.montant FROM ArchivePaiement t"),
         INSERT_ARCHIVES("INSERT INTO ArchivePaiement (nom, prenom, service, date_paiement, montant) VALUES (?, ?, ?,?, ?)"),
@@ -84,7 +87,7 @@ public class IntelijjParkingService {
         SELECT_ALL_PLACE_DE_PARKING("SELECT t.id_place, t.emplacement, t.type_place, t.statut_place FROM PlaceDeParking t"),
         INSERT_PLACE_DE_PARKING("INSERT INTO PlaceDeParking (id_place, emplacement, type_place, statut_place) VALUES (?,?, ?, ?)"),
         UPDATE_PLACE_DE_PARKING("UPDATE PlaceDeParking t  SET t.emplacement = ?, t.type_place = ?, t.statut_place = ? WHERE t.id_place = ? "),
-        //UPDATE_PLACE_DE_PARKING("UPDATE PlaceDeParking SET statut_place = ? WHERE position = ?"),
+        UPDATE_STATUS_PLACE_DE_PARKING("UPDATE PlaceDeParking SET statut_place = ? WHERE position = ?"),
         DELETE_PLACE_DE_PARKING("DELETE FROM PlaceDeParking t WHERE t.id_place = ?");
 
         private final String query;
@@ -1069,22 +1072,29 @@ private Response UpdateLocalT(final Request request, final Connection connection
             reservation.setDateEntree(res.getDate("dateEntree").toString());
             reservation.setDateSortie(res.getDate("dateSortie").toString());
 
-
+            // Place de parking
             PlaceDeParking placeDeParking = new PlaceDeParking();
             placeDeParking.setIdPlace(res.getString("id_place"));
             placeDeParking.setTypePlace(res.getString("type_place"));
             placeDeParking.setStatutPlace(res.getString("statut_place"));
             placeDeParking.setEmplacement(res.getString("emplacement"));
+            reservation.setPlaceDeParking(placeDeParking);
 
-            reservation.setPlaceDeParking(placeDeParking); //pour les associer
+            // Personne
+            Personne personne = new Personne();
+            personne.setIdPersonne(res.getString("id_personne"));
+            personne.setNom(res.getString("nom"));
+            personne.setPrenom(res.getString("prenom"));
+            personne.setMail(res.getString("mail"));
+            personne.setCodePostal(res.getString("code_postal"));
+            reservation.setPersonne(personne);
 
             reservations.add(reservation);
-
         }
 
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservations));
-
     }
+
     private Response selectAllReservationLocal(final Request request, final Connection connection)
             throws SQLException, JsonProcessingException {
 
