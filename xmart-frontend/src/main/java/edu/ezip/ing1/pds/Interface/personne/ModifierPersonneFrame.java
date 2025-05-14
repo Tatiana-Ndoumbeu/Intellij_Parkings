@@ -1,6 +1,7 @@
 package edu.ezip.ing1.pds.Interface.personne;
 
 import edu.ezip.ing1.pds.business.dto.Personne;
+import edu.ezip.ing1.pds.business.dto.Personnes;
 import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 
 import javax.swing.*;
@@ -10,7 +11,7 @@ import java.util.function.Consumer;
 
 public class ModifierPersonneFrame extends JFrame {
 
-    public ModifierPersonneFrame(Personne personne, Consumer<Set<Personne>> onUpdate, PersonneUseCase personneUseCase) {
+    public ModifierPersonneFrame(Personne personne, Runnable onUpdate, PersonneUseCase personneUseCase) {
         setTitle("Modifier Personne");
         setSize(500, 600);
         setLocationRelativeTo(null);
@@ -63,15 +64,16 @@ public class ModifierPersonneFrame extends JFrame {
                 boolean success = personneUseCase.updatePersonne(personne);
                 if (success) {
                     Set<Personne> updatedList = personneUseCase.getALLPersonnes();
-                    onUpdate.accept(updatedList);
-                    JOptionPane.showMessageDialog(this, "Personne mise à jour avec succès !");
+                    //JOptionPane.showMessageDialog(this, "Personne mise à jour avec succès !");
                     dispose();
+                    onUpdate.run();
                 } else {
                     JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour.");
                 }
 
             }catch (Exception ex){
-                JOptionPane.showMessageDialog(this, "Erreur lors de la saisie des données.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
             }
         });
 

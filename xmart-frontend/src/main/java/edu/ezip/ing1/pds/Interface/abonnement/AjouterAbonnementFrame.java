@@ -8,6 +8,7 @@ import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -17,10 +18,14 @@ public class AjouterAbonnementFrame extends JFrame {
 
     private final AbonnementUseCase abonnementUseCase;
     private final String idPersonne;
+    private final String nomPersonne;
+    private final String prenomPersonne;
 
     public AjouterAbonnementFrame(AbonnementPanel parent, AbonnementUseCase abonnementUseCase, Personne personne) {
         this.abonnementUseCase = abonnementUseCase;
         this.idPersonne = personne.getIdPersonne();
+        this.nomPersonne = personne.getNom();
+        this.prenomPersonne = personne.getPrenom();
 
         setTitle("Ajouter un abonnement");
         setSize(500, 600);
@@ -40,7 +45,7 @@ public class AjouterAbonnementFrame extends JFrame {
         //JTextField typeField = new JTextField();
         JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"Standard", "Premium"});
         JTextField prixField = new JTextField();
-        JTextField statutField = new JTextField();
+        JComboBox<String> statutField = new JComboBox<>(new String[]{"Actif", "Inactif", "Suspendu"});
         JTextField dateDebutField = new JTextField();
         JTextField dateFinField = new JTextField();
         JButton addBtn = new JButton("Ajouter");
@@ -48,10 +53,10 @@ public class AjouterAbonnementFrame extends JFrame {
         //styleField(idField, "ID Abonnement");
         //styleField(typeField, "Type Abonnement");
         styleComboBox(typeComboBox, "Type d'abonnement");
-        styleField(prixField, "Prix");
-        styleField(statutField, "Statut (Actif, Inactif, Suspendu");
-        styleField(dateDebutField, "Date Début (dd/MM/yyyy)");
-        styleField(dateFinField, "Date Fin (dd/MM/yyyy)");
+        styleField(prixField, "Prix (€)");
+        styleComboBox(statutField, "Statut (Actif, Inactif, Suspendu)");
+        styleField(dateDebutField, "Date Début (JJ/MM/AAAA)");
+        styleField(dateFinField, "Date Fin (JJ/MM/AAAA)");
         styleButton(addBtn, new Color(255, 152, 0));
 
         //panel.add(idField);
@@ -77,11 +82,11 @@ public class AjouterAbonnementFrame extends JFrame {
             //String id = idField.getText().trim();
             String selectedType = (String) typeComboBox.getSelectedItem();
             String prixStr = prixField.getText().trim();
-            String statut = statutField.getText().trim();
+            String selectedstatut = (String) statutField.getSelectedItem();
             String dateDebutStr = dateDebutField.getText().trim();
             String dateFinStr = dateFinField.getText().trim();
 
-            if ( prixStr.isEmpty() || statut.isEmpty()
+            if ( prixStr.isEmpty() || selectedstatut.isEmpty()
                     || dateDebutStr.isEmpty() || dateFinStr.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.");
                 return;
@@ -93,6 +98,11 @@ public class AjouterAbonnementFrame extends JFrame {
                 Date dateDebut = sdf.parse(dateDebutStr);
                 Date dateFin = sdf.parse(dateFinStr);
 
+                if (dateFin.before(dateDebut)) {
+                    JOptionPane.showMessageDialog(this, "La date de fin doit être postérieure à la date de début.");
+                    return;
+                }
+
                 String id = UUID.randomUUID().toString();
 
                 Abonnement newAbonnement = new Abonnement(
@@ -101,22 +111,32 @@ public class AjouterAbonnementFrame extends JFrame {
                         prix,
                         new java.sql.Date(dateDebut.getTime()),
                         new java.sql.Date(dateFin.getTime()),
-                        statut,
-                        idPersonne
+                        selectedstatut,
+                        idPersonne,
+                        nomPersonne,
+                        prenomPersonne
                 );
 
                 boolean isAdded = abonnementUseCase.createAbonnement(newAbonnement);
 
                 if (isAdded) {
-                    List<Abonnement> updatedList = abonnementUseCase.getAllAbonnements().getAbonnements().stream().toList();
-                    parent.refreshTable(updatedList);
+                    try{
+                        List<Abonnement> updatedList = abonnementUseCase.getAllAbonnements().getAbonnements().stream().toList();
+                        parent.refreshTable(updatedList);
+                    } catch (Exception ex){
+                        System.err.println("Erreur lors du rafraîchissement : " + ex.getMessage());
+                    }
                     JOptionPane.showMessageDialog(this, "Abonnement ajouté avec succès !");
                     dispose();
-                } else {
+
+                }else {
                     JOptionPane.showMessageDialog(this, "Erreur lors de l'ajout de l'abonnement.");
                 }
-            } catch (Exception ex) {
+            } catch (NumberFormatException | ParseException ex) {
                 JOptionPane.showMessageDialog(this, "Erreur dans le format des données.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex){
+                ex.printStackTrace(); // Pour comprendre ce qui plante réellement
+                JOptionPane.showMessageDialog(this, "Une erreur inattendue est survenue.", "Erreur", JOptionPane.ERROR_MESSAGE);
             }
         });
     }

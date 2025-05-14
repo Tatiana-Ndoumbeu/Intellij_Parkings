@@ -13,8 +13,11 @@ public class Abonnement {
     private Date dateFin;
     private String statutAbonnement;
     private String idPersonne;
+    private String nomPersonne;
+    private String prenomPersonne;
 
-    public Abonnement(String idAbonnement, String typeAbonnement, double prix, Date dateDebut, Date dateFin, String statutAbonnement, String idPersonne) {
+
+    public Abonnement(String idAbonnement, String typeAbonnement, double prix, Date dateDebut, Date dateFin, String statutAbonnement, String idPersonne, String prenomPersonne, String nomPersonne) {
         this.idAbonnement = idAbonnement;
         this.typeAbonnement = typeAbonnement;
         this.prix = prix;
@@ -22,6 +25,8 @@ public class Abonnement {
         this.dateFin = dateFin;
         this.statutAbonnement = statutAbonnement;
         this.idPersonne = idPersonne;
+        this.prenomPersonne = prenomPersonne;
+        this.nomPersonne = nomPersonne;
     }
 
     public Abonnement() {}
@@ -77,6 +82,23 @@ public class Abonnement {
     public String getIdPersonne() {
         return idPersonne;
     }
+
+    public String getNomPersonne() {
+        return nomPersonne;
+    }
+
+    public void setNomPersonne(String nomPersonne) {
+        this.nomPersonne = nomPersonne;
+    }
+
+    public String getPrenomPersonne() {
+        return prenomPersonne;
+    }
+
+    public void setPrenomPersonne(String prenomPersonne) {
+        this.prenomPersonne = prenomPersonne;
+    }
+
     public void setIdPersonne(String idPersonne) {
         this.idPersonne = idPersonne;
     }
@@ -91,9 +113,11 @@ public class Abonnement {
                 ", dateFin=" + dateFin +
                 ", statutAbonnement='" + statutAbonnement + '\'' +
                 ", idPersonne='" + idPersonne + '\'' +
-
-
+                ", nomPersonne='" + nomPersonne + '\'' +
+                ", prenomPersonne='" + prenomPersonne + '\'' +
                 '}';
     }
+
+
 }
 

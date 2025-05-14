@@ -170,7 +170,7 @@ public class PersonneService implements PersonneRepository {
     @Override
     public Set<Personne> findAll() {
         try {
-            logger.debug("Retrieving all personnes objects");
+            logger.debug("Retrieving all Personnes objects");
             final ObjectMapper objectMapper = new ObjectMapper();
             final String requestId = UUID.randomUUID().toString();
             final Request request = new Request();

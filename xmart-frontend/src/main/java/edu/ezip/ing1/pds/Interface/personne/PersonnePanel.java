@@ -30,7 +30,7 @@ public class PersonnePanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
-        this.personnes = new ArrayList<>(personneUseCase.afficherPersonnes().getPersonnes());
+        this.personnes = personneUseCase.afficherPersonnes().getPersonnes().stream().toList();
         this.abonnementUseCase = abonnementUseCase;
 
         String[] columns = {"ID", "Nom", "Prenom", "Tél", "Mail", "Code Postal"};
@@ -69,14 +69,15 @@ public class PersonnePanel extends JPanel {
                     Abonnement abonnement = abonnementUseCase.findOneAbonnement(selectedPersonne.getIdPersonne());
 
                     if (abonnement != null) {
-                        String message = "Abonnement ID : " + abonnement.getIdAbonnement() + "\n"
-                                + "Type : " + abonnement.getTypeAbonnement() + "\n"
-                                + "Prix : " + abonnement.getPrix() + " €\n"
-                                + "Statut : " + abonnement.getStatutAbonnement() + "\n"
-                                + "Début : " + abonnement.getDateDebut() + "\n"
-                                + "Fin : " + abonnement.getDateFin();
+                        String message = STR."""
+Abonnement ID : \{abonnement.getIdAbonnement()}
+Type : \{abonnement.getTypeAbonnement()}
+Prix : \{abonnement.getPrix()} €
+Statut : \{abonnement.getStatutAbonnement()}
+Début : \{abonnement.getDateDebut()}
+Fin : \{abonnement.getDateFin()}""";
 
-                        JOptionPane.showMessageDialog(null, message, "Abonnement de " + selectedPersonne.getPrenom(), JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(null, message, STR."Abonnement de \{selectedPersonne.getPrenom()}", JOptionPane.INFORMATION_MESSAGE);
                     }else{
                         JOptionPane.showMessageDialog(null, "Pas d'abonnement pour cette personne");
                     }
@@ -107,9 +108,20 @@ public class PersonnePanel extends JPanel {
 
         modifierItem.addActionListener(e ->{
             if (selectedPersonne != null) {
-                new ModifierPersonneFrame(selectedPersonne, updatedList -> {
-                    personnes = (List<Personne>) updatedList;
-                    refreshTable(personnes);
+                new ModifierPersonneFrame(selectedPersonne, () -> {
+                    //personnes = (List<Personne>) updatedList;
+                    //refreshTable(personnes);
+                    List<Personne> personnesActuelles = null;
+                    try {
+                        personnesActuelles = personneUseCase.afficherPersonnes().getPersonnes().stream().toList();
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    refreshTable(personnesActuelles);
+
+                    JOptionPane.showMessageDialog(this, "Les informations ont bien été modifiée.", "Succès", JOptionPane.INFORMATION_MESSAGE);
                 }, personneUseCase);
             }
         });
@@ -119,17 +131,13 @@ public class PersonnePanel extends JPanel {
                 int res = JOptionPane.showConfirmDialog(table, "Supprimer cette personne ?", "Confirmation", JOptionPane.YES_NO_OPTION);
                 if (res == JOptionPane.YES_OPTION) {
                     try {
-                        Personne persoASupprimer = new Personne();
-                        persoASupprimer.setIdPersonne(selectedPersonne.getIdPersonne());
-                        persoASupprimer.setNom(selectedPersonne.getNom());
-                        persoASupprimer.setPrenom(selectedPersonne.getPrenom());
-                        persoASupprimer.setMail(selectedPersonne.getMail());
-                        persoASupprimer.setCodePostal(selectedPersonne.getCodePostal());
-                        persoASupprimer.setTelephone(selectedPersonne.getTelephone());
-
-                        personneUseCase.deletePersonne(persoASupprimer);
-
-//                        refreshTable(personnes);
+                        personneUseCase.deletePersonne(selectedPersonne);
+                        //personnes.remove(selectedPersonne);
+                        //refreshTable(personnes);
+                        List<Personne> nouvelleListe = personneUseCase.afficherPersonnes().getPersonnes().stream().toList();
+                        refreshTable(nouvelleListe);
+                        selectedPersonne = null;
+                        JOptionPane.showMessageDialog(this, "Personne supprimée avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
                     } catch (IOException | InterruptedException ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(table, "Erreur lors de la suppression.", "Erreur", JOptionPane.ERROR_MESSAGE);
