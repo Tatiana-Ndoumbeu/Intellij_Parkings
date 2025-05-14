@@ -428,20 +428,45 @@ public class IntelijjParkingService {
     private Response SelectAllPlaceDeParking(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
         final ObjectMapper objectMapper = new ObjectMapper();
         final Statement stmt = connection.createStatement();
+
+        // Récupère toutes les places
         final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_PLACE_DE_PARKING.getQuery());
-//UPDATE PlaceDeParking t SET t.emplacement = ?, t.type_place = ?, t.statut_place = ? WHERE t.id_place = ?
         PlacesDeParkings placesDeParkings = new PlacesDeParkings();
+
         while (res.next()) {
             PlaceDeParking placeDeParking = new PlaceDeParking();
-            placeDeParking.setIdPlace(res.getString(1));
+            String idPlace = res.getString(1);
+            placeDeParking.setIdPlace(idPlace);
             placeDeParking.setEmplacement(res.getString(2));
             placeDeParking.setTypePlace(res.getString(3));
-            placeDeParking.setStatutPlace(res.getString(4));
+
+            // Vérifie si une réservation est en cours pour cette place
+            String statutPlace = checkIfPlaceIsOccupiedNow(connection, idPlace) ? "Occupée" : "Libre";
+            placeDeParking.setStatutPlace(statutPlace);
+
             placesDeParkings.add(placeDeParking);
         }
 
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(placesDeParkings));
     }
+
+
+
+    private boolean checkIfPlaceIsOccupiedNow(Connection connection, String idPlace) throws SQLException {
+        String query = "SELECT COUNT(*) FROM Reservation " +
+                "WHERE id_place = ? " +
+                "AND CURRENT_TIMESTAMP BETWEEN dateEntree AND dateSortie";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            pstmt.setString(1, idPlace);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // true s'il y a une réservation active
+            }
+        }
+        return false;
+    }
+
 
 
     private Response InsertVehicule(final Request request, final Connection connection) throws SQLException, IOException {
@@ -1066,6 +1091,8 @@ private Response UpdateLocalT(final Request request, final Connection connection
         final ResultSet res = stmt.executeQuery(Queries.SELECT_ALL_RESERVATIONS.query);
         ReservationsResquests reservations = new ReservationsResquests();
 
+        java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+
         while (res.next()) {
             ReservationRequest reservation = new ReservationRequest();
             reservation.setIdReservation(res.getString("idReservation"));
@@ -1074,12 +1101,18 @@ private Response UpdateLocalT(final Request request, final Connection connection
             reservation.setDateEntree(res.getDate("dateEntree").toString());
             reservation.setDateSortie(res.getDate("dateSortie").toString());
 
+            // Vérification de l'état de cette réservation
+            java.sql.Timestamp dateEntree = res.getTimestamp("dateEntree");
+            java.sql.Timestamp dateSortie = res.getTimestamp("dateSortie");
+            String statut = (now.after(dateEntree) && now.before(dateSortie)) ? "Occupée" : "Libre";
+
             // Place de parking
             PlaceDeParking placeDeParking = new PlaceDeParking();
             placeDeParking.setIdPlace(res.getString("id_place"));
             placeDeParking.setTypePlace(res.getString("type_place"));
-            placeDeParking.setStatutPlace(res.getString("statut_place"));
             placeDeParking.setEmplacement(res.getString("emplacement"));
+            placeDeParking.setStatutPlace(statut); // Calculé dynamiquement
+
             reservation.setPlaceDeParking(placeDeParking);
 
             // Personne
@@ -1096,6 +1129,7 @@ private Response UpdateLocalT(final Request request, final Connection connection
 
         return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservations));
     }
+
 
     private Response selectAllReservationLocal(final Request request, final Connection connection)
             throws SQLException, JsonProcessingException {

@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.yaml.snakeyaml.nodes.Tag.STR;
+
 public class PersonnePanel extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
@@ -65,29 +67,30 @@ public class PersonnePanel extends JPanel {
         JMenuItem voirAboItem = new JMenuItem("Voir son abonnement");
         voirAboItem.addActionListener(e -> {
             if (selectedPersonne != null) {
-                try{
+                try {
                     Abonnement abonnement = abonnementUseCase.findOneAbonnement(selectedPersonne.getIdPersonne());
 
                     if (abonnement != null) {
-                        String message = STR."""
-Abonnement ID : \{abonnement.getIdAbonnement()}
-Type : \{abonnement.getTypeAbonnement()}
-Prix : \{abonnement.getPrix()} €
-Statut : \{abonnement.getStatutAbonnement()}
-Début : \{abonnement.getDateDebut()}
-Fin : \{abonnement.getDateFin()}""";
+                        String message = "Abonnement ID : " + abonnement.getIdAbonnement() + "\n"
+                                + "Type : " + abonnement.getTypeAbonnement() + "\n"
+                                + "Prix : " + abonnement.getPrix() + " €\n"
+                                + "Statut : " + abonnement.getStatutAbonnement() + "\n"
+                                + "Début : " + abonnement.getDateDebut() + "\n"
+                                + "Fin : " + abonnement.getDateFin();
 
-                        JOptionPane.showMessageDialog(null, message, STR."Abonnement de \{selectedPersonne.getPrenom()}", JOptionPane.INFORMATION_MESSAGE);
-                    }else{
+                        String title = "Abonnement de " + selectedPersonne.getPrenom();
+
+                        JOptionPane.showMessageDialog(null, message, title, JOptionPane.INFORMATION_MESSAGE);
+                    } else {
                         JOptionPane.showMessageDialog(null, "Pas d'abonnement pour cette personne");
                     }
 
-                }catch (Exception ex){
+                } catch (Exception ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(null, ex.getMessage());
-
                 }
             }
+
         });
 
 

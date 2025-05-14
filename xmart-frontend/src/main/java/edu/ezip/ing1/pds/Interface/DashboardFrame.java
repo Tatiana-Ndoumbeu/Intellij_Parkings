@@ -210,7 +210,7 @@ public class DashboardFrame extends JFrame {
 
     private void showPlacesDeParking() {
         mainContent.removeAll();
-        mainContent.add(new PlaceDeParkingPanel(placeDeParkingUseCase, reservationUseCase), BorderLayout.CENTER);
+        mainContent.add(new PlaceDeParkingPanel(placeDeParkingUseCase,personneUseCase, reservationUseCase,this), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }

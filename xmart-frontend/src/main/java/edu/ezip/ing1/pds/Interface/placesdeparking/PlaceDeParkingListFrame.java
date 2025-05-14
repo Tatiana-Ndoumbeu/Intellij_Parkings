@@ -1,5 +1,6 @@
 package edu.ezip.ing1.pds.Interface.placesdeparking;
 
+import edu.ezip.ing1.pds.api.PersonneRepository;
 import edu.ezip.ing1.pds.api.PlaceDeParkingRepository;
 import edu.ezip.ing1.pds.api.ReservationRepository;
 import edu.ezip.ing1.pds.business.dto.PlaceDeParking;
@@ -12,8 +13,10 @@ import java.util.List;
 
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
+import edu.ezip.ing1.pds.services.PersonneService;
 import edu.ezip.ing1.pds.services.PlaceDeParkingService;
 import edu.ezip.ing1.pds.services.ReservationService;
+import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 import edu.ezip.ing1.pds.usecase.PlaceDeParkingUseCase;
 import edu.ezip.ing1.pds.usecase.ReservationUseCase;
 
@@ -25,7 +28,7 @@ public class PlaceDeParkingListFrame extends JFrame {
     private List<PlaceDeParking> places;
     private final static String networkConfigFile = "network.yaml";
 
-    public PlaceDeParkingListFrame(PlaceDeParkingUseCase placeDeParkingUseCase, ReservationUseCase  reservationUseCase) {
+    public PlaceDeParkingListFrame(PlaceDeParkingUseCase placeDeParkingUseCase,PersonneUseCase personneUseCase, ReservationUseCase  reservationUseCase) {
         this.placeDeParkingUseCase = placeDeParkingUseCase;
         this.places = placeDeParkingUseCase.getAllPlacesDeParking(); // Load data from use case
 
@@ -102,10 +105,12 @@ public class PlaceDeParkingListFrame extends JFrame {
                         // Réserver
                         reserverItem.addActionListener(ev -> {
                             FormulaireReservation.showForm(
-                                    PlaceDeParkingListFrame.this, // Pass the current JFrame instance
-                                    reservationUseCase,
-                                    selected,// Pass the reservation use case
-                                    () -> refreshTable(placeDeParkingUseCase.getAllPlacesDeParking()) // Refresh the table after reservation
+                                    PlaceDeParkingListFrame.this,              // JFrame parent
+                                    reservationUseCase,                        // Use case pour les réservations
+                                    selected,                                  // Place sélectionnée
+                                    () -> refreshTable(placeDeParkingUseCase.getAllPlacesDeParking()),
+                                    personneUseCase// Callback de rafraîchissement
+                                                                // Use case pour récupérer la liste des personnes
                             );
                         });
 
@@ -144,10 +149,12 @@ public class PlaceDeParkingListFrame extends JFrame {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, networkConfigFile);
         // Assuming PlaceDeParkingUseCase is your business layer
         PlaceDeParkingRepository repository = new PlaceDeParkingService(networkConfig);  // Replace with your actual repository implementation
+        PersonneRepository personneRepository = new PersonneService(networkConfig); // Replace with your actual repository implementation
         ReservationRepository reservationRepository = new ReservationService(networkConfig);  // Replace with your actual repository implementation
         PlaceDeParkingUseCase placeDeParkingUseCase = new PlaceDeParkingUseCase(repository);
         ReservationUseCase reservationUseCase = new ReservationUseCase(reservationRepository);
+        PersonneUseCase personneUseCase = new PersonneUseCase(personneRepository);
 
-        SwingUtilities.invokeLater(() -> new PlaceDeParkingListFrame(placeDeParkingUseCase,reservationUseCase));
+        SwingUtilities.invokeLater(() -> new PlaceDeParkingListFrame(placeDeParkingUseCase,personneUseCase,reservationUseCase));
     }
 }

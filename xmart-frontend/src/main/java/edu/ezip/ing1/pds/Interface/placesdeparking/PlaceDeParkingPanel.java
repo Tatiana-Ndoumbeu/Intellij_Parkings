@@ -2,6 +2,7 @@ package edu.ezip.ing1.pds.Interface.placesdeparking;
 
 
 import edu.ezip.ing1.pds.business.dto.PlaceDeParking;
+import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 import edu.ezip.ing1.pds.usecase.PlaceDeParkingUseCase;
 import edu.ezip.ing1.pds.usecase.ReservationUseCase;
 
@@ -16,7 +17,7 @@ public class PlaceDeParkingPanel extends JPanel {
     private DefaultTableModel tableModel;
     private List<PlaceDeParking> places;
 
-    public PlaceDeParkingPanel(PlaceDeParkingUseCase placeDeParkingUseCase, ReservationUseCase reservationUseCase) {
+    public PlaceDeParkingPanel(PlaceDeParkingUseCase placeDeParkingUseCase, PersonneUseCase personneUseCase,  ReservationUseCase reservationUseCase,JFrame parent) {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
@@ -85,9 +86,15 @@ public class PlaceDeParkingPanel extends JPanel {
 
                         reserverItem.addActionListener(ev -> {
                             FormulaireReservation.showForm(
-                                    null, reservationUseCase, selected,
-                                    () -> refreshTable(placeDeParkingUseCase.getAllPlacesDeParking()));
+                                    parent,              // JFrame parent
+                                    reservationUseCase,                        // Use case pour les réservations
+                                    selected,                                  // Place sélectionnée
+                                    () -> refreshTable(placeDeParkingUseCase.getAllPlacesDeParking()), // Callback de rafraîchissement
+                                    personneUseCase                            // Use case pour récupérer la liste des personnes
+                            );
                         });
+
+
 
                         affecterItem.addActionListener(ev -> {
                             JOptionPane.showMessageDialog(table, "Affectation à un véhicule pour " + selected.getIdPlace());
