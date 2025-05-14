@@ -32,7 +32,7 @@ public class IntelijjParkingService {
         SELECT_ALL_VEHICULES("SELECT t.num_plaque, t.type, t.marque FROM Vehicule t"),
         INSERT_VEHICULE("INSERT INTO Vehicule (num_plaque, type, marque) VALUES (?, ?, ?)"),
 
-        SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin FROM Abonnement t"),
+        SELECT_ALL_ABONNEMENTS("SELECT t.id_abonnement, t.typeAbonnement, t.prix, t.statutAbonnement, t.dateDebut,t.dateFin, p.nom, p.prenom FROM Abonnement t JOIN Personne p ON t.id_personne = p.id_personne"),
         INSERT_ABONNEMENT("INSERT INTO Abonnement (id_abonnement, typeAbonnement, prix,statutAbonnement, dateDebut, dateFin, id_personne ) VALUES (?, ?, ?, ?, ?, ?, ?)"),
         DELETE_ABONNEMENT("DELETE FROM Abonnement t WHERE t.id_abonnement = ?"),
         UPDATE_ABONNEMENT("UPDATE Abonnement SET typeAbonnement= ?, prix= ?, statutAbonnement= ?, dateDebut=?, dateFin=? WHERE id_abonnement=?"),
@@ -279,6 +279,8 @@ public class IntelijjParkingService {
             abonnement.setDateDebut(res.getDate(5));
             abonnement.setDateFin(res.getDate(6));
             abonnement.setStatutAbonnement(res.getString(4));
+            abonnement.setNomPersonne(res.getString(7));
+            abonnement.setPrenomPersonne(res.getString(8));
             abonnements.add(abonnement);
         }
 

@@ -7,11 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class AjouterPersonneFrame extends JFrame{
 
@@ -66,9 +63,7 @@ public class AjouterPersonneFrame extends JFrame{
                 return;
             }
             try{
-                Set<String> existingIds = personneUseCase.getALLPersonnes().stream().map(Personne::getIdPersonne).collect(Collectors.toSet());
-
-                String id = generateUniqueId(5, existingIds);
+                String id = UUID.randomUUID().toString();
                 Personne personne = new Personne(
 
                 id,
@@ -80,9 +75,13 @@ public class AjouterPersonneFrame extends JFrame{
 
                 personneUseCase.ajouterPersonnes(personne);
 
+                Set<Personne> updatedSet = personneUseCase.afficherPersonnes().getPersonnes();
+                List<Personne> updatedList = new ArrayList<>(updatedSet);
+                parent.refreshTable(updatedList);
+
+                JOptionPane.showMessageDialog(this, "La personne a été ajoutée avec succès !");
+
                 dispose();
-            } catch (IllegalArgumentException iae) {
-                JOptionPane.showMessageDialog(this, iae.getMessage(), "Erreur de saisie", JOptionPane.ERROR_MESSAGE);
             }catch (IOException | InterruptedException ex){
                 JOptionPane.showMessageDialog(this, "Erreur lors de l'ajout de la personne : " + ex.getMessage());
             }
@@ -103,19 +102,6 @@ public class AjouterPersonneFrame extends JFrame{
         button.setBackground(bg);
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
-    }
-    private String generateUniqueId(int length, Set<String> existingIds) {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        String id;
-        do {
-            StringBuilder idBuilder = new StringBuilder();
-            for (int i = 0; i < length; i++) {
-                int index = (int) (Math.random() * characters.length());
-                idBuilder.append(characters.charAt(index));
-            }
-            id = idBuilder.toString();
-        } while (existingIds.contains(id));
-        return id;
     }
 
 }

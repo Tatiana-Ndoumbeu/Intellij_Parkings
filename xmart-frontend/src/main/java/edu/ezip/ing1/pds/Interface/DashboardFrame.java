@@ -230,7 +230,7 @@ public class DashboardFrame extends JFrame {
 
     private void showAbonnements() throws IOException, InterruptedException {
         mainContent.removeAll();
-        mainContent.add(new AbonnementPanel(abonnementUseCase), BorderLayout.CENTER);  // Add AbonnementPanel
+        mainContent.add(new AbonnementPanel(abonnementUseCase, personneUseCase), BorderLayout.CENTER);  // Add AbonnementPanel
         mainContent.revalidate();
         mainContent.repaint();
     }

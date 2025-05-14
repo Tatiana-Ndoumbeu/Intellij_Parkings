@@ -3,6 +3,7 @@ package edu.ezip.ing1.pds.Interface.abonnement;
 import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
 import edu.ezip.ing1.pds.business.dto.Personne;
+import edu.ezip.ing1.pds.usecase.PersonneUseCase;
 
 
 import javax.swing.*;
@@ -10,6 +11,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AbonnementPanel extends JPanel {
@@ -17,17 +19,18 @@ public class AbonnementPanel extends JPanel {
     private DefaultTableModel tableModel;
     private List<Abonnement> abonnements;
     private Abonnement selectedAbonnement;
-    private Personne selectedPersonne;
+    private Personne personne;
 
-    public AbonnementPanel(AbonnementUseCase abonnementUseCase) throws IOException, InterruptedException {
+    public AbonnementPanel(AbonnementUseCase abonnementUseCase, PersonneUseCase personneUseCase) throws IOException, InterruptedException {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 245));
 
         // Fetch abonnements from the use case
         this.abonnements =  abonnementUseCase.getAllAbonnements().getAbonnements().stream().toList();
 
+
         // Define the table columns
-        String[] columns = {"ID", "Type Abonnement", "Prix", "Statut", "Date Début", "Date Fin"};
+        String[] columns = {"ID", "Type Abonnement", "Prix", "Statut", "Date Début", "Date Fin", "Titulaire de l'abonnement"};
         tableModel = new DefaultTableModel(columns, 0) {
             public boolean isCellEditable(int row, int column) {
                 return false;  // Disable editing in the table
@@ -64,7 +67,12 @@ public class AbonnementPanel extends JPanel {
             if (selectedAbonnement != null) {
                 new ModifierAbonnementFrame(selectedAbonnement, updatedList -> {
                     abonnements = updatedList;
-                    refreshTable(abonnements);
+
+                    try {
+                        refreshTable(abonnements);
+                    } catch (IOException | InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }, abonnementUseCase);
             }
 
@@ -77,8 +85,14 @@ public class AbonnementPanel extends JPanel {
                 if (res == JOptionPane.YES_OPTION) {
                     try {
                         abonnementUseCase.deleteAbonnementById(selectedAbonnement.getIdAbonnement());
-                        abonnements.remove(selectedAbonnement);
+
+                        List<Abonnement> abonnementsModifiables = new ArrayList<>(abonnements);
+                        abonnementsModifiables.remove(selectedAbonnement);
+                        abonnements = abonnementsModifiables;
                         refreshTable(abonnements);
+                        //abonnements.remove(selectedAbonnement);
+                        //refreshTable(abonnements);
+                        JOptionPane.showMessageDialog(table, "Abonnement supprimé avec succès.", "Suppression", JOptionPane.INFORMATION_MESSAGE);
                     } catch (IOException | InterruptedException ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(table, "Erreur lors de la suppression.", "Erreur", JOptionPane.ERROR_MESSAGE);
@@ -119,7 +133,7 @@ public class AbonnementPanel extends JPanel {
     }
 
     // Method to refresh the table when the abonnements list changes
-    void refreshTable(List<Abonnement> updatedList) {
+    void refreshTable(List<Abonnement> updatedList) throws IOException, InterruptedException {
         this.abonnements= updatedList;
         tableModel.setRowCount(0);  // Clear existing rows
         for (Abonnement abonnement : updatedList) {
@@ -129,7 +143,8 @@ public class AbonnementPanel extends JPanel {
                     abonnement.getPrix(),
                     abonnement.getStatutAbonnement(),
                     abonnement.getDateDebut(),
-                    abonnement.getDateFin()
+                    abonnement.getDateFin(),
+                    abonnement.getNomPersonne() + " " + abonnement.getPrenomPersonne()
             });
         }
     }
