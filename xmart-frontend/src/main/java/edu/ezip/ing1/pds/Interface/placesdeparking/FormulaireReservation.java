@@ -94,7 +94,7 @@ public class FormulaireReservation {
                 JOptionPane.showMessageDialog(dialog, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
             } else {
                 ReservationRequest reservation = new ReservationRequest();
-                reservation.setIdReservation(generateUniqueId()); // Assuming this method exists
+                reservation.setIdReservation(generateUniqueId());
                 reservation.setDateReservation(LocalDate.now().toString());
                 reservation.setHeure(LocalTime.now().toString());
                 reservation.setDateEntree(dateDebut.toString());
@@ -102,7 +102,7 @@ public class FormulaireReservation {
                 reservation.setHeureEntree(heureDebut.toString());
                 reservation.setHeureSortie(heureFin.toString());
                 reservation.setIdPersonne(mail);
-                reservation.setPlaceDeParking(selectedPlace); // Set the selected place
+                reservation.setPlaceDeParking(selectedPlace); 
 
                 // Insert reservation using the use case
                 try {
