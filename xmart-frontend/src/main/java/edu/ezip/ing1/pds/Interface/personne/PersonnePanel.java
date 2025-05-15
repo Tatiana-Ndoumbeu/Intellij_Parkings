@@ -1,7 +1,9 @@
 package edu.ezip.ing1.pds.Interface.personne;
 
 import edu.ezip.ing1.pds.Interface.abonnement.AjouterAbonnementFrame;
+import edu.ezip.ing1.pds.Interface.abonnement.HistoriquePaiement;
 import edu.ezip.ing1.pds.Interface.abonnement.ModifierAbonnementFrame;
+import edu.ezip.ing1.pds.Interface.abonnement.VoirAbonnement;
 import edu.ezip.ing1.pds.api.AbonnementRepository;
 import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.business.dto.Abonnements;
@@ -68,26 +70,16 @@ public class PersonnePanel extends JPanel {
         voirAboItem.addActionListener(e -> {
             if (selectedPersonne != null) {
                 try {
-                    Abonnement abonnement = abonnementUseCase.findOneAbonnement(selectedPersonne.getIdPersonne());
-
+                    Abonnement abonnement = abonnementUseCase.findAbonnementX(selectedPersonne);
+                    //List<Abonnement> abonnements = abonnementUseCase.getAllAbonnementsByPersonneId(selectedPersonne.getIdPersonne());
                     if (abonnement != null) {
-                        String message = "Abonnement ID : " + abonnement.getIdAbonnement() + "\n"
-                                + "Type : " + abonnement.getTypeAbonnement() + "\n"
-                                + "Prix : " + abonnement.getPrix() + " €\n"
-                                + "Statut : " + abonnement.getStatutAbonnement() + "\n"
-                                + "Début : " + abonnement.getDateDebut() + "\n"
-                                + "Fin : " + abonnement.getDateFin();
-
-                        String title = "Abonnement de " + selectedPersonne.getPrenom();
-
-                        JOptionPane.showMessageDialog(null, message, title, JOptionPane.INFORMATION_MESSAGE);
+                        new VoirAbonnement((JFrame) SwingUtilities.getWindowAncestor(this), abonnement, selectedPersonne);
                     } else {
-                        JOptionPane.showMessageDialog(null, "Pas d'abonnement pour cette personne");
+                        JOptionPane.showMessageDialog(this, "Cette personne n'a pas d'abonnement.", "Information", JOptionPane.INFORMATION_MESSAGE);
                     }
-
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(null, ex.getMessage());
+                    JOptionPane.showMessageDialog(this, "Erreur lors de la récupération de l'abonnement.", "Erreur", JOptionPane.ERROR_MESSAGE);
                 }
             }
 
@@ -137,9 +129,11 @@ public class PersonnePanel extends JPanel {
                         personneUseCase.deletePersonne(selectedPersonne);
                         //personnes.remove(selectedPersonne);
                         //refreshTable(personnes);
-                        List<Personne> nouvelleListe = personneUseCase.afficherPersonnes().getPersonnes().stream().toList();
-                        refreshTable(nouvelleListe);
-                        selectedPersonne = null;
+                        List<Personne> personnesModifiables = new ArrayList<>(personnes);
+                        personnesModifiables.remove(selectedPersonne);
+                        personnes = personnesModifiables;
+                        refreshTable(personnes);
+
                         JOptionPane.showMessageDialog(this, "Personne supprimée avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
                     } catch (IOException | InterruptedException ex) {
                         ex.printStackTrace();
