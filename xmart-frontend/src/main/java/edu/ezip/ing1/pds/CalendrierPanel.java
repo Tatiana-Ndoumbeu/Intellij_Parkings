@@ -88,7 +88,13 @@ public class CalendrierPanel extends JPanel{
                     if (reservationLocalParMoisMap.getMap().containsKey(date)) {
                         List<String> resasDuJour = reservationLocalParMoisMap.getMap().get(date);
                         String message = String.join("\n", resasDuJour);
-                        JOptionPane.showMessageDialog(this, message, "Réservations pour le " + date, JOptionPane.INFORMATION_MESSAGE);
+                        Object[] options = {"OK", "+"};
+                        int choice = JOptionPane.showOptionDialog(this, message, "Réservations pour le " + date,         JOptionPane.DEFAULT_OPTION,
+                                JOptionPane.INFORMATION_MESSAGE, null,options, options[0]);
+                       if (choice == 1) {
+                            reserverJour(date);
+                        }
+
                     } else {
                         int choix = JOptionPane.showConfirmDialog(this,
                                 "Aucune réservation. Voulez-vous en créer une ?",

@@ -40,7 +40,7 @@ public class AjouterMecanicienForm extends JFrame {
         styleField(nomField, "Nom");
         styleField(prenomField, "Prénom");
         styleField(telephoneField, "Téléphone (ex:0743434343)");
-        styleField(dispoField, "Disponibilité (mois courant)");
+        styleField(dispoField, "Disponibilité:true/false(mois courant)");
         styleField(specialiteField, "Spécialité");
         styleField(mailField, "E-mail");
 
@@ -65,13 +65,14 @@ public class AjouterMecanicienForm extends JFrame {
             String nom = nomField.getText().trim();
             String prenom = prenomField.getText().trim();
             String telephone = telephoneField.getText().trim();
+            String dispoEnString =dispoField.getText().trim();
             Boolean disponibilite = Boolean.parseBoolean(dispoField.getText().trim());
             String specialite = specialiteField.getText().trim();
             String mail = mailField.getText().trim();
 
             if (nom.isEmpty() || prenom.isEmpty() || telephone.isEmpty()  || specialite.isEmpty()
-                    || mail.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.");
+                    || mail.isEmpty() || !dispoEnString.equalsIgnoreCase("true") && !dispoEnString.equalsIgnoreCase("false")) {
+                JOptionPane.showMessageDialog(this, "Veuillez remplir correctement tous les champs .");
                 return;
             }
 

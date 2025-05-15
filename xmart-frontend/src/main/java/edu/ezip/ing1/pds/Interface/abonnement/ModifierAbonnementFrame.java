@@ -62,10 +62,18 @@ public class ModifierAbonnementFrame extends JFrame {
                 abonnement.setTypeAbonnement(typeField.getText().trim());
                 abonnement.setPrix(Double.parseDouble(prixField.getText().trim()));
                 abonnement.setStatutAbonnement(statutField.getText().trim());
-                abonnement.setDateDebut(new java.sql.Date(sdf.parse(dateDebutField.getText().trim()).getTime()));
-                abonnement.setDateFin(new java.sql.Date(sdf.parse(dateFinField.getText().trim()).getTime()));
+                //abonnement.setDateDebut(new java.sql.Date(sdf.parse(dateDebutField.getText().trim()).getTime()));
+                //abonnement.setDateFin(new java.sql.Date(sdf.parse(dateFinField.getText().trim()).getTime()));
+                Date dateDebut = sdf.parse(dateDebutField.getText().trim());
+                Date dateFin = sdf.parse(dateFinField.getText().trim());
 
                 boolean success = abonnementUseCase.updateAbonnement(abonnement);
+
+                if (dateFin.before(dateDebut)) {
+                    JOptionPane.showMessageDialog(this, "La date de fin doit être postérieure à la date de début.");
+                    return;
+                }
+
                 if (success) {
                     List<Abonnement> updatedList = abonnementUseCase.getAllAbonnements().getAbonnements().stream().toList();
                     onUpdate.accept(updatedList);

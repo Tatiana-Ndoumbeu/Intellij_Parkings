@@ -207,12 +207,12 @@ public class Formulaires {
 
 
             ReservationLocal reservationLocal = new ReservationLocal();
-            /*
+
             if (dateDebut.after(dateFin)) {
                 JOptionPane.showMessageDialog(dialog, "La date de début ne peut pas être après la date de fin.", "Erreur", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
+/*
             if ( champNom.getText().isEmpty() || champTelephone.getText().isEmpty() || champCodeP.getText().isEmpty() || dateDebut == null || dateFin == null) {
                 JOptionPane.showMessageDialog(dialog, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
             } else {*/
@@ -350,15 +350,6 @@ public class Formulaires {
                     JOptionPane.showMessageDialog(dialog, "Veuillez entrer votre email.");
                     return;
                 }
-
-
-                // TODO
-                //  Vérifie l'email dans la personne liée à abonnement
-                //  verifie quel type de place de son abonnement
-                //  verifie si c'est VOITURE Ou moto
-                //  et définis le prix
-                //en attendant maryline
-                int prix = 20; //exemple
 
             } else {
                 if (nom.isEmpty() || prenom.isEmpty()|| telephone.isEmpty()) {
