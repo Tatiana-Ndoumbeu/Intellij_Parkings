@@ -1,5 +1,6 @@
 package edu.ezip.ing1.pds;
 
+import edu.ezip.ing1.pds.Interface.LoginFrame;
 import edu.ezip.ing1.pds.business.dto.*;
 
 import edu.ezip.ing1.pds.Interface.Principale;
@@ -107,7 +108,7 @@ public class MainFrontEnd {
         } catch (Exception e) {
             e.printStackTrace();
         } // pour faire plus beau
-        SwingUtilities.invokeLater(() -> new Principale().setVisible(true));
+        SwingUtilities.invokeLater(() -> new LoginFrame(networkConfig).setVisible(true));
       
 
     }
