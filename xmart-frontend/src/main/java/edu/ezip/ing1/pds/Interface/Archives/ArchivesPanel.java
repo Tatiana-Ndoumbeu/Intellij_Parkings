@@ -10,6 +10,13 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+
+import javax.swing.*;
+import java.io.File;
+import java.io.FileOutputStream;
 
 import static edu.ezip.ing1.pds.Formulaires.chargerIcone;
 
@@ -40,23 +47,49 @@ public class ArchivesPanel extends JPanel {
         JPanel panelSud = new JPanel();
         JButton ImprimerBouton = new JButton("", chargerIcone("/icons/imprimante.png", 30, 30));
         ImprimerBouton.addActionListener(e -> {
-            int confirmation = JOptionPane.showConfirmDialog(ArchivesPanel.this,"Vous allez Exporter et Imprimer les archives?\n\n Continuer? ", "Impression", JOptionPane.YES_NO_OPTION);
+            int confirmation = JOptionPane.showConfirmDialog(ArchivesPanel.this,"Vous allez Exporter et Imprimer les archives au format PDF,\n\n Continuer? ", "Impression", JOptionPane.YES_NO_OPTION);
 
-            if (confirmation == JOptionPane.YES_OPTION) {
-                JOptionPane.showMessageDialog(
-                        ArchivesPanel.this,
-                        "Les archives ont été exportées au format PDF.",
-                        "Exportation réussie",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
+            if(confirmation == JOptionPane.YES_OPTION){
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setSelectedFile(new File("archives.pdf"));
+            int option = fileChooser.showSaveDialog(ArchivesPanel.this);
+            if (option == JFileChooser.APPROVE_OPTION) {
+                File fichier = fileChooser.getSelectedFile();
+                exporterEnPDF(table, fichier);
             }
 
+            }
         });
         panelSud.add(ImprimerBouton);
         add(panelSud, BorderLayout.SOUTH);
         refreshTable(archivesUseCase.afficherArchives().getArchivesPaiements().stream().toList());
     }
+    public void exporterEnPDF(JTable table, File fichier) {
+        try {
+            Document document = new Document(PageSize.A4);
+            PdfWriter.getInstance(document, new FileOutputStream(fichier));
+            document.open();
 
+            PdfPTable pdfTable = new PdfPTable(table.getColumnCount());
+            for (int i = 0; i < table.getColumnCount(); i++) {
+                pdfTable.addCell(new Phrase(table.getColumnName(i)));
+            }
+
+            for (int row = 0; row < table.getRowCount(); row++) {
+                for (int col = 0; col < table.getColumnCount(); col++) {
+                    Object value = table.getValueAt(row, col);
+                    pdfTable.addCell(value != null ? value.toString() : "");
+                }
+            }
+
+            document.add(pdfTable);
+            document.close();
+            JOptionPane.showMessageDialog(null, "PDF généré avec succès !");
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Erreur lors de la génération du PDF : " + e.getMessage());
+        }
+    }
     public void refreshTable(List<ArchivesPaiement> paiements) {
         tableModel.setRowCount(0);
 
