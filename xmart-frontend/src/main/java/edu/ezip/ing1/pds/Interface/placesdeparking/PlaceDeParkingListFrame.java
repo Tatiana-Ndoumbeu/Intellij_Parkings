@@ -52,7 +52,7 @@ public class PlaceDeParkingListFrame extends JFrame {
 
         JButton addBtn = new JButton("Ajouter une place");
         styleButton(addBtn, new Color(255, 152, 0));
-        addBtn.addActionListener(e -> new AjouterPlaceFrame(this,placeDeParkingUseCase));
+        addBtn.addActionListener(e -> new AjouterPlaceFrame(null,placeDeParkingUseCase));
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(new Color(245, 245, 245));

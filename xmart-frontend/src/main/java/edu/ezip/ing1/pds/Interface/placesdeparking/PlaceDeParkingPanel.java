@@ -37,7 +37,7 @@ public class PlaceDeParkingPanel extends JPanel {
 
         JButton addBtn = new JButton("Ajouter une place");
         styleButton(addBtn, new Color(255, 152, 0));
-        addBtn.addActionListener(e -> new AjouterPlaceFrame(null, placeDeParkingUseCase));
+        addBtn.addActionListener(e -> new AjouterPlaceFrame(this, placeDeParkingUseCase));
 
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(new Color(245, 245, 245));
@@ -78,9 +78,16 @@ public class PlaceDeParkingPanel extends JPanel {
                         supprimerItem.addActionListener(ev -> {
                             int res = JOptionPane.showConfirmDialog(table, "Supprimer cette place ?", "Confirmation", JOptionPane.YES_NO_OPTION);
                             if (res == JOptionPane.YES_OPTION) {
-                                placeDeParkingUseCase.deletePlaceDeParking(selected.getIdPlace());
-                                places.remove(selected);
-                                refreshTable(places);
+                                try {
+                                    placeDeParkingUseCase.deletePlaceDeParking(selected.getIdPlace());
+                                    places.remove(selected);
+                                    refreshTable(places);
+                                } catch (Exception ex) {
+                                    JOptionPane.showMessageDialog(table,
+                                            "Impossible de supprimer la place. Veuillez réessayer.",
+                                            "Erreur",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
                             }
                         });
 
@@ -93,8 +100,6 @@ public class PlaceDeParkingPanel extends JPanel {
                                     personneUseCase                            // Use case pour récupérer la liste des personnes
                             );
                         });
-
-
 
                         affecterItem.addActionListener(ev -> {
                             JOptionPane.showMessageDialog(table, "Affectation à un véhicule pour " + selected.getIdPlace());
@@ -113,7 +118,7 @@ public class PlaceDeParkingPanel extends JPanel {
         button.setPreferredSize(new Dimension(200, 40));
     }
 
-    private void refreshTable(List<PlaceDeParking> updatedList) {
+    void refreshTable(List<PlaceDeParking> updatedList) {
         tableModel.setRowCount(0);
 
         if (updatedList == null) {
@@ -130,4 +135,3 @@ public class PlaceDeParkingPanel extends JPanel {
     }
 
 }
-
