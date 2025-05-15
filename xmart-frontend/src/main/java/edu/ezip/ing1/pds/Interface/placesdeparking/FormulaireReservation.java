@@ -50,10 +50,9 @@ public class FormulaireReservation {
         styleField(champPosition, "Position");
         styleField(champEmplacement, "Emplacement");
 
-        // ComboBox pour choisir une personne
         JComboBox<Personne> personneComboBox = new JComboBox<>();
         try {
-            var personnes = personneUseCase.afficherPersonnes().getPersonnes();
+           var personnes = personneUseCase.afficherPersonnes().getPersonnes();
             for (Personne p : personnes) {
                 personneComboBox.addItem(p);
             }
@@ -64,8 +63,6 @@ public class FormulaireReservation {
         personneComboBox.setFont(new Font("SansSerif", Font.PLAIN, 16));
         personneComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         personneComboBox.setBorder(BorderFactory.createTitledBorder("Sélectionner une personne"));
-
-        // Affichage personnalisé du combo box (prénom + nom)
         personneComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
@@ -78,7 +75,6 @@ public class FormulaireReservation {
             }
         });
 
-        // Date pickers
         JDateChooser dateDebutChooser = new JDateChooser();
         dateDebutChooser.setDateFormatString("dd/MM/yyyy");
         JSpinner hourSpinner = new JSpinner(new SpinnerDateModel());
@@ -115,7 +111,7 @@ public class FormulaireReservation {
             reservation.setDateSortie(dateFin.toString());
             reservation.setHeureEntree(heureDebut.toString());
             reservation.setHeureSortie(heureFin.toString());
-            reservation.setIdPersonne(selectedPersonne.getIdPersonne()); // <-- ID utilisé
+            reservation.setIdPersonne(selectedPersonne.getIdPersonne());
             reservation.setPlaceDeParking(selectedPlace);
 
             try {
@@ -125,11 +121,16 @@ public class FormulaireReservation {
                     refreshTable.run();
                     JOptionPane.showMessageDialog(dialog, "Réservation effectuée avec succès.");
                 } else {
-                    JOptionPane.showMessageDialog(dialog, "Erreur lors de la réservation.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(dialog, "La réservation a échoué. Veuillez vérifier les dates ou la disponibilité de la place.", "Erreur", JOptionPane.WARNING_MESSAGE);
                 }
             } catch (Exception ex) {
                 logger.error("Erreur lors de la réservation", ex);
-                JOptionPane.showMessageDialog(dialog, "Erreur technique.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                String message = ex.getMessage();
+                if (message != null && message.contains("réservée")) {
+                    JOptionPane.showMessageDialog(dialog, message, "Conflit de réservation", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Erreur : " + message, "Erreur", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 

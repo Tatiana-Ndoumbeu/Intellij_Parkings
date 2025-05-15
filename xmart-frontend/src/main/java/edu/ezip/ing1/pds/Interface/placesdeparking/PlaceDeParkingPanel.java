@@ -115,9 +115,19 @@ public class PlaceDeParkingPanel extends JPanel {
 
     private void refreshTable(List<PlaceDeParking> updatedList) {
         tableModel.setRowCount(0);
+
+        if (updatedList == null) {
+            JOptionPane.showMessageDialog(this,
+                    "La liste des places de parking est vide ou n'a pas pu être chargée.",
+                    "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         for (PlaceDeParking p : updatedList) {
             tableModel.addRow(new Object[]{p.getIdPlace(), p.getTypePlace(), p.getStatutPlace(), p.getEmplacement()});
         }
     }
+
 }
 

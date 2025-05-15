@@ -1048,43 +1048,75 @@ private Response UpdateLocalT(final Request request, final Connection connection
     }
 
     private Response InsertReservation(final Request request, final Connection connection) throws SQLException, IOException {
-
         final ObjectMapper objectMapper = new ObjectMapper();
         Reservation reservation;
+
         try {
-          ReservationRequest  reservationRequest = objectMapper.readValue(request.getRequestBody(), ReservationRequest.class);
-          reservation = ReservationMapper.toReservation(reservationRequest);
+            ReservationRequest reservationRequest = objectMapper.readValue(request.getRequestBody(), ReservationRequest.class);
+            reservation = ReservationMapper.toReservation(reservationRequest);
         } catch (JsonProcessingException e) {
             logger.error("Erreur lors du parsing du JSON: {}", request.getRequestBody(), e);
-            return new Response(request.getRequestId(), "Données de reservation invalides");
+            return new Response(request.getRequestId(), "Données de réservation invalides.");
         }
 
-        if (reservation.getDateReservation() == null || reservation.getDateEntree() == null) {
-            return new Response(request.getRequestId(), "Champs  manquants");
+        if (reservation.getDateReservation() == null || reservation.getDateEntree() == null || reservation.getDateSortie() == null) {
+            return new Response(request.getRequestId(), "Champs requis manquants.");
+        }
+
+        // 🔍 Vérification de chevauchement avant insertion
+        String overlapQuery =
+                "SELECT COUNT(*) FROM Reservation " +
+                        "WHERE id_place = ? " +
+                        "AND (" +
+                        "   (dateEntree < ? OR (dateEntree = ? AND heureEntree < ?)) " +
+                        "AND (dateSortie > ? OR (dateSortie = ? AND heureSortie > ?))" +
+                        ")";
+
+
+        try (PreparedStatement checkStmt = connection.prepareStatement(overlapQuery)) {
+            checkStmt.setString(1, reservation.getPlaceDeParking().getIdPlace());
+
+            // Comparer dateEntree < dateSortie_nouvelle || (égal ET heureEntree < heureSortie_nouvelle)
+            checkStmt.setDate(2, new java.sql.Date(reservation.getDateSortie().getTime())); // pour dateEntree < ?
+            checkStmt.setDate(3, new java.sql.Date(reservation.getDateSortie().getTime())); // pour dateEntree = ?
+            checkStmt.setTime(4, new java.sql.Time(reservation.getHeureSortie().getTime())); // pour heureEntree < ?
+
+            // Comparer dateSortie > dateEntree_nouvelle || (égal ET heureSortie > heureEntree_nouvelle)
+            checkStmt.setDate(5, new java.sql.Date(reservation.getDateEntree().getTime())); // pour dateSortie > ?
+            checkStmt.setDate(6, new java.sql.Date(reservation.getDateEntree().getTime())); // pour dateSortie = ?
+            checkStmt.setTime(7, new java.sql.Time(reservation.getDateEntree().getTime())); // pour heureSortie > ?
+
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                return new Response(request.getRequestId(),
+                        "Erreur : cette place est déjà réservée pour cette plage horaire (même date + heure).");
+            }
         }
 
 
+        // ✅ Insertion car aucune collision détectée
         try (PreparedStatement stmt = connection.prepareStatement(Queries.INSERT_RESERVATION.query)) {
             stmt.setString(1, reservation.getIdReservation());
             stmt.setDate(2, java.sql.Date.valueOf(reservation.getDateReservation()));
             stmt.setTime(3, java.sql.Time.valueOf(reservation.getHeure()));
             stmt.setDate(4, new java.sql.Date(reservation.getDateEntree().getTime()));
             stmt.setDate(5, new java.sql.Date(reservation.getDateSortie().getTime()));
-            stmt.setTime(6, new java.sql.Time(reservation.getDateEntree().getTime()));
-            stmt.setTime(7,  new java.sql.Time(reservation.getHeureSortie().getTime()));
+            stmt.setTime(6, new java.sql.Time(reservation.getDateEntree().getTime())); // heureEntree = heure de dateEntree
+            stmt.setTime(7, new java.sql.Time(reservation.getHeureSortie().getTime()));
             stmt.setString(8, reservation.getIdPersonne());
             stmt.setString(9, reservation.getPlaceDeParking().getIdPlace());
             stmt.executeUpdate();
-            return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservation));
 
+            return new Response(request.getRequestId(), objectMapper.writeValueAsString(reservation));
         } catch (SQLException e) {
+            logger.error("Erreur SQL : {}", e.getMessage(), e);
             return new Response(request.getRequestId(), "Erreur SQL : " + e.getMessage());
         } catch (IOException e) {
+            logger.error("Erreur IO : {}", e.getMessage(), e);
             return new Response(request.getRequestId(), "Erreur de traitement de la requête.");
         }
-
-
     }
+
     private Response SelectAllReservations(final Request request, final Connection connection) throws SQLException, JsonProcessingException {
         final ObjectMapper objectMapper = new ObjectMapper();
         final Statement stmt = connection.createStatement();
