@@ -64,8 +64,6 @@ public class PlaceDeParkingPanel extends JPanel {
                     int row = table.rowAtPoint(e.getPoint());
                     if (row >= 0 && row < table.getRowCount()) {
                         table.setRowSelectionInterval(row, row);
-                        contextMenu.show(table, e.getX(), e.getY());
-
                         PlaceDeParking selected = places.get(row);
 
                         modifierItem.addActionListener(ev -> {
@@ -78,36 +76,31 @@ public class PlaceDeParkingPanel extends JPanel {
                         supprimerItem.addActionListener(ev -> {
                             int res = JOptionPane.showConfirmDialog(table, "Supprimer cette place ?", "Confirmation", JOptionPane.YES_NO_OPTION);
                             if (res == JOptionPane.YES_OPTION) {
-                                try {
-                                    placeDeParkingUseCase.deletePlaceDeParking(selected.getIdPlace());
+                                boolean deleted = placeDeParkingUseCase.deletePlaceDeParking(selected.getIdPlace());
+                                if (deleted) {
                                     places.remove(selected);
                                     refreshTable(places);
-                                } catch (Exception ex) {
-                                    JOptionPane.showMessageDialog(table,
-                                            "Impossible de supprimer la place. Veuillez réessayer.",
-                                            "Erreur",
-                                            JOptionPane.ERROR_MESSAGE);
+                                    JOptionPane.showMessageDialog(table, "Place supprimée avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
+                                } else {
+                                    JOptionPane.showMessageDialog(table, "Impossible de supprimer la place. Elle est peut-être liée à une ou plusieurs réservations.", "Erreur", JOptionPane.ERROR_MESSAGE);
                                 }
                             }
                         });
 
                         reserverItem.addActionListener(ev -> {
-                            FormulaireReservation.showForm(
-                                    parent,              // JFrame parent
-                                    reservationUseCase,                        // Use case pour les réservations
-                                    selected,                                  // Place sélectionnée
-                                    () -> refreshTable(placeDeParkingUseCase.getAllPlacesDeParking()), // Callback de rafraîchissement
-                                    personneUseCase                            // Use case pour récupérer la liste des personnes
-                            );
+                            FormulaireReservation.showForm(parent, reservationUseCase, selected, () -> refreshTable(placeDeParkingUseCase.getAllPlacesDeParking()), personneUseCase);
                         });
 
                         affecterItem.addActionListener(ev -> {
                             JOptionPane.showMessageDialog(table, "Affectation à un véhicule pour " + selected.getIdPlace());
                         });
+
+                        contextMenu.show(table, e.getX(), e.getY());
                     }
                 }
             }
         });
+
     }
 
     private void styleButton(JButton button, Color bg) {

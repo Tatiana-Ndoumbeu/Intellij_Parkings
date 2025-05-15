@@ -580,16 +580,18 @@ public class IntelijjParkingService {
     }
 
 
-
     private Response DeletePlaceDeParking(final Request request, final Connection connection) throws SQLException, IOException {
         final ObjectMapper objectMapper = new ObjectMapper();
         PlaceDeParking placeDeParking = objectMapper.readValue(request.getRequestBody(), PlaceDeParking.class);
 
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.DELETE_PLACE_DE_PARKING.getQuery())) {
-            pstmt.setString(1, placeDeParking.getIdPlace()); // Use the ID to delete
+            pstmt.setString(1, placeDeParking.getIdPlace());
 
             int affectedRows = pstmt.executeUpdate();
-            return new Response(request.getRequestId(), affectedRows > 0 ? "Place de parking supprimée avec succès" : "Échec de la suppression");
+            return new Response(request.getRequestId(),
+                    affectedRows > 0 ? "true" : "false");
+        } catch (SQLIntegrityConstraintViolationException e) {
+            return new Response(request.getRequestId(), "false");
         }
     }
 

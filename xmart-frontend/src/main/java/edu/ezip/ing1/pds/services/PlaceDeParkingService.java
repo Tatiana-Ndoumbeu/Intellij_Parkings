@@ -111,11 +111,19 @@ public class PlaceDeParkingService implements PlaceDeParkingRepository {
 
             final DeleteClientRequest clientRequest = new DeleteClientRequest(
                     networkConfig,
-                    requestId.hashCode(), request, placeDeParking, requestBytes);
+                    requestId.hashCode(), request, Request.class, requestBytes);
             clientRequest.join();
 
+
+            logger.debug("PlaceDeParkingsss deleted with ID: {}", clientRequest.getResult());
+
+
             logger.debug("PlaceDeParking deleted with ID: {}", idPlace);
-            return true;
+            if(clientRequest.getResult().toString().contains("true")) {
+                return true;
+            }else {
+                return false;
+            }
         } catch (Exception e) {
             logger.error("Error deleting PlaceDeParking", e);
             return false;
