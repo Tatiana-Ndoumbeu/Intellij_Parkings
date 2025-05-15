@@ -31,7 +31,7 @@ public class AbonnementPanel extends JPanel {
 
 
         // Define the table columns
-        String[] columns = {"ID", "Type Abonnement", "Prix", "Statut", "Date Début", "Date Fin", "Titulaire de l'abonnement"};
+        String[] columns = {"ID", "Type", "Prix", "Statut", "Début de validité", "Fin de validité", "Titulaire de l'abonnement"};
         tableModel = new DefaultTableModel(columns, 0) {
             public boolean isCellEditable(int row, int column) {
                 return false;  // Disable editing in the table

@@ -76,7 +76,9 @@ public class IntelijjParkingService {
                 "p.id_personne, p.nom, p.prenom, p.tel, p.mail, p.code_postal " +
                 "FROM Reservation r " +
                 "INNER JOIN PlaceDeParking t ON t.id_place = r.id_place " +
-                "INNER JOIN Personne p ON p.id_personne = r.id_personne;"),
+                "INNER JOIN Personne p ON p.id_personne = r.id_personne " +
+                "ORDER BY r.dateReservation DESC;"),
+
         INSERT_RESERVATION("INSERT into Reservation (idReservation, dateReservation, heure, dateEntree, dateSortie, heureEntree, heureSortie, id_personne, id_place) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "),
 
         SELECT_ALL_ARCHIVES("SELECT t.nom, t.prenom, t.service, t.date_paiement, t.montant FROM ArchivePaiement t"),
@@ -550,21 +552,34 @@ public class IntelijjParkingService {
         }
     }
 
-    
+
 
     private Response InsertPlaceDeParking(final Request request, final Connection connection) throws SQLException, IOException {
         final ObjectMapper objectMapper = new ObjectMapper();
         PlaceDeParking placeDeParking = objectMapper.readValue(request.getRequestBody(), PlaceDeParking.class);
 
+        // Génération d'un ID lisible
+        String readableId = generateShortReadableId();
+
         try (PreparedStatement pstmt = connection.prepareStatement(Queries.INSERT_PLACE_DE_PARKING.getQuery())) {
-            pstmt.setString(1, UUID.randomUUID().toString());
+            pstmt.setString(1, readableId);
             pstmt.setString(2, placeDeParking.getEmplacement());
             pstmt.setString(3, placeDeParking.getTypePlace());
             pstmt.setString(4, placeDeParking.getStatutPlace());
             int affectedRows = pstmt.executeUpdate();
-            return new Response(request.getRequestId(), affectedRows > 0 ? "place de parking inséré avec succès" : "Échec de l'insertion");
+            return new Response(request.getRequestId(), affectedRows > 0 ? "place de parking insérée avec succès avec l’ID " + readableId : "Échec de l'insertion");
         }
     }
+
+
+
+    private String generateShortReadableId() {
+        String date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMdd"));
+        int random = (int)(Math.random() * 900 + 100); // 100 à 999
+        return "PK-" + date + "-" + random;
+    }
+
+
 
     private Response DeletePlaceDeParking(final Request request, final Connection connection) throws SQLException, IOException {
         final ObjectMapper objectMapper = new ObjectMapper();

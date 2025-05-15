@@ -24,8 +24,13 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DashboardFrame extends JFrame {
+
+    // Composants graphiques
     private JPanel sideMenu;
     private JPanel mainContent;
+    private final JDialog loadingDialog = new JDialog(this, "Chargement...", true); // Loader modal
+
+    // Use cases métier
     private PlaceDeParkingUseCase placeDeParkingUseCase;
     private ReservationUseCase reservationUseCase;
     private AbonnementUseCase abonnementUseCase;
@@ -35,14 +40,29 @@ public class DashboardFrame extends JFrame {
     private MecanicienUseCase mecanicienUseCase;
     private ReservationLocalUseCase reservationLocalUseCase;
     private ArchivesUseCase archivesUseCase;
+
+    // Données partagées
     private List<String> ClientsEnAttente;
 
-    public DashboardFrame(PlaceDeParkingUseCase placeUseCase, ReservationUseCase reservUseCase, AbonnementUseCase abonUseCase, PersonneUseCase persoUseCase, LocalLaverieUseCase LLUsecase, LocalTechniqueUseCase LLUseCase, MecanicienUseCase MecaUseCase, ReservationLocalUseCase reservationLocalUseCase, ArchivesUseCase archivesUseCase, List<String> clients) {
+    public DashboardFrame(
+            PlaceDeParkingUseCase placeUseCase,
+            ReservationUseCase reservUseCase,
+            AbonnementUseCase abonUseCase,
+            PersonneUseCase persoUseCase,
+            LocalLaverieUseCase LLUsecase,
+            LocalTechniqueUseCase LLUseCase,
+            MecanicienUseCase MecaUseCase,
+            ReservationLocalUseCase reservationLocalUseCase,
+            ArchivesUseCase archivesUseCase,
+            List<String> clients
+    ) {
         setTitle("Tableau de bord - Gestion Parking");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
+
+        // Initialisation des services métier
         this.placeDeParkingUseCase = placeUseCase;
         this.reservationUseCase = reservUseCase;
         this.reservationLocalUseCase = reservationLocalUseCase;
@@ -53,139 +73,195 @@ public class DashboardFrame extends JFrame {
         this.mecanicienUseCase = MecaUseCase;
         this.archivesUseCase = archivesUseCase;
         this.ClientsEnAttente = clients;
-        initSideMenu();
-        initMainContent();
+
+        // Interface
+        initSideMenu();      // Menu latéral
+        initMainContent();   // Zone centrale
+        initLoadingDialog(); // Prépare la fenêtre de chargement
 
         add(sideMenu, BorderLayout.WEST);
         add(mainContent, BorderLayout.CENTER);
-
         setVisible(true);
     }
 
+    // Prépare la boîte de dialogue de chargement
+    private void initLoadingDialog() {
+        JLabel label = new JLabel("Chargement en cours...", SwingConstants.CENTER);
+        label.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        loadingDialog.getContentPane().add(label);
+        loadingDialog.setSize(250, 100);
+        loadingDialog.setLocationRelativeTo(this);
+        loadingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+    }
+
+    // Affiche un panneau avec un loader pendant le chargement
+    private void loadPanelAsync(Runnable panelLoader) {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                SwingUtilities.invokeLater(() -> loadingDialog.setVisible(true));
+                panelLoader.run();
+                return null;
+            }
+            @Override
+            protected void done() {
+                loadingDialog.setVisible(false);
+            }
+        };
+        worker.execute();
+    }
+
+    // Méthodes de navigation
+    private void showPlacesDeParking() {
+        loadPanelAsync(() -> {
+            mainContent.removeAll();
+            mainContent.add(new PlaceDeParkingPanel(placeDeParkingUseCase, personneUseCase, reservationUseCase, this), BorderLayout.CENTER);
+            mainContent.revalidate();
+            mainContent.repaint();
+        });
+    }
+
+    private void showReservations() {
+        loadPanelAsync(() -> {
+            mainContent.removeAll();
+            mainContent.add(new ReservationPanel(reservationUseCase), BorderLayout.CENTER);
+            mainContent.revalidate();
+            mainContent.repaint();
+        });
+    }
+
+    private void showReservationsLocaux() {
+        loadPanelAsync(() -> {
+            try {
+                mainContent.removeAll();
+                mainContent.add(new ReservationLocauxPanel(reservationLocalUseCase), BorderLayout.CENTER);
+                mainContent.revalidate();
+                mainContent.repaint();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void showAbonnements() {
+        loadPanelAsync(() -> {
+            try {
+                mainContent.removeAll();
+                mainContent.add(new AbonnementPanel(abonnementUseCase, personneUseCase), BorderLayout.CENTER);
+                mainContent.revalidate();
+                mainContent.repaint();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void showPersonnes() {
+        loadPanelAsync(() -> {
+            try {
+                mainContent.removeAll();
+                mainContent.add(new PersonnePanel(personneUseCase, abonnementUseCase), BorderLayout.CENTER);
+                mainContent.revalidate();
+                mainContent.repaint();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void showLocalLaverie() {
+        loadPanelAsync(() -> {
+            try {
+                mainContent.removeAll();
+                mainContent.add(new LocalLaveriePanel(localLaverieUseCase, personneUseCase, abonnementUseCase, archivesUseCase, ClientsEnAttente), BorderLayout.CENTER);
+                mainContent.revalidate();
+                mainContent.repaint();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void showLocalTechnique() {
+        loadPanelAsync(() -> {
+            try {
+                mainContent.removeAll();
+                mainContent.add(new LocalTechniquePanel(localTechniqueUseCase, mecanicienUseCase), BorderLayout.CENTER);
+                mainContent.revalidate();
+                mainContent.repaint();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void showMecaniciens() {
+        loadPanelAsync(() -> {
+            try {
+                mainContent.removeAll();
+                mainContent.add(new MecanicienPanel(mecanicienUseCase), BorderLayout.CENTER);
+                mainContent.revalidate();
+                mainContent.repaint();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void showArchives() {
+        loadPanelAsync(() -> {
+            try {
+                mainContent.removeAll();
+                mainContent.add(new ArchivesPanel(archivesUseCase), BorderLayout.CENTER);
+                mainContent.revalidate();
+                mainContent.repaint();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void showAccueuil() {
+        mainContent.removeAll();
+        mainContent.add(new PanelAccueuil(), BorderLayout.CENTER);
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+
+    // Initialise la zone principale
+    private void initMainContent() {
+        mainContent = new JPanel();
+        mainContent.setLayout(new BorderLayout());
+        showAccueuil();
+    }
+
+    // Initialise le menu latéral
     private void initSideMenu() {
         sideMenu = new JPanel();
         sideMenu.setLayout(new BoxLayout(sideMenu, BoxLayout.Y_AXIS));
         sideMenu.setBackground(new Color(50, 63, 75));
         sideMenu.setPreferredSize(new Dimension(200, getHeight()));
 
+        // Titre
         JLabel title = new JLabel("Tableau de bord");
         title.setForeground(Color.WHITE);
         title.setFont(new Font("SansSerif", Font.BOLD, 16));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-
         sideMenu.add(title);
 
-        // Menu items
-        addMenuButton("Accueil", e ->showAccueuil());
-       // addMenuButton("Accueil", e -> showContent("Accueil"));
+        // Boutons du menu
+        addMenuButton("Accueil", e -> showAccueuil());
         addMenuButton("Places de parking", e -> showPlacesDeParking());
-
-        JButton ReservationButton = boutonderoulant("Réservations");
-        JPopupMenu reservationMenu = new JPopupMenu();
-        reservationMenu.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100)));
-        reservationMenu.setBackground(new Color(60, 73, 85));
-
-        JMenuItem parkingReservationItem = new JMenuItem("Places de parking");
-        parkingReservationItem.addActionListener(e -> showReservations());
-
-        JMenuItem localReservationItem = new JMenuItem("Locaux services");
-        localReservationItem.addActionListener(e ->{
-        try {
-            showReservationsLocaux();
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);}
-        catch (InterruptedException ie) {
-            throw new RuntimeException(ie);
-        }
-        });
-
-        ReservationButton.addActionListener(e -> reservationMenu.show(ReservationButton, 0, ReservationButton.getHeight()));
-        reservationMenu.add(parkingReservationItem);
-        reservationMenu.add(localReservationItem);
-        sideMenu.add(Box.createVerticalStrut(10));
-        sideMenu.add(ReservationButton);
-
-        addMenuButton("Abonnements", e -> {
-            try {
-                showAbonnements();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
-        });  // New button for abonnements
-
-        addMenuButton("Personnes", e -> {
-            try{
-                showPersonnes();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
-        });
-
-
-        JButton servicesButton = boutonderoulant("Services");
-
-        JPopupMenu servicesMenu = new JPopupMenu();
-        servicesMenu.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100)));
-        servicesMenu.setBackground(new Color(60, 73, 85));
-
-        JMenuItem laverieItem = new JMenuItem("Laverie");
-        laverieItem.addActionListener(e -> {  try {
-            showLocalLaverie();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        } catch (InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        });
-
-        JMenuItem techniqueItem = new JMenuItem("Technique");
-        techniqueItem.addActionListener(e -> { try {
-            showLocalTechnique();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        } catch (InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        });
-
-        JMenuItem mecanicienItem = new JMenuItem("Mécaniciens");
-        mecanicienItem.addActionListener(e -> { try {
-            showMecaniciens();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        } catch (InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
-
-
-        });
-
-        servicesMenu.add(laverieItem);
-        servicesMenu.add(techniqueItem);
-        servicesMenu.add(mecanicienItem);
-
-        servicesButton.addActionListener(e -> servicesMenu.show(servicesButton, 0, servicesButton.getHeight()));
-
-        sideMenu.add(Box.createVerticalStrut(10));
-        sideMenu.add(servicesButton);
-
-        addMenuButton("Archives et chiffres", e -> {try {
-            showArchives();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        } catch (InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        });
-        addMenuButton("Déconnexion", e -> System.exit(0));
+        addMenuButton("Réservations", e -> showReservations());
+        addMenuButton("Réservations locaux", e -> showReservationsLocaux());
+        addMenuButton("Abonnements", e -> showAbonnements());
+        addMenuButton("Personnes", e -> showPersonnes());
+        addMenuButton("Laverie", e -> showLocalLaverie());
+        addMenuButton("Technique", e -> showLocalTechnique());
+        addMenuButton("Mécaniciens", e -> showMecaniciens());
+        addMenuButton("Archives", e -> showArchives());
+        addMenuButton("Quitter", e -> System.exit(0));
     }
 
     private void addMenuButton(String label, ActionListener listener) {
@@ -202,116 +278,9 @@ public class DashboardFrame extends JFrame {
         sideMenu.add(button);
     }
 
-    private void initMainContent() {
-        mainContent = new JPanel();
-        mainContent.setLayout(new BorderLayout());
-        showAccueuil();
-    }
-
-    private void showPlacesDeParking() {
-        mainContent.removeAll();
-        mainContent.add(new PlaceDeParkingPanel(placeDeParkingUseCase,personneUseCase, reservationUseCase,this), BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-
-    private void showReservations() {
-        mainContent.removeAll();
-        mainContent.add(new ReservationPanel(reservationUseCase), BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-    private void showReservationsLocaux() throws IOException, InterruptedException  {
-        mainContent.removeAll();
-        mainContent.add(new ReservationLocauxPanel(reservationLocalUseCase), BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-
-    private void showAbonnements() throws IOException, InterruptedException {
-        mainContent.removeAll();
-        mainContent.add(new AbonnementPanel(abonnementUseCase, personneUseCase), BorderLayout.CENTER);  // Add AbonnementPanel
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-
-    private void showPersonnes() throws IOException, InterruptedException {
-        mainContent.removeAll();
-        mainContent.add(new PersonnePanel(personneUseCase, abonnementUseCase), BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-
-    private void showLocalLaverie() throws IOException, InterruptedException {
-        mainContent.removeAll();
-        mainContent.add(new LocalLaveriePanel(localLaverieUseCase, personneUseCase, abonnementUseCase, archivesUseCase, ClientsEnAttente), BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-    private void showLocalTechnique() throws IOException, InterruptedException {
-        mainContent.removeAll();
-        mainContent.add(new LocalTechniquePanel(localTechniqueUseCase, mecanicienUseCase), BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-    private void showMecaniciens() throws IOException, InterruptedException {
-        mainContent.removeAll();
-        mainContent.add(new MecanicienPanel(mecanicienUseCase), BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-
-    private void showContent(String section) {
-        mainContent.removeAll();
-
-        JLabel label = new JLabel("Section : " + section, SwingConstants.CENTER);
-        label.setFont(new Font("SansSerif", Font.BOLD, 24));
-
-        mainContent.add(label, BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-
-    private void showAccueuil() {
-        mainContent.removeAll();
-
-       mainContent.add(new PanelAccueuil(), BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-    private void showArchives()throws IOException, InterruptedException{
-        mainContent.removeAll();
-        mainContent.add(new ArchivesPanel(archivesUseCase), BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-
-    private void showEntityManagement() {
-        mainContent.removeAll();
-        JLabel label = new JLabel("Gestion des entités", SwingConstants.CENTER);
-        label.setFont(new Font("SansSerif", Font.BOLD, 24));
-        mainContent.add(label, BorderLayout.CENTER);
-        mainContent.revalidate();
-        mainContent.repaint();
-    }
-    private JButton boutonderoulant(String text) {
-        JButton button = new JButton(text);
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setMaximumSize(new Dimension(180, 40));
-        button.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        button.setFocusPainted(false);
-        button.setBackground(new Color(70, 83, 96));
-        button.setForeground(Color.WHITE);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        return button;
-    }
 
 
     public static void main(String[] args) {
-        showDasbord();
-    }
-
-    private static void showDasbord() {
         final NetworkConfig networkConfig = ConfigLoader.loadConfig(NetworkConfig.class, "network.yaml");
         PlaceDeParkingRepository repository = new PlaceDeParkingService(networkConfig);
         ReservationRepository reservationRepository = new ReservationService(networkConfig);
@@ -333,8 +302,24 @@ public class DashboardFrame extends JFrame {
         ReservationLocalUseCase ResaLocalUseCase = new ReservationLocalUseCase(reservationLocalRepository);
         ArchivesUseCase ArchivesPaiementUseCase = new ArchivesUseCase(archivesRepository);
 
-         List<String> clientsEnAttente = new ArrayList<>(Arrays.asList("", "", "", ""));
+        List<String> clientsEnAttente = new ArrayList<>(Arrays.asList("", "", "", ""));
 
-        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase, persoUseCase, LLUsecase, LTUsecase, MecaUseCase, ResaLocalUseCase, ArchivesPaiementUseCase, clientsEnAttente));
+        SwingUtilities.invokeLater(() -> new DashboardFrame(
+                placeUseCase,
+                reservUseCase,
+                abonUseCase,
+                persoUseCase,
+                LLUsecase,
+                LTUsecase,
+                MecaUseCase,
+                ResaLocalUseCase,
+                ArchivesPaiementUseCase,
+                clientsEnAttente
+        ));
     }
+
+
+
+
+
 }
