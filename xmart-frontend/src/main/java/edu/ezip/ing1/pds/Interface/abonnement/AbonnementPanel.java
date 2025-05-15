@@ -4,6 +4,7 @@ import edu.ezip.ing1.pds.business.dto.Abonnement;
 import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
 import edu.ezip.ing1.pds.business.dto.Personne;
 import edu.ezip.ing1.pds.usecase.PersonneUseCase;
+import edu.ezip.ing1.pds.Interface.abonnement.HistoriquePaiement;
 
 
 import javax.swing.*;
@@ -61,6 +62,7 @@ public class AbonnementPanel extends JPanel {
         JPopupMenu contextMenu = new JPopupMenu();
         JMenuItem modifierItem = new JMenuItem("Modifier");
         JMenuItem supprimerItem = new JMenuItem("Supprimer");
+        JMenuItem paiementItem = new JMenuItem("Historique de paiement");
 
         modifierItem.addActionListener(ev -> {
 
@@ -101,8 +103,15 @@ public class AbonnementPanel extends JPanel {
             }
         });
 
+        paiementItem.addActionListener(ev -> {
+            if(selectedAbonnement != null) {
+                new HistoriquePaiement((JFrame) SwingUtilities.getWindowAncestor(this), selectedAbonnement);
+            }
+        });
+
         contextMenu.add(modifierItem);
         contextMenu.add(supprimerItem);
+        contextMenu.add(paiementItem);
 
         // Mouse listener for showing the context menu
         table.addMouseListener(new MouseAdapter() {
