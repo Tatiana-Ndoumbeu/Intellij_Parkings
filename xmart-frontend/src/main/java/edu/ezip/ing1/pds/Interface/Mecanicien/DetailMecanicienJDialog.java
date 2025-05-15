@@ -1,6 +1,9 @@
 package edu.ezip.ing1.pds.Interface.Mecanicien;
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class DetailMecanicienJDialog extends JDialog {
 
@@ -30,6 +33,15 @@ public class DetailMecanicienJDialog extends JDialog {
 
         mailBtn.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "ECRIRE UN MAIL À "+mail);
+            try {
+                String subject = "Demande d'intervention";
+                String body = "Bonjour " + prenom + ",\n\n ...";
+                URI mailto = new URI("mailto:" + mail + "?subject=" + ComposanteMailEncodage(subject) + "&body=" + ComposanteMailEncodage(body));
+                Desktop.getDesktop().mail(mailto);
+            } catch (IOException | URISyntaxException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Impossible d'ouvrir l'application de mails.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         boutonPanel.add(contacterBtn);
@@ -37,5 +49,12 @@ public class DetailMecanicienJDialog extends JDialog {
 
         add(infoPanel, BorderLayout.CENTER);
         add(boutonPanel, BorderLayout.SOUTH);
+    }
+    private String ComposanteMailEncodage(String s) {
+        try {
+            return java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20");
+        } catch (Exception e) {
+            return s;
+        }
     }
 }

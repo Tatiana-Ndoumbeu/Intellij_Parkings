@@ -105,10 +105,15 @@ public class AjouterMecanicienForm extends JFrame {
         });
     }
 
-    private void styleField(JTextField field, String placeholder) {
-        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+    private void styleField(JTextField field, String label) {
+        field.setEditable(true);
         field.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        field.setBorder(BorderFactory.createTitledBorder(placeholder));
+        field.setBorder(BorderFactory.createTitledBorder(label));
+        field.setPreferredSize(new Dimension(400, 60));
+        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+        field.setForeground(Color.BLACK);
+        field.setBackground(Color.WHITE);
     }
 
 

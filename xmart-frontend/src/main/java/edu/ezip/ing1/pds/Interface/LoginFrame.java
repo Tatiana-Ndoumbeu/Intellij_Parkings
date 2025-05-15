@@ -1,25 +1,21 @@
 package edu.ezip.ing1.pds.Interface;
 
-import edu.ezip.ing1.pds.api.AbonnementRepository;
-import edu.ezip.ing1.pds.api.PlaceDeParkingRepository;
-import edu.ezip.ing1.pds.api.ReservationRepository;
+import edu.ezip.ing1.pds.api.*;
 import edu.ezip.ing1.pds.client.commons.ConfigLoader;
 import edu.ezip.ing1.pds.client.commons.NetworkConfig;
-import edu.ezip.ing1.pds.services.AbonnementService;
-import edu.ezip.ing1.pds.services.AdminService;
-import edu.ezip.ing1.pds.services.PlaceDeParkingService;
-import edu.ezip.ing1.pds.services.ReservationService;
+import edu.ezip.ing1.pds.services.*;
 import edu.ezip.ing1.pds.uiUtils.LoginAdminUseCase;
 import edu.ezip.ing1.pds.uiUtils.RegisterAdminUseCase;
-import edu.ezip.ing1.pds.usecase.AbonnementUseCase;
-import edu.ezip.ing1.pds.usecase.PlaceDeParkingUseCase;
-import edu.ezip.ing1.pds.usecase.ReservationUseCase;
+import edu.ezip.ing1.pds.usecase.*;
 
 import javax.swing.*;
 import java.awt.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class LoginFrame extends JFrame {
     public LoginFrame(NetworkConfig config) {
@@ -109,9 +105,13 @@ public class LoginFrame extends JFrame {
     }
 
     private void styleField(JTextField field, String placeholder) {
+        field.setEditable(true);
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         field.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        field.setBorder(BorderFactory.createTitledBorder(placeholder));
+        /*field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder(placeholder),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        field.setBorder(BorderFactory.createTitledBorder(placeholder));*/
     }
 
     private void styleButton(JButton button, Color bg) {
@@ -141,11 +141,25 @@ public class LoginFrame extends JFrame {
         PlaceDeParkingRepository repository = new PlaceDeParkingService(networkConfig);
         ReservationRepository reservationRepository = new ReservationService(networkConfig);
         AbonnementRepository abonnementRepository = new AbonnementService(networkConfig);
+        PersonneRepository personneRepository = new PersonneService(networkConfig);
+        LocalLaverieRepository localLaverieRepository = new LocalLaveriesService(networkConfig);
+        LocalTechniqueRepository localTechniqueRepository = new LocalTechniqueService(networkConfig);
+        MecanicienRepository mecanicienRepository = new MecanicienService(networkConfig);
+        ReservationLocalRepository reservationLocalRepository = new ReservationLocalService(networkConfig);
+        ArchivesRepository archivesRepository = new ArchivesPaiementService(networkConfig);
 
         PlaceDeParkingUseCase placeUseCase = new PlaceDeParkingUseCase(repository);
         ReservationUseCase reservUseCase = new ReservationUseCase(reservationRepository);
         AbonnementUseCase abonUseCase = new AbonnementUseCase(abonnementRepository);
+        PersonneUseCase persoUseCase = new PersonneUseCase(personneRepository);
+        LocalLaverieUseCase LLUsecase = new LocalLaverieUseCase(localLaverieRepository);
+        LocalTechniqueUseCase LTUsecase = new LocalTechniqueUseCase(localTechniqueRepository);
+        MecanicienUseCase MecaUseCase = new MecanicienUseCase(mecanicienRepository);
+        ReservationLocalUseCase ResaLocalUseCase = new ReservationLocalUseCase(reservationLocalRepository);
+        ArchivesUseCase ArchivesPaiementUseCase = new ArchivesUseCase(archivesRepository);
 
-     //   SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase));
+        List<String> clientsEnAttente = new ArrayList<>(Arrays.asList("", "", "", ""));
+
+        SwingUtilities.invokeLater(() -> new DashboardFrame(placeUseCase, reservUseCase, abonUseCase, persoUseCase, LLUsecase, LTUsecase, MecaUseCase, ResaLocalUseCase, ArchivesPaiementUseCase, clientsEnAttente));
     }
 }
