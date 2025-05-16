@@ -177,8 +177,8 @@ public class FormulaireLaverMaintenant {
 
 
             } else {
-                if (nom.isEmpty() || prenom.isEmpty()|| telephone.isEmpty()) {
-                    JOptionPane.showMessageDialog(dialog, "Champs manquants.");
+                if (nom.isEmpty() || prenom.isEmpty()|| telephone.isEmpty()|| !telephone.matches("^0\\d{9}$")) {
+                    JOptionPane.showMessageDialog(dialog, "Champs manquants ou incorrects.");
                     return;
                 }
                 int prixBase = switch (typeLavage) {

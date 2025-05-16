@@ -243,6 +243,8 @@ public class Formulaires {
                     ReservationLocalUseCase reservationLocalUseCase = new ReservationLocalUseCase(reservationLocalRepository);
                     boolean isReservationCreated = reservationLocalUseCase.createReservationLocal(reservationLocal);
 
+                    JOptionPane.showMessageDialog(dialog, "Reservation enregistrée", "Information", JOptionPane.INFORMATION_MESSAGE);
+                    dialog.dispose();
                 } catch (IOException | InterruptedException u) {
 
                     JOptionPane.showMessageDialog(dialog, "Prenom: " + Prenom + "\nNom: " + Nom + "\nTelephone: " + Telephone + "\nE-Mail: " + Mail + "\nCode Postal: " + codePostal + " \ndate de debut: " + dateDebut + "\ndate de fin: " + dateFin+ "\n\n id de la reservation: "+ReservationLocId);

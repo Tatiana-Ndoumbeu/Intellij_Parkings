@@ -74,7 +74,13 @@ public class ReservationLocauxPanel extends JPanel {
         JButton rafraichirButton = new JButton("",chargerIcone("/icons/refresh.png", 30, 30));
         rafraichirButton.setBackground(Color.CYAN);
         rafraichirButton.addActionListener( e -> {
-            refreshTable(reservationLocalList);
+            try {
+                reservationLocalList = reservationLocalUseCase.getAllReservationsLocal().getReservationLocaux().stream().toList();
+                refreshTable(reservationLocalList);
+            } catch (IOException | InterruptedException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Erreur lors du rafraîchissement.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
         });
         panelSud.add(rafraichirButton);
 
